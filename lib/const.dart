@@ -1,0 +1,20 @@
+const appTitle = "Fix Bayonets!";
+const appSplashGraphic = "images/fix_bayonets_splash.jpg";
+const appVersion = "Version 1.0, May 2022";
+const sdsLogo = "images/sds_logo.png";
+
+const gfxForest = "images/forest42x42.png"; // 0xff6b8e23
+const gfxOpen = "images/open42x42.png"; // 0xff7c9c3b
+const gfxThick = "images/thick42x42.png"; // 0xff536e1c
+const gfxUsStacked = "images/us_multiple.png";
+const gfxGermanStacked = "images/german_multiple.png";
+const gfxGermanOfficer = "images/german_officer.png";
+const gfxGermanRifle = "images/german_rifle.png";
+const gfxGermanHeavy = "images/german_machinegun.png";
+const gfxGermanRunner = "images/german_runner.png";
+const gfxGermanSniper = "images/german_sniper.png";
+const gfxUsOfficer = "images/us_officer.png";
+const gfxUsRifle = "images/us_rifle.png";
+const gfxUsHeavy = "images/us_machinegun.png";
+const gfxUsRunner = "images/us_runner.png";
+const gfxUsSniper = "images/us_sniper.png";
