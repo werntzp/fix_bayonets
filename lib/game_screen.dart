@@ -5,15 +5,16 @@ import 'models/card.dart';
 import 'models/map.dart';
 import 'models/game.dart';
 
-var _gcf = GameCardFactory();
-var _uf = UnitFactory();
-var _cards = _gcf.prepareDeck();
-var _units = _uf.prepareUnits();
-var _map = List<String>.filled(64, gfxForest); // tracks graphic to display
-
-//List<Unit> _mapSquareUnits = List<Unit>();
-//Unit _selectedUnit = null;
-int _selectedMapSquare = -1;
+GameModel _gm = GameModel();
+GameCardFactory _cf = GameCardFactory();
+UnitFactory _uf = UnitFactory();
+MapFactory _mf = MapFactory();
+List<Unit> _units = [];
+List<MapSquare> _map = [];
+List<GameCard> _drawPile = [];
+List<GameCard> _playerHand = [];
+List<GameCard> _computerHand = [];
+List<GameCard> _discardPile = [];
 
 // main class
 class GameScreen extends StatefulWidget {
@@ -24,88 +25,77 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late GameModel _model;
-
-  String _displayRound() {
-    return 'Round: ' + _model.displayRound();
+  @override
+  void initState() {
+    super.initState();
+    _newGame();
   }
 
-  String _displayTurn() {
-    return 'Turn: ' + _model.displayTurn();
+  void _newGame() async {
+    _gm.newGame();
+    _drawPile = _cf.prepareDeck();
+    _units = _uf.prepareUnits();
+    _map = _mf.prepareMap(_units);
+
+    // draw 3 cards for american and german
+    _playerHand.add(_drawPile[0]);
+    _drawPile.remove(_drawPile[0]);
+    _playerHand.add(_drawPile[1]);
+    _drawPile.remove(_drawPile[1]);
+    _playerHand.add(_drawPile[2]);
+    _drawPile.remove(_drawPile[2]);
+  }
+
+  String _displayRound() {
+    return 'Round: ' + _gm.displayRound();
+  }
+
+  String _displayPhase() {
+    return 'Phase: ' + _gm.displayPhase();
   }
 
   Widget _cardRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: <Widget>[
+    // iterate through cards to display the ones in the player's hand ...
+    return Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
+      for (var c in _playerHand)
         Container(
           decoration: BoxDecoration(
-            border: Border.all(
-              width: 1,
-            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5), //color of shadow
+                blurRadius: 1,
+                offset: const Offset(.5, .5),
+              )
+            ],
           ),
-          height: 90.0,
-          width: 90.0,
-          child: Image.asset('images/bayonet.png'),
+          height: 65.0,
+          width: 60.0,
+          child: Image.asset(c.graphic),
         ),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              width: 1,
-            ),
-          ),
-          height: 90.0,
-          width: 90.0,
-          child: Image.asset('images/bayonet.png'),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              width: 1,
-            ),
-          ),
-          height: 90.0,
-          width: 90.0,
-          child: Image.asset('images/bayonet.png'),
-        ),
-      ],
-    );
+    ]);
   }
 
-  Widget _drawUnits(units) {
+  Widget _unitRow() {
     // for each unit in the map square, return an image of it
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
-        for (var u in units)
-          Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  width: 1,
-                  color: Colors.black,
-                ),
-              ),
-              child: Image.asset(_uf.returnUnitImage(_map[u.boardpos]))),
+        Container(
+          height: 45,
+        ),
+        if (_mf.selectedSquare != -1)
+          for (var u in _map[_mf.selectedSquare].units)
+            Container(
+              child: Image.asset(_uf.returnUnitImage(u)),
+            ),
       ],
     );
   }
 
-  void _setSelectedMapSquare(x) {
+  void _setSelectedMapSquare(int pos) {
     setState(() {
-      _selectedMapSquare = x;
-      // clear out the stacked units list
-      //_mapSquareUnits.clear();
-
-      // see if there are any units in that square, and if so, add to list
-      for (var i = 0; i < _units.length; i++) {
-        if (_units[i].boardpos == x) {
-          // temp array with units
-          //  _mapSquareUnits.add(_units[i]);
-        }
-      }
-
-      // now display them
-      //_drawUnits(_mapSquareUnits);
+      _mf.selectedSquare = pos;
+      _unitRow;
     });
   }
 
@@ -131,7 +121,7 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   Container(
                     child: Center(
-                      child: Text(_displayTurn(),
+                      child: Text(_displayPhase(),
                           style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 20)),
                     ),
@@ -164,7 +154,8 @@ class _GameScreenState extends State<GameScreen> {
                             ),
                           ),
                           // child: Center(child: Text('$index')),
-                          child: Center(child: Image.asset(_map[index]))),
+                          child:
+                              Center(child: Image.asset(_map[index].terrain))),
                     );
                   }),
                 ),
@@ -172,15 +163,12 @@ class _GameScreenState extends State<GameScreen> {
             ),
             const Padding(
               padding: EdgeInsets.all(1.0),
-              child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Text("Selected Square:")),
             ),
-            //_drawUnits(_mapSquareUnits),
+            _unitRow(),
             const Padding(
               padding: EdgeInsets.all(10.0),
               child: Align(
-                  alignment: Alignment.topCenter, child: Text("Your hand:")),
+                  alignment: Alignment.topLeft, child: Text("Your hand:")),
             ),
             _cardRow()
           ],

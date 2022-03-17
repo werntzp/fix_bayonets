@@ -1,17 +1,20 @@
 import 'map.dart';
 import '../const.dart';
 
-enum enumPlayerType { american, german }
-enum enumSoldierType { officer, rifleman, heavyweapon, runner, sniper }
-enum enumUnitMoved { zero, one, two }
-
 class Unit {
-  final enumSoldierType type;
-  final int boardpos;
-  final enumPlayerType player;
-  final enumUnitMoved moved;
+  final enumUnitType type;
+  final enumUnitOwner owner;
+  final enumUnitMoveAllowed move;
+  bool hasMoved = false;
+  bool hasAttacked = false;
+  bool isAlive = true;
 
-  Unit(this.type, this.boardpos, this.player, this.moved);
+  void reset() {
+    hasAttacked = false;
+    hasMoved = false;
+  }
+
+  Unit(this.type, this.owner, this.move);
 }
 
 class UnitFactory {
@@ -19,35 +22,35 @@ class UnitFactory {
     String s = gfxUsRifle;
 
     // return based on image type
-    if ((u.type == enumSoldierType.rifleman) &&
-        (u.player == enumPlayerType.american)) {
+    if ((u.type == enumUnitType.rifleman) &&
+        (u.owner == enumUnitOwner.american)) {
       s = gfxUsRifle.toString();
-    } else if ((u.type == enumSoldierType.officer) &&
-        (u.player == enumPlayerType.american)) {
+    } else if ((u.type == enumUnitType.officer) &&
+        (u.owner == enumUnitOwner.american)) {
       s = gfxUsOfficer.toString();
-    } else if ((u.type == enumSoldierType.heavyweapon) &&
-        (u.player == enumPlayerType.american)) {
+    } else if ((u.type == enumUnitType.heavyweapon) &&
+        (u.owner == enumUnitOwner.american)) {
       s = gfxUsHeavy.toString();
-    } else if ((u.type == enumSoldierType.runner) &&
-        (u.player == enumPlayerType.american)) {
+    } else if ((u.type == enumUnitType.runner) &&
+        (u.owner == enumUnitOwner.american)) {
       s = gfxUsRunner.toString();
-    } else if ((u.type == enumSoldierType.sniper) &&
-        (u.player == enumPlayerType.american)) {
+    } else if ((u.type == enumUnitType.sniper) &&
+        (u.owner == enumUnitOwner.american)) {
       s = gfxUsSniper.toString();
-    } else if ((u.type == enumSoldierType.rifleman) &&
-        (u.player == enumPlayerType.german)) {
+    } else if ((u.type == enumUnitType.rifleman) &&
+        (u.owner == enumUnitOwner.german)) {
       s = gfxGermanRifle.toString();
-    } else if ((u.type == enumSoldierType.officer) &&
-        (u.player == enumPlayerType.german)) {
+    } else if ((u.type == enumUnitType.officer) &&
+        (u.owner == enumUnitOwner.german)) {
       s = gfxGermanOfficer.toString();
-    } else if ((u.type == enumSoldierType.heavyweapon) &&
-        (u.player == enumPlayerType.german)) {
+    } else if ((u.type == enumUnitType.heavyweapon) &&
+        (u.owner == enumUnitOwner.german)) {
       s = gfxGermanHeavy.toString();
-    } else if ((u.type == enumSoldierType.runner) &&
-        (u.player == enumPlayerType.german)) {
+    } else if ((u.type == enumUnitType.runner) &&
+        (u.owner == enumUnitOwner.german)) {
       s = gfxGermanRunner.toString();
-    } else if ((u.type == enumSoldierType.sniper) &&
-        (u.player == enumPlayerType.german)) {
+    } else if ((u.type == enumUnitType.sniper) &&
+        (u.owner == enumUnitOwner.german)) {
       s = gfxGermanSniper.toString();
     }
 
@@ -59,99 +62,72 @@ class UnitFactory {
     // while americans in spaces 57-63; for each unit, pick a map square. also have a placeholder
     // list so when you get to 2 in that space, pick a different random number
     List<Unit> u = [];
-    var b = List<int>.filled(8, 0);
-    int min = 0;
-    int max = 0;
 
-    MapFactory mf = MapFactory();
+    u.add(Unit(
+        enumUnitType.officer, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.officer, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.rifleman, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.heavyweapon, enumUnitOwner.german,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.heavyweapon, enumUnitOwner.german,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.sniper, enumUnitOwner.german, enumUnitMoveAllowed.one));
+    u.add(Unit(
+        enumUnitType.runner, enumUnitOwner.german, enumUnitMoveAllowed.two));
 
-    // german units
-    min = 0;
-    max = 8;
-    u.add(Unit(enumSoldierType.officer, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.officer, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
     u.add(Unit(
-        enumSoldierType.heavyweapon,
-        mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german,
-        enumUnitMoved.zero));
+        enumUnitType.officer, enumUnitOwner.american, enumUnitMoveAllowed.one));
     u.add(Unit(
-        enumSoldierType.heavyweapon,
-        mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german,
-        enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.sniper, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.runner, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.german, enumUnitMoved.zero));
-
-    // us units
-    min = 56;
-    max = 64;
-    // reset mapsquare for space tracking
-    for (int i = 0; i < 8; i++) {
-      b[i] = 0;
-    }
-    u.add(Unit(enumSoldierType.officer, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.officer, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.rifleman, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
+        enumUnitType.officer, enumUnitOwner.american, enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.rifleman, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.heavyweapon, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
+    u.add(Unit(enumUnitType.heavyweapon, enumUnitOwner.american,
+        enumUnitMoveAllowed.one));
     u.add(Unit(
-        enumSoldierType.heavyweapon,
-        mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american,
-        enumUnitMoved.zero));
+        enumUnitType.sniper, enumUnitOwner.american, enumUnitMoveAllowed.one));
     u.add(Unit(
-        enumSoldierType.heavyweapon,
-        mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american,
-        enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.sniper, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
-    u.add(Unit(enumSoldierType.runner, mf.getStartingMapSquare(b, min, max),
-        enumPlayerType.american, enumUnitMoved.zero));
+        enumUnitType.runner, enumUnitOwner.american, enumUnitMoveAllowed.two));
 
     return u;
   }

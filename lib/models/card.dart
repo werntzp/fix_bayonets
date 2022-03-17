@@ -1,29 +1,4 @@
-enum enumTurn { orders, move, fight }
-enum enumCardType { attack, move, terrain }
-enum enumCardLocation { hand, draw, discard }
-enum enumPlayerUse { american, german, both }
-enum enumCardNegate { move, attack, neither }
-enum enumCardName {
-  bayonet,
-  pistol,
-  flamethrower,
-  grenade,
-  rifle,
-  machinegun,
-  sniper,
-  crawl,
-  march,
-  doubletime,
-  zigzag,
-  run,
-  charge,
-  advance,
-  counterattack,
-  trees,
-  foxholes,
-  roughground,
-  holdground
-}
+import 'package:fix_bayonets/const.dart';
 
 class GameCard {
   final enumCardName name;
@@ -32,10 +7,11 @@ class GameCard {
   final int maxrange;
   final enumPlayerUse player;
   final enumCardNegate negate;
-  final enumCardLocation location;
+  final enumUnitType useby;
+  final String graphic;
 
   GameCard(this.name, this.type, this.minrange, this.maxrange, this.player,
-      this.negate, this.location);
+      this.negate, this.useby, this.graphic);
 }
 
 class GameCardFactory {
@@ -44,32 +20,74 @@ class GameCardFactory {
 
     // bayonet x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.bayonet, enumCardType.attack, 1, 1,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.bayonet,
+          enumCardType.attack,
+          1,
+          1,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxAttack1));
     }
     // pistol x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.pistol, enumCardType.attack, 1, 2,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.pistol,
+          enumCardType.attack,
+          1,
+          2,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.officer,
+          gfxAttack2Officer));
     }
     // flamer thrower x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.flamethrower, enumCardType.attack, 2, 3,
-          enumPlayerUse.german, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.flamethrower,
+          enumCardType.attack,
+          2,
+          3,
+          enumPlayerUse.german,
+          enumCardNegate.neither,
+          enumUnitType.heavyweapon,
+          gfxAttack23German));
     }
     // grenade x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.grenade, enumCardType.attack, -1, -1,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.grenade,
+          enumCardType.attack,
+          -1,
+          -1,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxAttackZ));
     }
     // rifle x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.grenade, enumCardType.attack, 3, 3,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.grenade,
+          enumCardType.attack,
+          3,
+          3,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxAttack3));
     } // rifle x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.rifle, enumCardType.attack, 4, 4,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.rifle,
+          enumCardType.attack,
+          4,
+          4,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxAttack4));
     } // machine gun x3
     for (int i = 0; i < 3; i++) {
       c.add(GameCard(
@@ -79,43 +97,100 @@ class GameCardFactory {
           5,
           enumPlayerUse.american,
           enumCardNegate.neither,
-          enumCardLocation.draw));
+          enumUnitType.heavyweapon,
+          gfxAttack45American));
     }
     // sniper x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.sniper, enumCardType.attack, 5, 6,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.sniper,
+          enumCardType.attack,
+          5,
+          6,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.sniper,
+          gfxAttack56Sniper));
     }
     // crawl x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.crawl, enumCardType.move, 1, 1,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.crawl,
+          enumCardType.move,
+          1,
+          1,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxMove1));
     } // march x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.march, enumCardType.move, 2, 2,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.march,
+          enumCardType.move,
+          2,
+          2,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxMove2));
     } // double time x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.doubletime, enumCardType.move, 3, 3,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.doubletime,
+          enumCardType.move,
+          3,
+          3,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxMove3));
     } // zig zag x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.zigzag, enumCardType.move, -1, -1,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.zigzag,
+          enumCardType.move,
+          -1,
+          -1,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxMoveZ));
     }
     // run x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.run, enumCardType.move, 4, 4,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.run,
+          enumCardType.move,
+          4,
+          4,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxMove4));
     } // charge x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.charge, enumCardType.move, 5, 5,
-          enumPlayerUse.both, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.charge,
+          enumCardType.move,
+          5,
+          5,
+          enumPlayerUse.both,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxMove5));
     }
     // advance x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.advance, enumCardType.move, 2, 2,
-          enumPlayerUse.german, enumCardNegate.neither, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.advance,
+          enumCardType.move,
+          2,
+          2,
+          enumPlayerUse.german,
+          enumCardNegate.neither,
+          enumUnitType.all,
+          gfxMove2German));
     }
     // counter attack
     for (int i = 0; i < 3; i++) {
@@ -126,31 +201,56 @@ class GameCardFactory {
           3,
           enumPlayerUse.american,
           enumCardNegate.neither,
-          enumCardLocation.draw));
-    } // trees x3
-    for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.trees, enumCardType.terrain, 0, 0,
-          enumPlayerUse.both, enumCardNegate.attack, enumCardLocation.draw));
-    } // fox holes x3
+          enumUnitType.all,
+          gfxMove3American));
+    } // smoke x3
     for (int i = 0; i < 3; i++) {
       c.add(GameCard(
-          enumCardName.foxholes,
+          enumCardName.smoke,
+          enumCardType.terrain,
+          0,
+          0,
+          enumPlayerUse.both,
+          enumCardNegate.attack,
+          enumUnitType.all,
+          gfxNegateAttack));
+    } // artillery x3
+    for (int i = 0; i < 3; i++) {
+      c.add(GameCard(
+          enumCardName.artillery,
           enumCardType.terrain,
           0,
           0,
           enumPlayerUse.american,
           enumCardNegate.attack,
-          enumCardLocation.draw));
-    } // rough ground x3
+          enumUnitType.all,
+          gfxNegateAttackAmerican));
+    } // wire x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.roughground, enumCardType.terrain, 0, 0,
-          enumPlayerUse.both, enumCardNegate.move, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.wire,
+          enumCardType.terrain,
+          0,
+          0,
+          enumPlayerUse.both,
+          enumCardNegate.move,
+          enumUnitType.all,
+          gfxNegateMove));
     }
-    // hold ground x3
+    // landmine x3
     for (int i = 0; i < 3; i++) {
-      c.add(GameCard(enumCardName.holdground, enumCardType.terrain, 0, 0,
-          enumPlayerUse.german, enumCardNegate.move, enumCardLocation.draw));
+      c.add(GameCard(
+          enumCardName.landmine,
+          enumCardType.terrain,
+          0,
+          0,
+          enumPlayerUse.german,
+          enumCardNegate.move,
+          enumUnitType.all,
+          gfxNegateMoveGerman));
     }
+
+    c.shuffle();
 
     return c;
   }

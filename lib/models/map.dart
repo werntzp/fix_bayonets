@@ -1,13 +1,24 @@
 import 'dart:math';
-import 'unit.dart';
 import '../const.dart';
+import 'unit.dart';
+
+class MapSquare {
+  Set<Unit> units = {};
+  String terrain = gfxForest;
+  bool isSelected = false;
+
+  MapSquare();
+}
 
 class MapFactory {
+  var b = List<String>.filled(64, gfxForest);
+  int selectedSquare = -1;
+
   int _getRandomNumber(int min, int max) {
     return (min + Random().nextInt(max - min));
   }
 
-  String _returnTerrain() {
+  String _randomizeTerrain() {
     String t = gfxForest;
     int i = Random().nextInt(10);
     // 6-8 open
@@ -22,7 +33,7 @@ class MapFactory {
     return t;
   }
 
-  int getStartingMapSquare(board, min, max) {
+  int _getStartingMapSquare(board, min, max) {
     int x = 0;
 
     // get a random number, see if there are already two units in that map square. if
@@ -38,31 +49,48 @@ class MapFactory {
     return x;
   }
 
-  List<String> prepareBoard() {
-    var b = List<String>.filled(64, gfxForest);
+  List<MapSquare> prepareMap(List<Unit> units) {
+    List<MapSquare> _map = [];
 
-    // auto stack units in first and last row to start the game
-    b[0] = gfxGermanStacked;
-    b[1] = gfxGermanStacked;
-    b[2] = gfxGermanStacked;
-    b[3] = gfxGermanStacked;
-    b[4] = gfxGermanStacked;
-    b[5] = gfxGermanStacked;
-    b[6] = gfxGermanStacked;
-    b[7] = gfxGermanStacked;
-    b[56] = gfxUsStacked;
-    b[57] = gfxUsStacked;
-    b[58] = gfxUsStacked;
-    b[59] = gfxUsStacked;
-    b[60] = gfxUsStacked;
-    b[61] = gfxUsStacked;
-    b[62] = gfxUsStacked;
-    b[63] = gfxUsStacked;
-    // then loop through to randomly add a little color
-    for (int i = 8; i < 56; i++) {
-      b[i] = _returnTerrain();
+    // add 64 map squares to list
+    for (int i = 0; i < 64; i++) {
+      MapSquare m = MapSquare();
+      if (i < 8) {
+        m.terrain = gfxUsStacked;
+      } else if (i > 55) {
+        m.terrain = gfxGermanStacked;
+      } else {
+        m.terrain = _randomizeTerrain();
+      }
+
+      _map.add(m);
     }
 
-    return b;
+    // go through all the units and place them into map squares
+    int x = 0;
+    int min = 0;
+    int max = 8;
+    bool addedUnit = false;
+
+    for (Unit u in units) {
+      // top row for american units, bottom for german to start
+      if (u.owner == enumUnitOwner.american) {
+        min = 0;
+        max = 8;
+      } else {
+        min = 56;
+        max = 64;
+      }
+      // get a starting map location; if that map location already has two units in it, keep repeating until we get one
+      do {
+        x = _getRandomNumber(min, max);
+        if (_map[x].units.length != 2) {
+          _map[x].units.add(u);
+          break;
+        }
+      } while (true);
+    }
+
+    return _map;
   }
 }
