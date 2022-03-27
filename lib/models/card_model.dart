@@ -15,31 +15,83 @@ class GameCard {
       this.player, this.negate, this.useby, this.graphic);
 }
 
-class GameCardFactory {
-  final List<bool> _selectedCards = List.filled(60, false);
+class CardFactory {
+  final List<bool> _selected = List.filled(60, false);
+  List<GameCard> _drawPile = [];
+  List<GameCard> _playerHand = [];
+  List<GameCard> _computerHand = [];
+  List<GameCard> _discardPile = [];
+
+  CardFactory();
 
   void clearSelectedCards() {
-    for (int i = 0; i < _selectedCards.length; i++) {
-      _selectedCards[i] == false;
+    for (int i = 0; i < _selected.length; i++) {
+      _selected[i] = false;
     }
   }
 
-  void toggleSelected(int id) {
-    _selectedCards[id] = !_selectedCards[id];
+  void discardCards() {
+    List<GameCard> toRemove = [];
+
+    for (int i = 0; i < _selected.length; i++) {
+      if (_selected[i]) {
+        _discardPile.add(_playerHand[i]);
+        toRemove.add(_playerHand[i]);
+      }
+
+      _playerHand.removeWhere((c) => toRemove.contains(c));
+      clearSelectedCards();
+    }
+  }
+
+  void toggleSelected(int id, bool multiselect) {
+    if (multiselect) {
+      // allowed to have more than one card selected (b/c they need to discard)
+      _selected[id] = !_selected[id];
+    } else {
+      // only one card allowed to be selected
+      clearSelectedCards();
+      _selected[id] = true;
+    }
   }
 
   bool isCardSelected(int id) {
-    return _selectedCards[id];
+    return _selected[id];
   }
 
-  List<GameCard> prepareDeck() {
-    List<GameCard> c = [];
+  List<GameCard> playerHand() {
+    return _playerHand;
+  }
+
+  void drawCards() {
+    // if not six cards, move cards from discard to draw and shuffle
+    if (_drawPile.length < 6) {
+      for (GameCard c in _discardPile) {
+        _drawPile.add(c);
+      }
+      _discardPile.clear();
+      _drawPile.shuffle();
+    }
+
+    // draw 3 cards for american and german
+    for (int i = 0; i < 3; i++) {
+      _playerHand.add(_drawPile[i]);
+      _drawPile.remove(_drawPile[i]);
+    }
+
+    for (int i = 0; i < 3; i++) {
+      _computerHand.add(_drawPile[i]);
+      _drawPile.remove(_drawPile[i]);
+    }
+  }
+
+  void prepareInitialDeck() {
     int id = -1;
 
     // bayonet x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.bayonet,
           enumCardType.attack,
@@ -53,7 +105,7 @@ class GameCardFactory {
     // pistol x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.pistol,
           enumCardType.attack,
@@ -67,7 +119,7 @@ class GameCardFactory {
     // flamer thrower x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.flamethrower,
           enumCardType.attack,
@@ -81,7 +133,7 @@ class GameCardFactory {
     // grenade x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.grenade,
           enumCardType.attack,
@@ -95,7 +147,7 @@ class GameCardFactory {
     // rifle x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.grenade,
           enumCardType.attack,
@@ -108,7 +160,7 @@ class GameCardFactory {
     } // rifle x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.rifle,
           enumCardType.attack,
@@ -121,7 +173,7 @@ class GameCardFactory {
     } // machine gun x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.machinegun,
           enumCardType.attack,
@@ -135,7 +187,7 @@ class GameCardFactory {
     // sniper x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.sniper,
           enumCardType.attack,
@@ -149,7 +201,7 @@ class GameCardFactory {
     // crawl x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.crawl,
           enumCardType.move,
@@ -162,7 +214,7 @@ class GameCardFactory {
     } // march x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.march,
           enumCardType.move,
@@ -175,7 +227,7 @@ class GameCardFactory {
     } // double time x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.doubletime,
           enumCardType.move,
@@ -188,7 +240,7 @@ class GameCardFactory {
     } // zig zag x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.zigzag,
           enumCardType.move,
@@ -202,7 +254,7 @@ class GameCardFactory {
     // run x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.run,
           enumCardType.move,
@@ -215,7 +267,7 @@ class GameCardFactory {
     } // charge x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.charge,
           enumCardType.move,
@@ -229,7 +281,7 @@ class GameCardFactory {
     // advance x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.advance,
           enumCardType.move,
@@ -243,7 +295,7 @@ class GameCardFactory {
     // counter attack
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.counterattack,
           enumCardType.move,
@@ -256,7 +308,7 @@ class GameCardFactory {
     } // smoke x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.smoke,
           enumCardType.terrain,
@@ -269,7 +321,7 @@ class GameCardFactory {
     } // artillery x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.artillery,
           enumCardType.terrain,
@@ -282,7 +334,7 @@ class GameCardFactory {
     } // wire x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.wire,
           enumCardType.terrain,
@@ -296,7 +348,7 @@ class GameCardFactory {
     // landmine x3
     for (int i = 0; i < 3; i++) {
       id++;
-      c.add(GameCard(
+      _drawPile.add(GameCard(
           id,
           enumCardName.landmine,
           enumCardType.terrain,
@@ -309,8 +361,6 @@ class GameCardFactory {
     }
 
     clearSelectedCards();
-
-    c.shuffle();
-    return c;
+    _drawPile.shuffle();
   }
 }

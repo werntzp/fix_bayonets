@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
 import 'const.dart';
-import 'models/unit.dart';
-import 'models/card.dart';
-import 'models/map.dart';
-import 'models/game.dart';
+import 'models/unit_model.dart';
+import 'models/game_model.dart';
+import 'models/card_model.dart';
+import 'models/map_model.dart';
 
 GameModel _gm = GameModel();
-GameCardFactory _cf = GameCardFactory();
+CardFactory _cf = CardFactory();
 UnitFactory _uf = UnitFactory();
 MapFactory _mf = MapFactory();
 List<Unit> _units = [];
 List<MapSquare> _map = [];
-List<GameCard> _drawPile = [];
-List<GameCard> _playerHand = [];
-List<GameCard> _computerHand = [];
-List<GameCard> _discardPile = [];
-bool _mustDiscard = false;
 
 // main class
 class GameScreen extends StatefulWidget {
@@ -34,72 +29,30 @@ class _GameScreenState extends State<GameScreen> {
 
   void _newGame() async {
     _gm.newGame();
-    _drawPile = _cf.prepareDeck();
+    _cf.prepareInitialDeck();
+    _cf.drawCards();
+
     _units = _uf.prepareUnits();
     _map = _mf.prepareMap(_units);
-
-    // draw 3 cards for american and german
-    _playerHand.add(_drawPile[0]);
-    _drawPile.remove(_drawPile[0]);
-    _playerHand.add(_drawPile[1]);
-    _drawPile.remove(_drawPile[1]);
-    _playerHand.add(_drawPile[2]);
-    _drawPile.remove(_drawPile[2]);
-    _playerHand.add(_drawPile[3]);
-    _drawPile.remove(_drawPile[3]);
-    _playerHand.add(_drawPile[4]);
-    _drawPile.remove(_drawPile[4]);
-    _playerHand.add(_drawPile[5]);
-    _drawPile.remove(_drawPile[5]);
-  }
-
-  String _displayRound() {
-    return 'Round: ' + _gm.displayRound();
-  }
-
-  String _displayPhase() {
-    return 'Phase: ' + _gm.displayPhase();
   }
 
   void _discardCards() {
-    List<GameCard> toRemove = [];
-
-    for (GameCard c in _playerHand) {
-      if (_cf.isCardSelected(c.id)) {
-        _discardPile.add(c);
-        toRemove.add(c);
-      }
-    }
-
-    _playerHand.removeWhere((c) => toRemove.contains(c));
-
-    _cf.clearSelectedCards();
-
+    _cf.discardCards();
     setState(() {
       // redraw interface
     });
   }
 
   void _toggleSelectedCard(int id) {
-    setState(() {
-      _cf.toggleSelected(id);
-    });
-  }
-
-  Color _getUnitBorderColor(int i) {
-    if (_mf.selectedSquare == i) {
-      return Colors.yellow;
-    } else {
-      return const Color(0xff6b8e23);
+    bool multiselect = false;
+    if (_cf.playerHand().length > 3) {
+      multiselect = true;
     }
-  }
 
-  Color _getCardBorderColor(int id) {
-    if (_cf.isCardSelected(id)) {
-      return Colors.yellow;
-    } else {
-      return const Color(0xffd3d3d3);
-    }
+    _cf.toggleSelected(id, multiselect);
+
+    setState(() {});
+    _checkMove();
   }
 
   Widget _discardButton() {
@@ -122,25 +75,99 @@ class _GameScreenState extends State<GameScreen> {
               fontFamily: 'HeadlinerNo45', color: Colors.black, fontSize: 30.0),
         ),
         onPressed: () {
-          // next phase
+          _gm.advancePhase();
+          _cf.clearSelectedCards();
+          if (_gm.getPhase() == enumPhase.orders) {
+            _cf.drawCards();
+          }
+          setState(() {
+            // redraw interface
+          });
         });
   }
 
-  Widget _discardNotice() {
-    // they have too many cards, so need to discard some before proceeding
-    return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: const <Widget>[
-          Flexible(
-            child: Text('Select cards to remove. Max is 3 in your hand.'),
-          ),
-        ],
+  Widget _cardRow() {
+    // iterate through cards to display the ones in the player's hand ...
+    return Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
+      const SizedBox(
+        height: 68,
+        width: 5,
       ),
-    );
+      for (int i = 0; i < _cf.playerHand().length; i++)
+        GestureDetector(
+          onTap: () {
+            _toggleSelectedCard(_cf.playerHand()[i].id);
+          },
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _getCardBorderColor(_cf.playerHand()[i].id),
+              //border: Border.all(width: 1),
+            ),
+            height: 68,
+            width: 58,
+            child: Image.asset(_cf.playerHand()[i].graphic),
+          ),
+        ),
+    ]);
   }
 
-  Widget _drawUnitContainer(int i) {
+  void _setSelectedMapSquare(int pos) {
+    if (_mf.selectedSquare != pos) {
+      _uf.resetSelectedUnit();
+    }
+    _mf.selectedSquare = pos;
+
+    setState(() {});
+  }
+
+  Color _getUnitBorderColor(int mapSquare) {
+    if (_mf.selectedSquare == mapSquare) {
+      return Colors.yellow;
+    } else {
+      return const Color(0xff6b8e23);
+    }
+  }
+
+  Color _getUnitHighlightColor(Unit unit) {
+    if (_uf.getSelectedUnit() == unit) {
+      return Colors.yellow;
+    } else {
+      return const Color(0xffd3d3d3);
+    }
+  }
+
+  Color _getCardBorderColor(int cardID) {
+    if (_cf.isCardSelected(cardID)) {
+      return Colors.yellow;
+    } else {
+      return const Color(0xffd3d3d3);
+    }
+  }
+
+  Widget _displayPlayer(String img) {
+    return Container(
+        alignment: Alignment.center,
+        child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              const Text('Player:',
+                  style: TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 30)),
+              const Padding(padding: EdgeInsets.all(2.0)),
+              Align(alignment: Alignment.topCenter, child: Image.asset(img)),
+            ]));
+  }
+
+  Widget _displayText(String txt) {
+    return Container(
+        alignment: Alignment.center,
+        child: Center(
+            child: Text(txt,
+                style: const TextStyle(
+                    fontFamily: 'HeadlinerNo45', fontSize: 30))));
+  }
+
+  Widget _drawUnitContainer(int i, String img) {
     return Container(
         decoration: BoxDecoration(
           color: _getUnitBorderColor(i),
@@ -148,29 +175,30 @@ class _GameScreenState extends State<GameScreen> {
             width: 1,
           ),
         ),
-        child: Center(child: Image.asset(_map[i].terrain)));
+        child: Center(child: Image.asset(img)));
   }
 
-  Widget _cardRow() {
-    // iterate through cards to display the ones in the player's hand ...
-    return Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-      for (int i = 0; i < _playerHand.length; i++)
-        GestureDetector(
-          onTap: () {
-            _toggleSelectedCard(_playerHand[i].id);
-          },
-          child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _getCardBorderColor(_playerHand[i].id),
-              //border: Border.all(width: 1),
-            ),
-            height: 68,
-            width: 58,
-            child: Image.asset(_playerHand[i].graphic),
-          ),
+  Widget _phaseNotice(String txt) {
+    // they have too many cards, so need to discard some before proceeding
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        Flexible(
+          child: Text(txt),
         ),
-    ]);
+      ],
+    );
+  }
+
+  void _checkMove() {
+    // if they have a unit selected, and if
+  }
+
+  void _setSelectedUnit(Unit unit) {
+    _uf.setSelectedUnit(unit);
+    _checkMove();
+
+    setState(() {});
   }
 
   Widget _unitRow() {
@@ -178,26 +206,28 @@ class _GameScreenState extends State<GameScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
-        Container(
+        const SizedBox(
           height: 45,
           width: 10,
         ),
         if (_mf.selectedSquare != -1)
           for (var u in _map[_mf.selectedSquare].units)
-            Container(
-              child: Image.asset(_uf.returnUnitImage(u)),
-            ),
+            GestureDetector(
+                onTap: () {
+                  _setSelectedUnit(u);
+                },
+                child: Container(
+                    decoration: BoxDecoration(
+                      color: _getUnitHighlightColor(u),
+                    ),
+                    height: 50,
+                    width: 50,
+                    child: Image.asset(_uf.returnUnitImage(u)))),
       ],
     );
   }
 
-  void _setSelectedMapSquare(int pos) {
-    setState(() {
-      _mf.selectedSquare = pos;
-      _unitRow;
-    });
-  }
-
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffd3d3d3),
@@ -207,42 +237,17 @@ class _GameScreenState extends State<GameScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              // const Padding(
-              //     padding: EdgeInsets.all(2.0),
-              //     child: Center(
-              //       child: Text(
-              //         "Fix Bayonets!",
-              //         style: TextStyle(
-              //             fontFamily: "HeaderlinerNo45",
-              //             fontSize: 40,
-              //             fontWeight: FontWeight.bold),
-              //       ),
-              //     )),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
               Padding(
                 padding: const EdgeInsets.all(5.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
-                    Container(
-                      alignment: Alignment.center,
-                      child: Center(
-                        child: Text(_displayRound(),
-                            style: const TextStyle(
-                                fontFamily: 'HeadlinerNo45',
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 30)),
-                      ),
-                    ),
-                    Container(
-                      alignment: Alignment.center,
-                      child: Center(
-                        child: Text(_displayPhase(),
-                            style: const TextStyle(
-                                fontFamily: 'HeadlinerNo45',
-                                //fontWeight: FontWeight.bold,
-                                fontSize: 30)),
-                      ),
-                    ),
+                    _displayPlayer(_gm.displayPlayer()),
+                    _displayText('Round: ' + _gm.displayRound()),
+                    _displayText('Phase: ' + _gm.displayPhase()),
                   ],
                 ),
               ),
@@ -261,9 +266,8 @@ class _GameScreenState extends State<GameScreen> {
                       return GestureDetector(
                         onTap: () {
                           _setSelectedMapSquare(index);
-                          //print("map square $index clicked");
                         },
-                        child: _drawUnitContainer(index),
+                        child: _drawUnitContainer(index, _map[index].terrain),
                       );
                     }),
                   ),
@@ -278,21 +282,27 @@ class _GameScreenState extends State<GameScreen> {
                 child: Align(
                     alignment: Alignment.topLeft,
                     child: Text(
-                      "Your hand:",
+                      "Cards in your hand:",
                       style: TextStyle(
-                        fontFamily: "HeaderlinerNo45",
-                        fontSize: 15,
-                      ),
+                          fontFamily: "HeaderlinerNo45",
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline),
                     )),
               ),
               _cardRow(),
               const Padding(padding: EdgeInsets.all(5.0)),
-              if (_playerHand.length > 3) _discardNotice(),
+              if (_gm.getPhase() == enumPhase.orders)
+                _phaseNotice(ordersNotice)
+              else if (_gm.getPhase() == enumPhase.move)
+                _phaseNotice(moveNotice)
+              else
+                _phaseNotice(attackNotice),
               const Padding(padding: EdgeInsets.all(10.0)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  if (_playerHand.length > 3)
+                  if (_cf.playerHand().length > 3)
                     _discardButton()
                   else
                     _nextButton(),

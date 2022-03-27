@@ -3,6 +3,8 @@ const appSplashGraphic = "images/fix_bayonets_splash.jpg";
 const appVersion = "Version 1.0, May 2022";
 const sdsLogo = "images/sds_logo.png";
 
+const gfxAmericanFlag = "images/american_flag.png";
+const gfxGermanFlag = "images/german_flag.png";
 const gfxForest = "images/forest42x42.png"; // 0xff6b8e23
 const gfxOpen = "images/open42x42.png"; // 0xff7c9c3b
 const gfxThick = "images/thick42x42.png"; // 0xff536e1c
@@ -39,7 +41,14 @@ const gfxNegateMove = "images/negate_move.png";
 const gfxNegateAttack = "images/negate_attack.png";
 const gfxNegateMoveGerman = "images/negate_move_german.png";
 const gfxNegateAttackAmerican = "images/negate_attack_american.png";
+const ordersNotice =
+    'Orders Phase: Review the cards in your hand. If you have more than 3, you must discard some.';
+const moveNotice =
+    'Move Phase: Choose a Move (green) card, then a unit, and a valid square.';
+const attackNotice =
+    'Attack Phase: Choose an Attack (red) card, then a unit to attack with, and a target.';
 
+enum enumCurrentPlayer { american, german }
 enum enumUnitType { officer, rifleman, heavyweapon, runner, sniper, all }
 enum enumUnitOwner { american, german }
 enum enumUnitMoveAllowed { one, two }

@@ -1,6 +1,6 @@
 import 'dart:math';
 import '../const.dart';
-import 'unit.dart';
+import 'unit_model.dart';
 
 class MapSquare {
   Set<Unit> units = {};
