@@ -21,9 +21,9 @@ class Unit {
 class UnitFactory {
   List<Unit> _units = [];
   final Unit _dummyUnit = Unit(
-      99, enumUnitType.all, enumUnitOwner.american, enumUnitMoveAllowed.one);
+      99, enumUnitType.all, enumUnitOwner.neither, enumUnitMoveAllowed.one);
   Unit _selectedUnit = Unit(
-      99, enumUnitType.all, enumUnitOwner.american, enumUnitMoveAllowed.one);
+      99, enumUnitType.all, enumUnitOwner.neither, enumUnitMoveAllowed.one);
 
   void setSelectedUnit(Unit unit) {
     _selectedUnit = unit;

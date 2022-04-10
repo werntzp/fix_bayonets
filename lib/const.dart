@@ -3,6 +3,9 @@ const appSplashGraphic = "images/fix_bayonets_splash.jpg";
 const appVersion = "Version 1.0, May 2022";
 const sdsLogo = "images/sds_logo.png";
 
+const gfxMoveGreen = "images/green43x43.png";
+const gfxMoveRed = "images/red43x43.png";
+const gfxStartSquare = "images/grey43x43.png";
 const gfxAmericanFlag = "images/american_flag.png";
 const gfxGermanFlag = "images/german_flag.png";
 const gfxForest = "images/forest42x42.png"; // 0xff6b8e23
@@ -50,7 +53,7 @@ const attackNotice =
 
 enum enumCurrentPlayer { american, german }
 enum enumUnitType { officer, rifleman, heavyweapon, runner, sniper, all }
-enum enumUnitOwner { american, german }
+enum enumUnitOwner { american, german, neither }
 enum enumUnitMoveAllowed { one, two }
 enum enumCardType { attack, move, terrain }
 enum enumCardLocation { americanhand, germanhand, draw, discard }

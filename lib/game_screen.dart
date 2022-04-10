@@ -11,6 +11,9 @@ UnitFactory _uf = UnitFactory();
 MapFactory _mf = MapFactory();
 List<Unit> _units = [];
 List<MapSquare> _map = [];
+bool _showMapSquaresForMove = false;
+bool _showMapSquaresForAttack = false;
+bool _ableToCancelAction = false;
 
 // main class
 class GameScreen extends StatefulWidget {
@@ -67,6 +70,18 @@ class _GameScreenState extends State<GameScreen> {
         });
   }
 
+  Widget _helpButton() {
+    return OutlinedButton(
+        child: const Text(
+          "Help",
+          style: TextStyle(
+              fontFamily: 'HeadlinerNo45', color: Colors.black, fontSize: 30.0),
+        ),
+        onPressed: () {
+          // TODO: bring up help screen
+        });
+  }
+
   Widget _nextButton() {
     return OutlinedButton(
         child: const Text(
@@ -86,6 +101,25 @@ class _GameScreenState extends State<GameScreen> {
         });
   }
 
+  Widget _cancelButton() {
+    return OutlinedButton(
+        child: const Text(
+          "Cancel",
+          style: TextStyle(
+              fontFamily: 'HeadlinerNo45', color: Colors.black, fontSize: 30.0),
+        ),
+        onPressed: () {
+          // cancel move or attack (depending on phase)
+          if (_gm.getPhase() == enumPhase.move) {
+            _cf.clearSelectedCards();
+            _uf.resetSelectedUnit();
+            _ableToCancelAction = false;
+            _showMapSquaresForMove = false;
+          }
+          setState(() {});
+        });
+  }
+
   Widget _cardRow() {
     // iterate through cards to display the ones in the player's hand ...
     return Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
@@ -96,7 +130,11 @@ class _GameScreenState extends State<GameScreen> {
       for (int i = 0; i < _cf.playerHand().length; i++)
         GestureDetector(
           onTap: () {
-            _toggleSelectedCard(_cf.playerHand()[i].id);
+            // only allow them to select in orders phase if player hand has more than 3
+            if (((_cf.playerHand().length > 3) &&
+                    (_gm.getPhase() == enumPhase.orders)) ||
+                (_gm.getPhase() != enumPhase.orders))
+              _toggleSelectedCard(_cf.playerHand()[i].id);
           },
           child: Container(
             alignment: Alignment.center,
@@ -138,9 +176,13 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Color _getCardBorderColor(int cardID) {
-    if (_cf.isCardSelected(cardID)) {
-      return Colors.yellow;
-    } else {
+    try {
+      if (_cf.isCardSelected(cardID)) {
+        return Colors.yellow;
+      } else {
+        return const Color(0xffd3d3d3);
+      }
+    } catch (e) {
       return const Color(0xffd3d3d3);
     }
   }
@@ -167,6 +209,40 @@ class _GameScreenState extends State<GameScreen> {
                     fontFamily: 'HeadlinerNo45', fontSize: 30))));
   }
 
+  String _getMoveSquareGraphic(int pos) {
+    String gfx = gfxMoveGreen;
+
+    // check distance between starting square and this one
+    int distance = _mf.getDistance(_mf.selectedSquare, pos);
+    if (distance > _cf.getSelectedCard().maxrange) {
+      gfx = gfxMoveRed;
+    } else if (distance < _cf.getSelectedCard().maxrange) {
+      // also make sure destination square doesn't contain enemy unit
+      try {
+        for (Unit u in _map[_mf.selectedSquare].units) {
+          if (u.owner == enumUnitOwner.german) {
+            gfx = gfxMoveRed;
+            break;
+          }
+        }
+      } catch (e) {
+        gfx = gfxMoveGreen;
+      }
+    }
+
+    return gfx;
+  }
+
+  Widget _drawMapSquaresForMove(int i, String img) {
+    return Stack(
+      children: <Widget>[
+        Image.asset(img),
+        if (_mf.selectedSquare != i)
+          Opacity(opacity: .60, child: Image.asset(_getMoveSquareGraphic(i)))
+      ],
+    );
+  }
+
   Widget _drawUnitContainer(int i, String img) {
     return Container(
         decoration: BoxDecoration(
@@ -191,13 +267,34 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _checkMove() {
-    // if they have a unit selected, and if
+    // if they have a unit selected, and if they have selected an appropriate move card, go!
+    Unit unit = _uf.getSelectedUnit();
+    if (unit.owner == enumUnitOwner.american) {
+      // Unit unit = _units.firstWhere((element) => element.id == selected.id);
+      try {
+        GameCard card = _cf.getSelectedCard();
+        // must be a move card, and unit must be able to move
+        if ((card.type == enumCardType.move) && (!unit.hasMoved)) {
+          // show valid move options
+          _showMapSquaresForMove = true;
+          // set flag to show cancel button
+          _ableToCancelAction = true;
+          setState(() {});
+        }
+      } catch (e) {
+        // do nothing, we're just done here for now
+        print('error: ' + e.toString());
+        return;
+      }
+    }
   }
 
   void _setSelectedUnit(Unit unit) {
-    _uf.setSelectedUnit(unit);
-    _checkMove();
-
+    // if not player unit, just bail
+    if (unit.owner == enumUnitOwner.american) {
+      _uf.setSelectedUnit(unit);
+      _checkMove();
+    }
     setState(() {});
   }
 
@@ -224,6 +321,58 @@ class _GameScreenState extends State<GameScreen> {
                     width: 50,
                     child: Image.asset(_uf.returnUnitImage(u)))),
       ],
+    );
+  }
+
+  Widget _whichGrid() {
+    if (_showMapSquaresForMove) {
+      return _gridViewMove();
+    } else if (_showMapSquaresForAttack) {
+      return _gridViewAttack();
+    } else {
+      return _gridViewMap();
+    }
+  }
+
+  Widget _gridViewAttack() {
+    return GridView.count(
+      crossAxisCount: 8,
+      children: List.generate(64, (index) {
+        return GestureDetector(
+          onTap: () {
+            // _setSelectedMapSquare(index);
+          },
+          // child: _drawMapSquaresForMove(index),
+        );
+      }),
+    );
+  }
+
+  Widget _gridViewMove() {
+    return GridView.count(
+      crossAxisCount: 8,
+      children: List.generate(64, (index) {
+        return GestureDetector(
+          onTap: () {
+            // _setSelectedMapSquare(index);
+          },
+          child: _drawMapSquaresForMove(index, _map[index].terrain),
+        );
+      }),
+    );
+  }
+
+  Widget _gridViewMap() {
+    return GridView.count(
+      crossAxisCount: 8,
+      children: List.generate(64, (index) {
+        return GestureDetector(
+          onTap: () {
+            _setSelectedMapSquare(index);
+          },
+          child: _drawUnitContainer(index, _map[index].terrain),
+        );
+      }),
     );
   }
 
@@ -260,17 +409,7 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   ),
                   height: 370.0,
-                  child: GridView.count(
-                    crossAxisCount: 8,
-                    children: List.generate(64, (index) {
-                      return GestureDetector(
-                        onTap: () {
-                          _setSelectedMapSquare(index);
-                        },
-                        child: _drawUnitContainer(index, _map[index].terrain),
-                      );
-                    }),
-                  ),
+                  child: _whichGrid(),
                 ),
               ),
               const Padding(
@@ -302,10 +441,13 @@ class _GameScreenState extends State<GameScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
+                  _helpButton(),
                   if (_cf.playerHand().length > 3)
                     _discardButton()
+                  else if (_ableToCancelAction)
+                    _cancelButton()
                   else
-                    _nextButton(),
+                    _nextButton()
                 ],
               )
             ],

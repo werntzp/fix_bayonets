@@ -13,6 +13,7 @@ class MapSquare {
 class MapFactory {
   var b = List<String>.filled(64, gfxForest);
   int selectedSquare = -1;
+  final _2darray = List.generate(8, (i) => List.filled(8, 0), growable: false);
 
   int _getRandomNumber(int min, int max) {
     return (min + Random().nextInt(max - min));
@@ -31,6 +32,33 @@ class MapFactory {
     }
 
     return t;
+  }
+
+  int getDistance(int start, int dest) {
+    // get row/col for start and dest
+    int startRow = 0;
+    int destRow = 0;
+    int startCol = 0;
+    int destCol = 0;
+
+    for (int row = 0; row < 8; row++) {
+      for (int col = 0; col < 8; col++) {
+        if (_2darray[row][col] == start) {
+          startRow = row;
+          startCol = col;
+        } else if (_2darray[row][col] == dest) {
+          destRow = row;
+          destCol = col;
+        }
+      }
+    }
+
+    int diffX = (startRow - destRow).abs();
+    int diffY = (startCol - destCol).abs();
+    int numSteps =
+        max(diffX, diffY); //max is returning the higher value of both
+
+    return numSteps;
   }
 
   int _getStartingMapSquare(board, min, max) {
@@ -64,6 +92,15 @@ class MapFactory {
       }
 
       _map.add(m);
+    }
+
+    // also build up a 2d array for distance checking later
+    int ctr = 0;
+    for (int row = 0; row < 8; row++) {
+      for (int col = 0; col < 8; col++) {
+        _2darray[row][col] = ctr;
+        ctr++;
+      }
     }
 
     // go through all the units and place them into map squares
