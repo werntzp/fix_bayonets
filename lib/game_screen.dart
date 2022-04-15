@@ -48,14 +48,27 @@ class _GameScreenState extends State<GameScreen> {
 
   void _toggleSelectedCard(int id) {
     bool multiselect = false;
+
+    // get the card
+    GameCard card = _cf.getCardById(id);
+
+    // if they have more than 3 cards, player is able to multi-select
     if (_cf.playerHand().length > 3) {
       multiselect = true;
     }
 
-    _cf.toggleSelected(id, multiselect);
+    // if they are trying to pick a german card during move or attack phase, just bail
+    if (card.player == enumPlayerUse.german) {
+      // must be during orders phase
+      if (_gm.getPhase() == enumPhase.orders) {
+        _cf.toggleSelected(id, multiselect);
+      }
+    } else {
+      _cf.toggleSelected(id, multiselect);
+      _checkMove();
+    }
 
     setState(() {});
-    _checkMove();
   }
 
   Widget _discardButton() {
@@ -92,6 +105,7 @@ class _GameScreenState extends State<GameScreen> {
         onPressed: () {
           _gm.advancePhase();
           _cf.clearSelectedCards();
+          _uf.resetSelectedUnit();
           if (_gm.getPhase() == enumPhase.orders) {
             _cf.drawCards();
           }
@@ -274,7 +288,9 @@ class _GameScreenState extends State<GameScreen> {
       try {
         GameCard card = _cf.getSelectedCard();
         // must be a move card, and unit must be able to move
-        if ((card.type == enumCardType.move) && (!unit.hasMoved)) {
+        if ((card.type == enumCardType.move) &&
+            (card.player != enumPlayerUse.german) &&
+            (!unit.hasMoved)) {
           // show valid move options
           _showMapSquaresForMove = true;
           // set flag to show cancel button
@@ -286,6 +302,50 @@ class _GameScreenState extends State<GameScreen> {
         print('error: ' + e.toString());
         return;
       }
+    }
+  }
+
+  bool _enemyUnitsInMapSquare(int pos) {
+    bool enemyUnits = false;
+
+    MapSquare mapSquare = _map[pos];
+    if (mapSquare.units.isNotEmpty) {
+      for (Unit u in mapSquare.units) {
+        if (u.owner == enumUnitOwner.german) {
+          enemyUnits = true;
+          break;
+        }
+      }
+    }
+
+    return enemyUnits;
+  }
+
+  void _tryMove(int pos) {
+    // if they got here, there's a valid selected move card and the unit can move
+    // check to see if square selected (a) if not the original selected square,
+    // (b) distance is valid, and (c) square doesn't contain an enemy unit
+    if ((pos != _mf.selectedSquare) &&
+        (_mf.getDistance(_mf.selectedSquare, pos) <=
+            _cf.getSelectedCard().maxrange) &&
+        (!_enemyUnitsInMapSquare(pos))) {
+      // move the unit to the spot
+      Unit unit = _uf.getSelectedUnit();
+      unit.hasMoved = true;
+      _map[_mf.selectedSquare]
+          .units
+          .removeWhere((element) => element.id == unit.id);
+      _map[pos].units.add(unit);
+
+      // discard the selected card
+      _cf.discardSelectedCard();
+
+      // no longer in active move
+      _showMapSquaresForMove = false;
+      _ableToCancelAction = false;
+      _uf.resetSelectedUnit();
+
+      setState(() {});
     }
   }
 
@@ -307,7 +367,7 @@ class _GameScreenState extends State<GameScreen> {
           height: 45,
           width: 10,
         ),
-        if (_mf.selectedSquare != -1)
+        if (_mf.selectedSquare != noCardSelected)
           for (var u in _map[_mf.selectedSquare].units)
             GestureDetector(
                 onTap: () {
@@ -354,9 +414,10 @@ class _GameScreenState extends State<GameScreen> {
       children: List.generate(64, (index) {
         return GestureDetector(
           onTap: () {
-            // _setSelectedMapSquare(index);
+            _tryMove(index);
           },
-          child: _drawMapSquaresForMove(index, _map[index].terrain),
+          child: _drawMapSquaresForMove(
+              index, _mf.getMapSquareGraphic(_uf, _map[index])),
         );
       }),
     );
@@ -370,7 +431,8 @@ class _GameScreenState extends State<GameScreen> {
           onTap: () {
             _setSelectedMapSquare(index);
           },
-          child: _drawUnitContainer(index, _map[index].terrain),
+          child: _drawUnitContainer(
+              index, _mf.getMapSquareGraphic(_uf, _map[index])),
         );
       }),
     );
@@ -415,7 +477,14 @@ class _GameScreenState extends State<GameScreen> {
               const Padding(
                 padding: EdgeInsets.all(1.0),
               ),
-              _unitRow(),
+              if ((_mf.selectedSquare != noCardSelected) &&
+                  (_map[_mf.selectedSquare].units.length > 1))
+                _unitRow()
+              else
+                const SizedBox(
+                  height: 45,
+                  width: 10,
+                ),
               const Padding(
                 padding: EdgeInsets.all(10.0),
                 child: Align(

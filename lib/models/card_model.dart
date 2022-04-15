@@ -38,8 +38,14 @@ class CardFactory {
     clearSelectedCards();
   }
 
-  GameCard _getCardById(int id) {
+  GameCard getCardById(int id) {
     return _masterDeck.firstWhere((element) => element.id == id);
+  }
+
+  void discardSelectedCard() {
+    _discardPile.add(_selected[0]);
+    _playerHand.removeWhere((element) => element.id == _selected[0].id);
+    clearSelectedCards();
   }
 
   GameCard getSelectedCard() {

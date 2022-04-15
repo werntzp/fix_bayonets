@@ -37,7 +37,7 @@ class UnitFactory {
     _selectedUnit = _dummyUnit;
   }
 
-  String returnUnitImage(u) {
+  String returnUnitImage(Unit u) {
     String s = gfxUsRifle;
 
     // return based on image type

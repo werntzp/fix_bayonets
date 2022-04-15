@@ -3,6 +3,7 @@ const appSplashGraphic = "images/fix_bayonets_splash.jpg";
 const appVersion = "Version 1.0, May 2022";
 const sdsLogo = "images/sds_logo.png";
 
+const noCardSelected = -1;
 const gfxMoveGreen = "images/green43x43.png";
 const gfxMoveRed = "images/red43x43.png";
 const gfxStartSquare = "images/grey43x43.png";

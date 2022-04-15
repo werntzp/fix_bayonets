@@ -19,6 +19,29 @@ class MapFactory {
     return (min + Random().nextInt(max - min));
   }
 
+  String getMapSquareGraphic(UnitFactory unitFactory, MapSquare mapSquare) {
+    String graphic = gfxForest;
+    // decide on which terrain to return
+    if (mapSquare.units.isEmpty) {
+      // no units, retain underlying terrain
+      graphic = mapSquare.terrain;
+    } else {
+      if (mapSquare.units.length == 1) {
+        // only one unit, so just return that unit image string
+        graphic = unitFactory.returnUnitImage(mapSquare.units.first);
+      } else {
+        // stacked units, so decide whether to show US or German icon
+        if (mapSquare.units.first.owner == enumUnitOwner.american) {
+          graphic = gfxUsStacked;
+        } else {
+          graphic = gfxGermanStacked;
+        }
+      }
+    }
+
+    return graphic;
+  }
+
   String _randomizeTerrain() {
     String t = gfxForest;
     int i = Random().nextInt(10);
@@ -83,13 +106,13 @@ class MapFactory {
     // add 64 map squares to list
     for (int i = 0; i < 64; i++) {
       MapSquare m = MapSquare();
-      if (i < 8) {
-        m.terrain = gfxUsStacked;
-      } else if (i > 55) {
-        m.terrain = gfxGermanStacked;
-      } else {
-        m.terrain = _randomizeTerrain();
-      }
+      //if (i < 8) {
+      //  m.terrain = gfxUsStacked;
+      //} else if (i > 55) {
+      //  m.terrain = gfxGermanStacked;
+      //} else {
+      m.terrain = _randomizeTerrain();
+      //}
 
       _map.add(m);
     }
@@ -107,7 +130,6 @@ class MapFactory {
     int x = 0;
     int min = 0;
     int max = 8;
-    bool addedUnit = false;
 
     for (Unit u in units) {
       // top row for american units, bottom for german to start
