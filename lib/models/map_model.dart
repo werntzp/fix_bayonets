@@ -57,31 +57,118 @@ class MapFactory {
     return t;
   }
 
-  int getDistance(int start, int dest) {
-    // get row/col for start and dest
-    int startRow = 0;
-    int destRow = 0;
-    int startCol = 0;
-    int destCol = 0;
+  int _checkRowCol(int destRow, int destCol) {
+    if (((destRow >= 0) && (destRow <= 7)) &&
+        ((destCol >= 0) && (destCol <= 7))) {
+      return constValidSpace;
+    } else {
+      return constInvalidSpace;
+    }
+  }
 
+  List<int> getValidMoves(int start, int minDistance, int maxDistance) {
+    var _moves = List<int>.filled(64, constInvalidSpace);
+
+    int startRow = 0;
+    int startCol = 0;
+    int diffRow = 0;
+    int diffCol = 0;
+    int numSteps = 0;
+    int destRow = 0;
+    int destCol = 0;
+    int mapPos = 0;
+
+    // find where we're starting from
     for (int row = 0; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
         if (_2darray[row][col] == start) {
           startRow = row;
           startCol = col;
-        } else if (_2darray[row][col] == dest) {
-          destRow = row;
-          destCol = col;
+          break;
         }
       }
     }
 
-    int diffX = (startRow - destRow).abs();
-    int diffY = (startCol - destCol).abs();
-    int numSteps =
-        max(diffX, diffY); //max is returning the higher value of both
+    // if regular move type, need to iterate over the array and check the distance
+    if (minDistance != constZigZag) {
+      for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+          // make sure we're not in the same spot
+          if ((row != startRow) || (col != startCol)) {
+            diffRow = (startRow - row).abs();
+            diffCol = (startCol - col).abs();
+            numSteps = max(
+                diffRow, diffCol); //max is returning the higher value of both
+            if ((numSteps <= maxDistance) && (numSteps >= minDistance)) {
+              // find the actual map square at row,col
+              mapPos = _2darray[row][col];
+              _moves[mapPos] = constValidSpace;
+            }
+          }
+        }
+      }
+    } else {
+      // zig-zag move type so easier to figure out valid squares
+      // 8 options to try
 
-    return numSteps;
+      // position #1
+      destRow = startRow - 2;
+      destCol = startCol - 1;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
+
+      // position #2
+      destRow = startRow - 1;
+      destCol = startCol - 2;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
+
+      // position #3
+      destRow = startRow + 1;
+      destCol = startCol - 2;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
+
+      // position #4
+      destRow = startRow + 2;
+      destCol = startCol - 1;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
+
+      // position #5
+      destRow = startRow - 2;
+      destCol = startCol + 1;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
+    }
+
+    // position #6
+    destRow = startRow - 1;
+    destCol = startCol + 2;
+    if (_checkRowCol(destRow, destCol) == constValidSpace) {
+      _moves[_2darray[destRow][destCol]] = constValidSpace;
+    }
+
+    // position #7
+    destRow = startRow + 1;
+    destCol = startCol + 2;
+    if (_checkRowCol(destRow, destCol) == constValidSpace) {
+      _moves[_2darray[destRow][destCol]] = constValidSpace;
+    }
+
+    // position #8
+    destRow = startRow + 2;
+    destCol = startCol + 1;
+    if (_checkRowCol(destRow, destCol) == constValidSpace) {
+      _moves[_2darray[destRow][destCol]] = constValidSpace;
+    }
+
+    return _moves;
   }
 
   int _getStartingMapSquare(board, min, max) {

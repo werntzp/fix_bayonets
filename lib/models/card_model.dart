@@ -104,7 +104,7 @@ class CardFactory {
   }
 
   void prepareInitialDeck() {
-    int id = -1;
+    int id = constNoCardSelected;
 
     // bayonet x3
     for (int i = 0; i < 3; i++) {
@@ -155,8 +155,8 @@ class CardFactory {
           id,
           enumCardName.grenade,
           enumCardType.attack,
-          -1,
-          -1,
+          constZigZag,
+          constZigZag,
           enumPlayerUse.both,
           enumCardNegate.neither,
           enumUnitType.all,
@@ -236,7 +236,7 @@ class CardFactory {
           id,
           enumCardName.march,
           enumCardType.move,
-          2,
+          1,
           2,
           enumPlayerUse.both,
           enumCardNegate.neither,
@@ -249,7 +249,7 @@ class CardFactory {
           id,
           enumCardName.doubletime,
           enumCardType.move,
-          3,
+          1,
           3,
           enumPlayerUse.both,
           enumCardNegate.neither,
@@ -262,8 +262,8 @@ class CardFactory {
           id,
           enumCardName.zigzag,
           enumCardType.move,
-          -1,
-          -1,
+          constZigZag,
+          constZigZag,
           enumPlayerUse.both,
           enumCardNegate.neither,
           enumUnitType.all,
@@ -276,7 +276,7 @@ class CardFactory {
           id,
           enumCardName.run,
           enumCardType.move,
-          4,
+          1,
           4,
           enumPlayerUse.both,
           enumCardNegate.neither,
@@ -289,7 +289,7 @@ class CardFactory {
           id,
           enumCardName.charge,
           enumCardType.move,
-          5,
+          1,
           5,
           enumPlayerUse.both,
           enumCardNegate.neither,
@@ -303,7 +303,7 @@ class CardFactory {
           id,
           enumCardName.advance,
           enumCardType.move,
-          2,
+          1,
           2,
           enumPlayerUse.german,
           enumCardNegate.neither,
@@ -317,7 +317,7 @@ class CardFactory {
           id,
           enumCardName.counterattack,
           enumCardType.move,
-          3,
+          1,
           3,
           enumPlayerUse.american,
           enumCardNegate.neither,

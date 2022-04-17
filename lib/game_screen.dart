@@ -14,6 +14,7 @@ List<MapSquare> _map = [];
 bool _showMapSquaresForMove = false;
 bool _showMapSquaresForAttack = false;
 bool _ableToCancelAction = false;
+List<int> _moveOptions = List<int>.filled(64, constInvalidSpace);
 
 // main class
 class GameScreen extends StatefulWidget {
@@ -165,10 +166,18 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _setSelectedMapSquare(int pos) {
+    // if picking a different square, clear any selected units
     if (_mf.selectedSquare != pos) {
       _uf.resetSelectedUnit();
     }
+
+    // set the new selected square
     _mf.selectedSquare = pos;
+
+    // if there's a single unit in the square, go ahead and select it
+    if ((_map[pos].units.isNotEmpty) && (_map[pos].units.length == 1)) {
+      _setSelectedUnit(_map[pos].units.first);
+    }
 
     setState(() {});
   }
@@ -224,27 +233,15 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   String _getMoveSquareGraphic(int pos) {
-    String gfx = gfxMoveGreen;
+    String graphic = gfxMoveRed;
 
-    // check distance between starting square and this one
-    int distance = _mf.getDistance(_mf.selectedSquare, pos);
-    if (distance > _cf.getSelectedCard().maxrange) {
-      gfx = gfxMoveRed;
-    } else if (distance < _cf.getSelectedCard().maxrange) {
-      // also make sure destination square doesn't contain enemy unit
-      try {
-        for (Unit u in _map[_mf.selectedSquare].units) {
-          if (u.owner == enumUnitOwner.german) {
-            gfx = gfxMoveRed;
-            break;
-          }
-        }
-      } catch (e) {
-        gfx = gfxMoveGreen;
-      }
+    // green - if move is in range and no enemy unit in the target spot
+    if ((_moveOptions[pos] == constValidSpace) &&
+        (!_enemyUnitsInMapSquare(pos))) {
+      graphic = gfxMoveGreen;
     }
 
-    return gfx;
+    return graphic;
   }
 
   Widget _drawMapSquaresForMove(int i, String img) {
@@ -295,6 +292,9 @@ class _GameScreenState extends State<GameScreen> {
           _showMapSquaresForMove = true;
           // set flag to show cancel button
           _ableToCancelAction = true;
+          // go get the array of valid move spaces (based on the unit selected)
+          _moveOptions = _mf.getValidMoves(
+              _mf.selectedSquare, card.minrange, card.maxrange);
           setState(() {});
         }
       } catch (e) {
@@ -324,10 +324,9 @@ class _GameScreenState extends State<GameScreen> {
   void _tryMove(int pos) {
     // if they got here, there's a valid selected move card and the unit can move
     // check to see if square selected (a) if not the original selected square,
-    // (b) distance is valid, and (c) square doesn't contain an enemy unit
+    // (b) spot they chose is valid, and (c) square doesn't contain an enemy unit
     if ((pos != _mf.selectedSquare) &&
-        (_mf.getDistance(_mf.selectedSquare, pos) <=
-            _cf.getSelectedCard().maxrange) &&
+        (_moveOptions[pos] == constValidSpace) &&
         (!_enemyUnitsInMapSquare(pos))) {
       // move the unit to the spot
       Unit unit = _uf.getSelectedUnit();
@@ -367,7 +366,7 @@ class _GameScreenState extends State<GameScreen> {
           height: 45,
           width: 10,
         ),
-        if (_mf.selectedSquare != noCardSelected)
+        if (_mf.selectedSquare != constNoCardSelected)
           for (var u in _map[_mf.selectedSquare].units)
             GestureDetector(
                 onTap: () {
@@ -477,7 +476,7 @@ class _GameScreenState extends State<GameScreen> {
               const Padding(
                 padding: EdgeInsets.all(1.0),
               ),
-              if ((_mf.selectedSquare != noCardSelected) &&
+              if ((_mf.selectedSquare != constNoCardSelected) &&
                   (_map[_mf.selectedSquare].units.length > 1))
                 _unitRow()
               else
