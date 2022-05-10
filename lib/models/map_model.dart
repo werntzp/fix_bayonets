@@ -145,27 +145,27 @@ class MapFactory {
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
         _moves[_2darray[destRow][destCol]] = constValidSpace;
       }
-    }
 
-    // position #6
-    destRow = startRow - 1;
-    destCol = startCol + 2;
-    if (_checkRowCol(destRow, destCol) == constValidSpace) {
-      _moves[_2darray[destRow][destCol]] = constValidSpace;
-    }
+      // position #6
+      destRow = startRow - 1;
+      destCol = startCol + 2;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
 
-    // position #7
-    destRow = startRow + 1;
-    destCol = startCol + 2;
-    if (_checkRowCol(destRow, destCol) == constValidSpace) {
-      _moves[_2darray[destRow][destCol]] = constValidSpace;
-    }
+      // position #7
+      destRow = startRow + 1;
+      destCol = startCol + 2;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
 
-    // position #8
-    destRow = startRow + 2;
-    destCol = startCol + 1;
-    if (_checkRowCol(destRow, destCol) == constValidSpace) {
-      _moves[_2darray[destRow][destCol]] = constValidSpace;
+      // position #8
+      destRow = startRow + 2;
+      destCol = startCol + 1;
+      if (_checkRowCol(destRow, destCol) == constValidSpace) {
+        _moves[_2darray[destRow][destCol]] = constValidSpace;
+      }
     }
 
     return _moves;

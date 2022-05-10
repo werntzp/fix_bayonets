@@ -4,6 +4,7 @@ import 'models/unit_model.dart';
 import 'models/game_model.dart';
 import 'models/card_model.dart';
 import 'models/map_model.dart';
+import 'dart:async';
 
 GameModel _gm = GameModel();
 CardFactory _cf = CardFactory();
@@ -45,6 +46,17 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       // redraw interface
     });
+  }
+
+  void _resetUnitFlags() {
+    // for any units on the map, reset their move/attack flags
+    for (MapSquare ms in _map) {
+      for (Unit u in ms.units) {
+        u.hasAttacked = false;
+        u.hasMoved = false;
+        u.numTimesMoved = 0;
+      }
+    }
   }
 
   void _toggleSelectedCard(int id) {
@@ -96,6 +108,23 @@ class _GameScreenState extends State<GameScreen> {
         });
   }
 
+  void _showGermanTurnDialog() {
+    showDialog(
+        context: context,
+        builder: (BuildContext builderContext) {
+          Timer _timer = Timer(const Duration(seconds: 5), () {
+            Navigator.of(context).pop();
+          });
+
+          return const AlertDialog(
+            backgroundColor: Color(0xffd3d3d3),
+            title: Text('German planning move'),
+            content: SingleChildScrollView(
+                child: LinearProgressIndicator(value: null)),
+          );
+        });
+  }
+
   Widget _nextButton() {
     return OutlinedButton(
         child: const Text(
@@ -104,11 +133,23 @@ class _GameScreenState extends State<GameScreen> {
               fontFamily: 'HeadlinerNo45', color: Colors.black, fontSize: 30.0),
         ),
         onPressed: () {
-          _gm.advancePhase();
+          _gm.incrementPhase();
           _cf.clearSelectedCards();
           _uf.resetSelectedUnit();
+          // if it is an orders phase (regardless of player), reset all the move/attack flags
           if (_gm.getPhase() == enumPhase.orders) {
+            _resetUnitFlags();
+          }
+          // if now the german turn, do different stuff
+          if (_gm.currentPlayer == enumCurrentPlayer.german) {
+            _showGermanTurnDialog();
+            // TODO: German turn stuff here
+            _gm.jump();
             _cf.drawCards();
+          } else {
+            if (_gm.getPhase() == enumPhase.orders) {
+              _cf.drawCards();
+            }
           }
           setState(() {
             // redraw interface
@@ -331,6 +372,7 @@ class _GameScreenState extends State<GameScreen> {
       // move the unit to the spot
       Unit unit = _uf.getSelectedUnit();
       unit.hasMoved = true;
+      unit.numTimesMoved++;
       _map[_mf.selectedSquare]
           .units
           .removeWhere((element) => element.id == unit.id);
@@ -349,8 +391,9 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _setSelectedUnit(Unit unit) {
-    // if not player unit, just bail
-    if (unit.owner == enumUnitOwner.american) {
+    // if not player unit and not order phase, just bail
+    if ((unit.owner == enumUnitOwner.american) &&
+        (_gm.getPhase() != enumPhase.orders)) {
       _uf.setSelectedUnit(unit);
       _checkMove();
     }

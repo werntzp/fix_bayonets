@@ -9,10 +9,12 @@ class Unit {
   bool hasMoved = false;
   bool hasAttacked = false;
   bool isAlive = true;
+  int numTimesMoved = 0;
 
   void reset() {
     hasAttacked = false;
     hasMoved = false;
+    numTimesMoved = 0;
   }
 
   Unit(this.id, this.type, this.owner, this.move);

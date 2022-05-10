@@ -5,34 +5,48 @@ enum enumPhase { orders, move, fight }
 class GameModel {
   int _currentRound = 1;
   enumPhase _currentPhase = enumPhase.orders;
-  enumCurrentPlayer _currentPlayer = enumCurrentPlayer.american;
+  enumCurrentPlayer currentPlayer = enumCurrentPlayer.american;
+  bool _bottomOfRound = true;
 
   GameModel();
 
-  void advancePhase() {
+  void incrementPhase() {
     if (_currentPhase == enumPhase.orders) {
       _currentPhase = enumPhase.move;
     } else if (_currentPhase == enumPhase.move) {
       _currentPhase = enumPhase.fight;
     } else {
       _currentPhase = enumPhase.orders;
-      _currentRound++;
-      if (_currentPlayer == enumCurrentPlayer.american) {
-        _currentPlayer = enumCurrentPlayer.german;
+      // if we're in the bottom of the round (american), set flag to false,
+      // otherwise, set back to bottom and then switch player
+      if (_bottomOfRound) {
+        _bottomOfRound = false;
+        currentPlayer = enumCurrentPlayer.german;
       } else {
-        _currentPlayer = enumCurrentPlayer.american;
+        _bottomOfRound = true;
+        currentPlayer = enumCurrentPlayer.american;
+        _currentRound++;
       }
     }
+  }
+
+  void jump() {
+    _currentRound++;
+    _bottomOfRound = true;
+    _currentPhase = enumPhase.orders;
+    currentPlayer = enumCurrentPlayer.american;
   }
 
   void newGame() {
     _currentRound = 1;
     _currentPhase = enumPhase.orders;
-    _currentPlayer = enumCurrentPlayer.american;
+    currentPlayer = enumCurrentPlayer.american;
+    _bottomOfRound = true;
   }
 
   void incrementRound() {
     _currentRound++;
+    _bottomOfRound = true;
   }
 
   enumPhase getPhase() {
@@ -43,26 +57,8 @@ class GameModel {
     return _currentRound;
   }
 
-  void swtichPlayer() {
-    if (_currentPlayer == enumCurrentPlayer.american) {
-      _currentPlayer = enumCurrentPlayer.german;
-    } else {
-      _currentPlayer = enumCurrentPlayer.american;
-    }
-  }
-
-  void incrementPhase() {
-    if (_currentPhase == enumPhase.orders) {
-      _currentPhase = enumPhase.move;
-    } else if (_currentPhase == enumPhase.move) {
-      _currentPhase = enumPhase.fight;
-    } else {
-      _currentPhase = enumPhase.orders;
-    }
-  }
-
   String displayPlayer() {
-    if (_currentPlayer == enumCurrentPlayer.american) {
+    if (currentPlayer == enumCurrentPlayer.american) {
       return gfxAmericanFlag;
     } else {
       return gfxGermanFlag;
