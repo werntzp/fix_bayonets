@@ -12,15 +12,17 @@ class MapSquare {
 
 class MapFactory {
   var b = List<String>.filled(64, gfxForest);
-  int selectedSquare = -1;
-  final _2darray = List.generate(8, (i) => List.filled(8, 0), growable: false);
+  final _distanceArray =
+      List.generate(8, (i) => List.filled(8, 0), growable: false);
 
   int _getRandomNumber(int min, int max) {
     return (min + Random().nextInt(max - min));
   }
 
-  String getMapSquareGraphic(UnitFactory unitFactory, MapSquare mapSquare) {
+  String getMapSquareGraphic(MapSquare mapSquare) {
     String graphic = gfxForest;
+    UnitFactory unitFactory = UnitFactory();
+
     // decide on which terrain to return
     if (mapSquare.units.isEmpty) {
       // no units, retain underlying terrain
@@ -28,7 +30,7 @@ class MapFactory {
     } else {
       if (mapSquare.units.length == 1) {
         // only one unit, so just return that unit image string
-        graphic = unitFactory.returnUnitImage(mapSquare.units.first);
+        graphic = unitFactory.getUnitImage(mapSquare.units.first);
       } else {
         // stacked units, so decide whether to show US or German icon
         if (mapSquare.units.first.owner == enumUnitOwner.american) {
@@ -81,7 +83,7 @@ class MapFactory {
     // find where we're starting from
     for (int row = 0; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
-        if (_2darray[row][col] == start) {
+        if (_distanceArray[row][col] == start) {
           startRow = row;
           startCol = col;
           break;
@@ -101,7 +103,7 @@ class MapFactory {
                 diffRow, diffCol); //max is returning the higher value of both
             if ((numSteps <= maxDistance) && (numSteps >= minDistance)) {
               // find the actual map square at row,col
-              mapPos = _2darray[row][col];
+              mapPos = _distanceArray[row][col];
               _moves[mapPos] = constValidSpace;
             }
           }
@@ -115,56 +117,56 @@ class MapFactory {
       destRow = startRow - 2;
       destCol = startCol - 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #2
       destRow = startRow - 1;
       destCol = startCol - 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #3
       destRow = startRow + 1;
       destCol = startCol - 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #4
       destRow = startRow + 2;
       destCol = startCol - 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #5
       destRow = startRow - 2;
       destCol = startCol + 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #6
       destRow = startRow - 1;
       destCol = startCol + 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #7
       destRow = startRow + 1;
       destCol = startCol + 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #8
       destRow = startRow + 2;
       destCol = startCol + 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_2darray[destRow][destCol]] = constValidSpace;
+        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
     }
 
@@ -193,14 +195,7 @@ class MapFactory {
     // add 64 map squares to list
     for (int i = 0; i < 64; i++) {
       MapSquare m = MapSquare();
-      //if (i < 8) {
-      //  m.terrain = gfxUsStacked;
-      //} else if (i > 55) {
-      //  m.terrain = gfxGermanStacked;
-      //} else {
       m.terrain = _randomizeTerrain();
-      //}
-
       _map.add(m);
     }
 
@@ -208,7 +203,7 @@ class MapFactory {
     int ctr = 0;
     for (int row = 0; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
-        _2darray[row][col] = ctr;
+        _distanceArray[row][col] = ctr;
         ctr++;
       }
     }

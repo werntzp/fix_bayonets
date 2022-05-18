@@ -1,9 +1,11 @@
+import 'dart:math';
+import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:flutter/material.dart';
-import 'const.dart';
-import 'models/unit_model.dart';
-import 'models/game_model.dart';
-import 'models/card_model.dart';
-import 'models/map_model.dart';
+import '../const.dart';
+import '../models/unit_model.dart';
+import '../models/game_model.dart';
+import '../models/card_model.dart';
+import '../models/map_model.dart';
 import 'dart:async';
 
 GameModel _gm = GameModel();
@@ -16,6 +18,7 @@ bool _showMapSquaresForMove = false;
 bool _showMapSquaresForAttack = false;
 bool _ableToCancelAction = false;
 List<int> _moveOptions = List<int>.filled(64, constInvalidSpace);
+List<int> _attackOptions = List<int>.filled(64, constInvalidSpace);
 
 // main class
 class GameScreen extends StatefulWidget {
@@ -36,16 +39,13 @@ class _GameScreenState extends State<GameScreen> {
     _gm.newGame();
     _cf.prepareInitialDeck();
     _cf.drawCards();
-
     _units = _uf.prepareUnits();
     _map = _mf.prepareMap(_units);
   }
 
   void _discardCards() {
     _cf.discardCards();
-    setState(() {
-      // redraw interface
-    });
+    setState(() {});
   }
 
   void _resetUnitFlags() {
@@ -57,6 +57,39 @@ class _GameScreenState extends State<GameScreen> {
         u.numTimesMoved = 0;
       }
     }
+  }
+
+  Unit _getSelectedUnit() {
+    for (MapSquare mapSquare in _map) {
+      if (mapSquare.units.isNotEmpty) {
+        for (Unit unit in mapSquare.units) {
+          if (unit.isSelected) {
+            return unit;
+          }
+        }
+      }
+    }
+    // if we got here, no map square is selected so throw an error to be handled
+    throw Exception('No unit selected');
+  }
+
+  int _getMapSquarePosition(MapSquare mapSquare) {
+    for (int i = 0; i < _map.length; i++) {
+      if (_map[i] == mapSquare) {
+        return i;
+      }
+    }
+    throw Exception('No map square found');
+  }
+
+  MapSquare _getSelectedSquare() {
+    for (MapSquare mapSquare in _map) {
+      if (mapSquare.isSelected) {
+        return mapSquare;
+      }
+    }
+    // if we got here, no map square is selected so throw an error to be handled
+    throw Exception('No map square selected');
   }
 
   void _toggleSelectedCard(int id) {
@@ -73,12 +106,17 @@ class _GameScreenState extends State<GameScreen> {
     // if they are trying to pick a german card during move or attack phase, just bail
     if (card.player == enumPlayerUse.german) {
       // must be during orders phase
-      if (_gm.getPhase() == enumPhase.orders) {
+      if (_gm.phase == enumPhase.orders) {
         _cf.toggleSelected(id, multiselect);
       }
+      // they selected an american card
     } else {
       _cf.toggleSelected(id, multiselect);
-      _checkMove();
+      if (_gm.phase == enumPhase.move) {
+        _checkMove();
+      } else if (_gm.phase == enumPhase.fight) {
+        _checkAttack();
+      }
     }
 
     setState(() {});
@@ -108,6 +146,18 @@ class _GameScreenState extends State<GameScreen> {
         });
   }
 
+  void _resetSelectedSquare() {
+    for (MapSquare mapSquare in _map) {
+      mapSquare.isSelected = false;
+    }
+  }
+
+  void _resetSelectedUnit() {
+    for (Unit unit in _units) {
+      unit.isSelected = false;
+    }
+  }
+
   void _showGermanTurnDialog() {
     showDialog(
         context: context,
@@ -135,19 +185,20 @@ class _GameScreenState extends State<GameScreen> {
         onPressed: () {
           _gm.incrementPhase();
           _cf.clearSelectedCards();
-          _uf.resetSelectedUnit();
+          _resetSelectedUnit();
+          _resetSelectedSquare();
           // if it is an orders phase (regardless of player), reset all the move/attack flags
-          if (_gm.getPhase() == enumPhase.orders) {
+          if (_gm.phase == enumPhase.orders) {
             _resetUnitFlags();
           }
           // if now the german turn, do different stuff
-          if (_gm.currentPlayer == enumCurrentPlayer.german) {
+          if (_gm.player == enumPlayer.german) {
             _showGermanTurnDialog();
             // TODO: German turn stuff here
             _gm.jump();
             _cf.drawCards();
           } else {
-            if (_gm.getPhase() == enumPhase.orders) {
+            if (_gm.phase == enumPhase.orders) {
               _cf.drawCards();
             }
           }
@@ -166,11 +217,12 @@ class _GameScreenState extends State<GameScreen> {
         ),
         onPressed: () {
           // cancel move or attack (depending on phase)
-          if (_gm.getPhase() == enumPhase.move) {
+          if ((_gm.phase == enumPhase.move) || (_gm.phase == enumPhase.fight)) {
             _cf.clearSelectedCards();
-            _uf.resetSelectedUnit();
+            _resetSelectedUnit();
             _ableToCancelAction = false;
             _showMapSquaresForMove = false;
+            _showMapSquaresForAttack = false;
           }
           setState(() {});
         });
@@ -188,8 +240,8 @@ class _GameScreenState extends State<GameScreen> {
           onTap: () {
             // only allow them to select in orders phase if player hand has more than 3
             if (((_cf.playerHand().length > 3) &&
-                    (_gm.getPhase() == enumPhase.orders)) ||
-                (_gm.getPhase() != enumPhase.orders))
+                    (_gm.phase == enumPhase.orders)) ||
+                (_gm.phase != enumPhase.orders))
               _toggleSelectedCard(_cf.playerHand()[i].id);
           },
           child: Container(
@@ -207,13 +259,12 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _setSelectedMapSquare(int pos) {
-    // if picking a different square, clear any selected units
-    if (_mf.selectedSquare != pos) {
-      _uf.resetSelectedUnit();
-    }
+    // clear any other selections
+    _resetSelectedSquare();
+    _resetSelectedUnit();
 
     // set the new selected square
-    _mf.selectedSquare = pos;
+    _map[pos].isSelected = true;
 
     // if there's a single unit in the square, go ahead and select it
     if ((_map[pos].units.isNotEmpty) && (_map[pos].units.length == 1)) {
@@ -223,8 +274,8 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {});
   }
 
-  Color _getUnitBorderColor(int mapSquare) {
-    if (_mf.selectedSquare == mapSquare) {
+  Color _getUnitBorderColor(int pos) {
+    if (_map[pos].isSelected) {
       return Colors.yellow;
     } else {
       return const Color(0xff6b8e23);
@@ -232,9 +283,13 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Color _getUnitHighlightColor(Unit unit) {
-    if (_uf.getSelectedUnit() == unit) {
-      return Colors.yellow;
-    } else {
+    try {
+      if (_getSelectedUnit() == unit) {
+        return Colors.yellow;
+      } else {
+        return const Color(0xffd3d3d3);
+      }
+    } catch (e) {
       return const Color(0xffd3d3d3);
     }
   }
@@ -273,6 +328,18 @@ class _GameScreenState extends State<GameScreen> {
                     fontFamily: 'HeadlinerNo45', fontSize: 30))));
   }
 
+  String _getAttackSquareGraphic(int pos) {
+    String graphic = gfxMoveRed;
+
+    // green - if move is in range and there's an enemy unit in the target spot
+    if ((_attackOptions[pos] == constValidSpace) &&
+        (_enemyUnitsInMapSquare(pos))) {
+      graphic = gfxMoveGreen;
+    }
+
+    return graphic;
+  }
+
   String _getMoveSquareGraphic(int pos) {
     String graphic = gfxMoveRed;
 
@@ -285,11 +352,30 @@ class _GameScreenState extends State<GameScreen> {
     return graphic;
   }
 
-  Widget _drawMapSquaresForMove(int i, String img) {
+  bool _isThereASelectedSquare() {
+    try {
+      MapSquare mapSquare = _getSelectedSquare();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Widget _drawMapSquaresForAttack(int i, String image) {
     return Stack(
       children: <Widget>[
-        Image.asset(img),
-        if (_mf.selectedSquare != i)
+        Image.asset(image),
+        if (_isThereASelectedSquare())
+          Opacity(opacity: .60, child: Image.asset(_getAttackSquareGraphic(i)))
+      ],
+    );
+  }
+
+  Widget _drawMapSquaresForMove(int i, String image) {
+    return Stack(
+      children: <Widget>[
+        Image.asset(image),
+        if (_isThereASelectedSquare())
           Opacity(opacity: .60, child: Image.asset(_getMoveSquareGraphic(i)))
       ],
     );
@@ -318,12 +404,40 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  void _checkAttack() {
+    // if they have a unit selected, and if they have selected an appropriate attack card, go!
+    try {
+      Unit unit = _getSelectedUnit();
+      if (unit.owner == enumUnitOwner.american) {
+        GameCard card = _cf.getSelectedCard();
+        // must be an attack card, and unit must be able to attack
+        if ((card.type == enumCardType.attack) &&
+            (card.player != enumPlayerUse.german) &&
+            (!unit.hasAttacked)) {
+          // show valid move options
+          _showMapSquaresForAttack = true;
+          // set flag to show cancel button
+          _ableToCancelAction = true;
+          // go get the array of valid move spaces (based on the unit selected)
+          _attackOptions = _mf.getValidMoves(
+              _getMapSquarePosition(_getSelectedSquare()),
+              card.minrange,
+              card.maxrange);
+          setState(() {});
+        }
+      }
+    } catch (e) {
+      // do nothing, we're just done here for now
+      print('error: ' + e.toString());
+      return;
+    }
+  }
+
   void _checkMove() {
     // if they have a unit selected, and if they have selected an appropriate move card, go!
-    Unit unit = _uf.getSelectedUnit();
-    if (unit.owner == enumUnitOwner.american) {
-      // Unit unit = _units.firstWhere((element) => element.id == selected.id);
-      try {
+    try {
+      Unit unit = _getSelectedUnit();
+      if (unit.owner == enumUnitOwner.american) {
         GameCard card = _cf.getSelectedCard();
         // must be a move card, and unit must be able to move
         if ((card.type == enumCardType.move) &&
@@ -335,14 +449,16 @@ class _GameScreenState extends State<GameScreen> {
           _ableToCancelAction = true;
           // go get the array of valid move spaces (based on the unit selected)
           _moveOptions = _mf.getValidMoves(
-              _mf.selectedSquare, card.minrange, card.maxrange);
+              _getMapSquarePosition(_getSelectedSquare()),
+              card.minrange,
+              card.maxrange);
           setState(() {});
         }
-      } catch (e) {
-        // do nothing, we're just done here for now
-        print('error: ' + e.toString());
-        return;
       }
+    } catch (e) {
+      // do nothing, we're just done here for now
+      print('error: ' + e.toString());
+      return;
     }
   }
 
@@ -362,18 +478,59 @@ class _GameScreenState extends State<GameScreen> {
     return enemyUnits;
   }
 
+  void _tryAttack(int pos) {
+    // check to see if square selected (a) if not the original selected square,
+    // (b) spot they chose is valid, and (c) square contains an enemy unit
+    if ((pos != _getMapSquarePosition(_getSelectedSquare())) &&
+        (_attackOptions[pos] == constValidSpace) &&
+        (_enemyUnitsInMapSquare(pos))) {
+      // if there's only one unit in the spot, eliminate it
+      int unitCount = _map[pos].units.length;
+      Unit unit;
+      if (unitCount == 1) {
+        unit = _map[pos].units.first;
+      } else {
+        // pick a unit at random to kill
+        int unitToKill = Random().nextInt(unitCount);
+        unit = _map[pos].units.elementAt(unitToKill);
+      }
+
+      // the unit that just attacked, cannot attack again
+      _map[_getMapSquarePosition(_getSelectedSquare())]
+          .units
+          .firstWhere((element) => element.id == _getSelectedUnit().id)
+          .hasAttacked = true;
+
+      // remove the destroyed unit from the map square
+      _map[pos].units.remove(unit);
+
+      // throw up dialog with unit info
+      showUnitKilledDialog(context, unit.type, unit.id);
+
+      // discard the selected card
+      _cf.discardSelectedCard();
+
+      // no longer in active attack
+      _showMapSquaresForAttack = false;
+      _ableToCancelAction = false;
+      _resetSelectedUnit();
+      _resetSelectedSquare();
+
+      setState(() {});
+    }
+  }
+
   void _tryMove(int pos) {
-    // if they got here, there's a valid selected move card and the unit can move
     // check to see if square selected (a) if not the original selected square,
     // (b) spot they chose is valid, and (c) square doesn't contain an enemy unit
-    if ((pos != _mf.selectedSquare) &&
+    if ((pos != _getMapSquarePosition(_getSelectedSquare())) &&
         (_moveOptions[pos] == constValidSpace) &&
         (!_enemyUnitsInMapSquare(pos))) {
       // move the unit to the spot
-      Unit unit = _uf.getSelectedUnit();
+      Unit unit = _getSelectedUnit();
       unit.hasMoved = true;
       unit.numTimesMoved++;
-      _map[_mf.selectedSquare]
+      _map[_getMapSquarePosition(_getSelectedSquare())]
           .units
           .removeWhere((element) => element.id == unit.id);
       _map[pos].units.add(unit);
@@ -384,20 +541,47 @@ class _GameScreenState extends State<GameScreen> {
       // no longer in active move
       _showMapSquaresForMove = false;
       _ableToCancelAction = false;
-      _uf.resetSelectedUnit();
+      _resetSelectedUnit();
+      _resetSelectedSquare();
 
       setState(() {});
     }
   }
 
-  void _setSelectedUnit(Unit unit) {
+  void _setSelectedUnit(Unit selectedUnit) {
     // if not player unit and not order phase, just bail
-    if ((unit.owner == enumUnitOwner.american) &&
-        (_gm.getPhase() != enumPhase.orders)) {
-      _uf.setSelectedUnit(unit);
-      _checkMove();
+    if (selectedUnit.owner == enumUnitOwner.american) {
+      for (int i = 0; i < _map.length; i++) {
+        if (_map[i].units.isNotEmpty) {
+          for (Unit unit in _map[i].units) {
+            if (unit == selectedUnit) {
+              _map[i]
+                  .units
+                  .firstWhere((element) => element.id == selectedUnit.id)
+                  .isSelected = true;
+              break;
+            }
+          }
+        }
+      }
+      if (_gm.phase == enumPhase.move) {
+        _checkMove();
+      } else if (_gm.phase == enumPhase.fight) {
+        _checkAttack();
+      }
+      setState(() {});
     }
-    setState(() {});
+  }
+
+  bool _unitsToShow() {
+    // check if there is more than one unit in the map square
+    try {
+      return _map[_getMapSquarePosition(_getSelectedSquare())].units.length > 1
+          ? true
+          : false;
+    } catch (e) {
+      return false;
+    }
   }
 
   Widget _unitRow() {
@@ -405,12 +589,9 @@ class _GameScreenState extends State<GameScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
-        const SizedBox(
-          height: 45,
-          width: 10,
-        ),
-        if (_mf.selectedSquare != constNoCardSelected)
-          for (var u in _map[_mf.selectedSquare].units)
+        const SizedBox(height: 50, width: 5),
+        if (_unitsToShow())
+          for (var u in _map[_getMapSquarePosition(_getSelectedSquare())].units)
             GestureDetector(
                 onTap: () {
                   _setSelectedUnit(u);
@@ -421,7 +602,7 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     height: 50,
                     width: 50,
-                    child: Image.asset(_uf.returnUnitImage(u)))),
+                    child: Image.asset(_uf.getUnitImage(u)))),
       ],
     );
   }
@@ -442,9 +623,10 @@ class _GameScreenState extends State<GameScreen> {
       children: List.generate(64, (index) {
         return GestureDetector(
           onTap: () {
-            // _setSelectedMapSquare(index);
+            _tryAttack(index);
           },
-          // child: _drawMapSquaresForMove(index),
+          child: _drawMapSquaresForAttack(
+              index, _mf.getMapSquareGraphic(_map[index])),
         );
       }),
     );
@@ -459,7 +641,7 @@ class _GameScreenState extends State<GameScreen> {
             _tryMove(index);
           },
           child: _drawMapSquaresForMove(
-              index, _mf.getMapSquareGraphic(_uf, _map[index])),
+              index, _mf.getMapSquareGraphic(_map[index])),
         );
       }),
     );
@@ -473,8 +655,8 @@ class _GameScreenState extends State<GameScreen> {
           onTap: () {
             _setSelectedMapSquare(index);
           },
-          child: _drawUnitContainer(
-              index, _mf.getMapSquareGraphic(_uf, _map[index])),
+          child:
+              _drawUnitContainer(index, _mf.getMapSquareGraphic(_map[index])),
         );
       }),
     );
@@ -499,8 +681,8 @@ class _GameScreenState extends State<GameScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     _displayPlayer(_gm.displayPlayer()),
-                    _displayText('Round: ' + _gm.displayRound()),
-                    _displayText('Phase: ' + _gm.displayPhase()),
+                    _displayText('Round: ' + _gm.round.toString()),
+                    _displayText('Phase: ' + _gm.phase.name.toUpperCase()),
                   ],
                 ),
               ),
@@ -519,14 +701,7 @@ class _GameScreenState extends State<GameScreen> {
               const Padding(
                 padding: EdgeInsets.all(1.0),
               ),
-              if ((_mf.selectedSquare != constNoCardSelected) &&
-                  (_map[_mf.selectedSquare].units.length > 1))
-                _unitRow()
-              else
-                const SizedBox(
-                  height: 45,
-                  width: 10,
-                ),
+              _unitRow(),
               const Padding(
                 padding: EdgeInsets.all(10.0),
                 child: Align(
@@ -542,9 +717,9 @@ class _GameScreenState extends State<GameScreen> {
               ),
               _cardRow(),
               const Padding(padding: EdgeInsets.all(5.0)),
-              if (_gm.getPhase() == enumPhase.orders)
+              if (_gm.phase == enumPhase.orders)
                 _phaseNotice(ordersNotice)
-              else if (_gm.getPhase() == enumPhase.move)
+              else if (_gm.phase == enumPhase.move)
                 _phaseNotice(moveNotice)
               else
                 _phaseNotice(attackNotice),

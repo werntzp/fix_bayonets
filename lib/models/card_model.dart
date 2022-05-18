@@ -329,7 +329,7 @@ class CardFactory {
       _masterDeck.add(GameCard(
           id,
           enumCardName.smoke,
-          enumCardType.terrain,
+          enumCardType.negate,
           0,
           0,
           enumPlayerUse.both,
@@ -342,7 +342,7 @@ class CardFactory {
       _masterDeck.add(GameCard(
           id,
           enumCardName.artillery,
-          enumCardType.terrain,
+          enumCardType.negate,
           0,
           0,
           enumPlayerUse.american,
@@ -355,7 +355,7 @@ class CardFactory {
       _masterDeck.add(GameCard(
           id,
           enumCardName.wire,
-          enumCardType.terrain,
+          enumCardType.negate,
           0,
           0,
           enumPlayerUse.both,
@@ -369,7 +369,7 @@ class CardFactory {
       _masterDeck.add(GameCard(
           id,
           enumCardName.landmine,
-          enumCardType.terrain,
+          enumCardType.negate,
           0,
           0,
           enumPlayerUse.german,

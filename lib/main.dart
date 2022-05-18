@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'help_screen.dart';
-import 'game_screen.dart';
+import 'screens/help_screen.dart';
+import 'screens/game_screen.dart';
 import 'const.dart';
 
 void main() {

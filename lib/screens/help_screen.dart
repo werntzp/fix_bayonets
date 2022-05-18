@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "dart:convert";
 import 'package:webview_flutter/webview_flutter.dart';
-import 'const.dart';
+import '../const.dart';
 
 class HelpScreen extends StatelessWidget {
   HelpScreen({Key? key}) : super(key: key);
