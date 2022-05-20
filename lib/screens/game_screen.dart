@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:fix_bayonets/dialogs/game_over_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:flutter/material.dart';
 import '../const.dart';
@@ -462,6 +463,24 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  bool _isGameOver() {
+    // loop through all the german units to see if both officer units still exist
+    int officerCount = 0;
+    for (int i = 0; i < _map.length; i++) {
+      if (_map[i].units.isNotEmpty) {
+        for (Unit unit in _map[i].units) {
+          if ((unit.owner == enumUnitOwner.german) &&
+              (unit.type == enumUnitType.officer)) {
+            officerCount++;
+          }
+        }
+      }
+    }
+
+    // if 0, game over, otherwise keep going
+    return officerCount == 0 ? true : false;
+  }
+
   bool _enemyUnitsInMapSquare(int pos) {
     bool enemyUnits = false;
 
@@ -506,6 +525,11 @@ class _GameScreenState extends State<GameScreen> {
 
       // throw up dialog with unit info
       showUnitKilledDialog(context, unit.type, unit.id);
+
+      // check to see if game end conditions have been met
+      if (_isGameOver()) {
+        showGameOverDialog(context, true);
+      }
 
       // discard the selected card
       _cf.discardSelectedCard();

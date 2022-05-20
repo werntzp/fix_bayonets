@@ -58,8 +58,14 @@ class CardFactory {
 
   void toggleSelected(int id, bool multiselect) {
     if (multiselect) {
-      // allowed to have more than one card selected (b/c they need to discard)
-      _selected.add(_masterDeck.firstWhere((element) => element.id == id));
+      // if they are picking a card that's already selected, clear it
+      GameCard card = _masterDeck[id];
+      if (_selected.contains(card)) {
+        _selected.removeWhere((element) => element.id == id);
+      } else {
+        // allowed to have more than one card selected (b/c they need to discard)
+        _selected.add(_masterDeck.firstWhere((element) => element.id == id));
+      }
     } else {
       // TODO: only let them select appropriate cards (based on phase, player use, etc.)
       clearSelectedCards();
