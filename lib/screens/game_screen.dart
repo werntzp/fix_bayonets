@@ -112,10 +112,13 @@ class _GameScreenState extends State<GameScreen> {
       }
       // they selected an american card
     } else {
-      _cf.toggleSelected(id, multiselect);
-      if (_gm.phase == enumPhase.move) {
+      // make sure they are selecting card based on phase
+      if ((_gm.phase == enumPhase.move) && (card.type == enumCardType.move)) {
+        _cf.toggleSelected(id, multiselect);
         _checkMove();
-      } else if (_gm.phase == enumPhase.fight) {
+      } else if ((_gm.phase == enumPhase.fight) &&
+          (card.type == enumCardType.attack)) {
+        _cf.toggleSelected(id, multiselect);
         _checkAttack();
       }
     }
@@ -430,6 +433,7 @@ class _GameScreenState extends State<GameScreen> {
     } catch (e) {
       // do nothing, we're just done here for now
       print('error: ' + e.toString());
+      setState(() {});
       return;
     }
   }
@@ -459,6 +463,7 @@ class _GameScreenState extends State<GameScreen> {
     } catch (e) {
       // do nothing, we're just done here for now
       print('error: ' + e.toString());
+      setState(() {});
       return;
     }
   }
@@ -573,7 +578,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _setSelectedUnit(Unit selectedUnit) {
-    // if not player unit and not order phase, just bail
+    // if not player unit, just bail
     if (selectedUnit.owner == enumUnitOwner.american) {
       for (int i = 0; i < _map.length; i++) {
         if (_map[i].units.isNotEmpty) {
@@ -618,7 +623,7 @@ class _GameScreenState extends State<GameScreen> {
           for (var u in _map[_getMapSquarePosition(_getSelectedSquare())].units)
             GestureDetector(
                 onTap: () {
-                  _setSelectedUnit(u);
+                  if (_gm.phase != enumPhase.orders) _setSelectedUnit(u);
                 },
                 child: Container(
                     decoration: BoxDecoration(
