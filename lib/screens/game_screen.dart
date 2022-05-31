@@ -109,6 +109,9 @@ class _GameScreenState extends State<GameScreen> {
       // must be during orders phase
       if (_gm.phase == enumPhase.orders) {
         _cf.toggleSelected(id, multiselect);
+      } else {
+        print(
+            '_toggleSelectedCard() - tried to pick german card outside orders');
       }
       // they selected an american card
     } else {
@@ -120,6 +123,10 @@ class _GameScreenState extends State<GameScreen> {
           (card.type == enumCardType.attack)) {
         _cf.toggleSelected(id, multiselect);
         _checkAttack();
+      } else if (_gm.phase == enumPhase.orders) {
+        _cf.toggleSelected(id, multiselect);
+      } else {
+        print('_toggleSelectedCard() - card not allowed for this situation');
       }
     }
 
@@ -418,6 +425,13 @@ class _GameScreenState extends State<GameScreen> {
         if ((card.type == enumCardType.attack) &&
             (card.player != enumPlayerUse.german) &&
             (!unit.hasAttacked)) {
+          // we got this far, let's see if there are other attack restrictions
+          if ((card.useby != unit.type) && (card.useby != enumUnitType.all)) {
+            _cf.clearSelectedCards();
+            setState(() {});
+            return;
+          }
+
           // show valid move options
           _showMapSquaresForAttack = true;
           // set flag to show cancel button
@@ -432,7 +446,7 @@ class _GameScreenState extends State<GameScreen> {
       }
     } catch (e) {
       // do nothing, we're just done here for now
-      print('error: ' + e.toString());
+      print('_checkAttack() error: ' + e.toString());
       setState(() {});
       return;
     }
@@ -462,7 +476,7 @@ class _GameScreenState extends State<GameScreen> {
       }
     } catch (e) {
       // do nothing, we're just done here for now
-      print('error: ' + e.toString());
+      print('_checkMove() error: ' + e.toString());
       setState(() {});
       return;
     }
@@ -557,8 +571,14 @@ class _GameScreenState extends State<GameScreen> {
         (!_enemyUnitsInMapSquare(pos))) {
       // move the unit to the spot
       Unit unit = _getSelectedUnit();
-      unit.hasMoved = true;
       unit.numTimesMoved++;
+      // if runner unit, then don't set hasMoved until times == 2
+      if ((unit.type == enumUnitType.runner) && (unit.numTimesMoved == 2)) {
+        unit.hasMoved = true;
+      } else if (unit.type != enumUnitType.runner) {
+        unit.hasMoved = true;
+      }
+
       _map[_getMapSquarePosition(_getSelectedSquare())]
           .units
           .removeWhere((element) => element.id == unit.id);
