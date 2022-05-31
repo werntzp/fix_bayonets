@@ -48,6 +48,7 @@ const gfxNegateMove = "images/negate_move.png";
 const gfxNegateAttack = "images/negate_attack.png";
 const gfxNegateMoveGerman = "images/negate_move_german.png";
 const gfxNegateAttackAmerican = "images/negate_attack_american.png";
+const constYourHand = "Your Hand:";
 const ordersNotice =
     'Orders Phase: Review the cards in your hand. If you have more than 3, you must discard some.';
 const moveNotice =
@@ -56,14 +57,23 @@ const attackNotice =
     'Attack Phase: Choose an Attack (red) card, then a unit to attack with, and a target.';
 
 enum enumMoveType { regular, zigzag }
+
 enum enumPlayer { american, german }
+
 enum enumUnitType { officer, rifleman, heavyweapon, runner, sniper, all }
+
 enum enumUnitOwner { american, german, neither }
+
 enum enumUnitMoveAllowed { one, two }
+
 enum enumCardType { attack, move, negate }
+
 enum enumCardLocation { american, german, draw, discard }
+
 enum enumPlayerUse { american, german, both }
+
 enum enumCardNegate { move, attack, neither }
+
 enum enumCardName {
   bayonet,
   pistol,

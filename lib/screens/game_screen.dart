@@ -100,7 +100,7 @@ class _GameScreenState extends State<GameScreen> {
     GameCard card = _cf.getCardById(id);
 
     // if they have more than 3 cards, player is able to multi-select
-    if (_cf.playerHand().length > 3) {
+    if (_gm.phase == enumPhase.orders) {
       multiselect = true;
     }
 
@@ -243,17 +243,13 @@ class _GameScreenState extends State<GameScreen> {
     // iterate through cards to display the ones in the player's hand ...
     return Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
       const SizedBox(
-        height: 68,
-        width: 5,
+        height: 60.0,
+        width: 5.0,
       ),
       for (int i = 0; i < _cf.playerHand().length; i++)
         GestureDetector(
           onTap: () {
-            // only allow them to select in orders phase if player hand has more than 3
-            if (((_cf.playerHand().length > 3) &&
-                    (_gm.phase == enumPhase.orders)) ||
-                (_gm.phase != enumPhase.orders))
-              _toggleSelectedCard(_cf.playerHand()[i].id);
+            _toggleSelectedCard(_cf.playerHand()[i].id);
           },
           child: Container(
             alignment: Alignment.center,
@@ -756,10 +752,10 @@ class _GameScreenState extends State<GameScreen> {
                 child: Align(
                     alignment: Alignment.topLeft,
                     child: Text(
-                      "Cards in your hand:",
+                      constYourHand,
                       style: TextStyle(
                           fontFamily: "HeaderlinerNo45",
-                          fontSize: 15,
+                          fontSize: 20.0,
                           fontWeight: FontWeight.bold,
                           decoration: TextDecoration.underline),
                     )),
@@ -776,13 +772,14 @@ class _GameScreenState extends State<GameScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  _helpButton(),
-                  if (_cf.playerHand().length > 3)
+                  if ((_cf.cardsSelected()) && (_gm.phase == enumPhase.orders))
                     _discardButton()
                   else if (_ableToCancelAction)
                     _cancelButton()
                   else
-                    _nextButton()
+                    _nextButton(),
+                  const SizedBox(width: 5.0, height: 10.0),
+                  _helpButton()
                 ],
               )
             ],

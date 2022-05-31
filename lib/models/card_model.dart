@@ -87,6 +87,10 @@ class CardFactory {
     return _playerHand;
   }
 
+  bool cardsSelected() {
+    return _selected.isNotEmpty;
+  }
+
   void drawCards() {
     // if not six cards, move cards from discard to draw and shuffle
     if (_drawPile.length < 6) {
@@ -103,9 +107,12 @@ class CardFactory {
       _drawPile.remove(_drawPile[i]);
     }
 
-    for (int i = 0; i < 3; i++) {
-      _computerHand.add(_drawPile[i]);
-      _drawPile.remove(_drawPile[i]);
+    // check german hand -- only draw if 3 or fewer cards
+    if (_computerHand.length <= 3) {
+      for (int i = 0; i < 3; i++) {
+        _computerHand.add(_drawPile[i]);
+        _drawPile.remove(_drawPile[i]);
+      }
     }
   }
 
