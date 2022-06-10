@@ -1,7 +1,5 @@
 import 'package:fix_bayonets/const.dart';
 
-enum enumPhase { orders, move, fight }
-
 class GameModel {
   int round = 1;
   enumPhase phase = enumPhase.orders;

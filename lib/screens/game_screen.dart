@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:fix_bayonets/dialogs/game_over_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
+import 'package:fix_bayonets/dialogs/unit_killed_all_dialog.dart';
+import 'package:fix_bayonets/dialogs/german_negated_dialog.dart';
 import 'package:flutter/material.dart';
 import '../const.dart';
 import '../models/unit_model.dart';
@@ -119,7 +121,7 @@ class _GameScreenState extends State<GameScreen> {
       if ((_gm.phase == enumPhase.move) && (card.type == enumCardType.move)) {
         _cf.toggleSelected(id, multiselect);
         _checkMove();
-      } else if ((_gm.phase == enumPhase.fight) &&
+      } else if ((_gm.phase == enumPhase.attack) &&
           (card.type == enumCardType.attack)) {
         _cf.toggleSelected(id, multiselect);
         _checkAttack();
@@ -204,10 +206,10 @@ class _GameScreenState extends State<GameScreen> {
           }
           // if now the german turn, do different stuff
           if (_gm.player == enumPlayer.german) {
-            _showGermanTurnDialog();
-            // TODO: German turn stuff here
-            _gm.jump();
+            // draw up cards
             _cf.drawCards();
+            _showGermanTurnDialog();
+            _gm.jump();
           } else {
             if (_gm.phase == enumPhase.orders) {
               _cf.drawCards();
@@ -228,7 +230,8 @@ class _GameScreenState extends State<GameScreen> {
         ),
         onPressed: () {
           // cancel move or attack (depending on phase)
-          if ((_gm.phase == enumPhase.move) || (_gm.phase == enumPhase.fight)) {
+          if ((_gm.phase == enumPhase.move) ||
+              (_gm.phase == enumPhase.attack)) {
             _cf.clearSelectedCards();
             _resetSelectedUnit();
             _ableToCancelAction = false;
@@ -512,21 +515,48 @@ class _GameScreenState extends State<GameScreen> {
     return enemyUnits;
   }
 
+  bool _germanNegates(enumCardNegate cardNegate) {
+    return _cf.germanCanNegate(cardNegate);
+  }
+
   void _tryAttack(int pos) {
     // check to see if square selected (a) if not the original selected square,
     // (b) spot they chose is valid, and (c) square contains an enemy unit
     if ((pos != _getMapSquarePosition(_getSelectedSquare())) &&
         (_attackOptions[pos] == constValidSpace) &&
         (_enemyUnitsInMapSquare(pos))) {
-      // if there's only one unit in the spot, eliminate it
-      int unitCount = _map[pos].units.length;
-      Unit unit;
-      if (unitCount == 1) {
-        unit = _map[pos].units.first;
+      // so yes an attack can occur, but check first to see if german player negates it
+      if (!_germanNegates(enumCardNegate.attack)) {
+        // if attack was with grenade, machine gun, or flame thrower, kill every unit
+        // otherwise,
+        // if there's only one unit in the spot, eliminate it
+        GameCard gameCard = _cf.getSelectedCard();
+        if ((gameCard.name == enumCardName.grenade) ||
+            (gameCard.name == enumCardName.flamethrower) ||
+            (gameCard.name == enumCardName.machinegun)) {
+          // every unit in square dies
+          _map[pos].units.clear();
+          if (_isGameOver()) showUnitKilledAllDialog(context);
+        } else {
+          Unit unit;
+          int unitCount = _map[pos].units.length;
+
+          if (unitCount == 1) {
+            unit = _map[pos].units.first;
+          } else {
+            // pick a unit at random to kill
+            int unitToKill = Random().nextInt(unitCount);
+            unit = _map[pos].units.elementAt(unitToKill);
+          }
+          // remove the destroyed unit from the map square
+          _map[pos].units.remove(unit);
+
+          // throw up dialog with unit info (unless end of game conditions were met)
+          if (_isGameOver()) showUnitKilledDialog(context, unit.type, unit.id);
+        }
       } else {
-        // pick a unit at random to kill
-        int unitToKill = Random().nextInt(unitCount);
-        unit = _map[pos].units.elementAt(unitToKill);
+        // german negated
+        showNegatedDialog(context, _gm.phase);
       }
 
       // the unit that just attacked, cannot attack again
@@ -534,12 +564,6 @@ class _GameScreenState extends State<GameScreen> {
           .units
           .firstWhere((element) => element.id == _getSelectedUnit().id)
           .hasAttacked = true;
-
-      // remove the destroyed unit from the map square
-      _map[pos].units.remove(unit);
-
-      // throw up dialog with unit info
-      showUnitKilledDialog(context, unit.type, unit.id);
 
       // check to see if game end conditions have been met
       if (_isGameOver()) {
@@ -565,8 +589,26 @@ class _GameScreenState extends State<GameScreen> {
     if ((pos != _getMapSquarePosition(_getSelectedSquare())) &&
         (_moveOptions[pos] == constValidSpace) &&
         (!_enemyUnitsInMapSquare(pos))) {
-      // move the unit to the spot
       Unit unit = _getSelectedUnit();
+      // before actually making the move, decide if the german player can negate it
+      if (!_germanNegates(enumCardNegate.move)) {
+        // move the unit to the new square
+        _map[_getMapSquarePosition(_getSelectedSquare())]
+            .units
+            .removeWhere((element) => element.id == unit.id);
+        _map[pos].units.add(unit);
+      } else {
+        showNegatedDialog(context, _gm.phase);
+      }
+
+      // no longer in active move
+      _showMapSquaresForMove = false;
+      _ableToCancelAction = false;
+      _resetSelectedUnit();
+      _resetSelectedSquare();
+      // discard
+      _cf.discardSelectedCard();
+      // move the unit to the spot
       unit.numTimesMoved++;
       // if runner unit, then don't set hasMoved until times == 2
       if ((unit.type == enumUnitType.runner) && (unit.numTimesMoved == 2)) {
@@ -574,20 +616,6 @@ class _GameScreenState extends State<GameScreen> {
       } else if (unit.type != enumUnitType.runner) {
         unit.hasMoved = true;
       }
-
-      _map[_getMapSquarePosition(_getSelectedSquare())]
-          .units
-          .removeWhere((element) => element.id == unit.id);
-      _map[pos].units.add(unit);
-
-      // discard the selected card
-      _cf.discardSelectedCard();
-
-      // no longer in active move
-      _showMapSquaresForMove = false;
-      _ableToCancelAction = false;
-      _resetSelectedUnit();
-      _resetSelectedSquare();
 
       setState(() {});
     }
@@ -611,7 +639,7 @@ class _GameScreenState extends State<GameScreen> {
       }
       if (_gm.phase == enumPhase.move) {
         _checkMove();
-      } else if (_gm.phase == enumPhase.fight) {
+      } else if (_gm.phase == enumPhase.attack) {
         _checkAttack();
       }
       setState(() {});

@@ -56,6 +56,8 @@ const moveNotice =
 const attackNotice =
     'Attack Phase: Choose an Attack (red) card, then a unit to attack with, and a target.';
 
+enum enumPhase { orders, move, attack }
+
 enum enumMoveType { regular, zigzag }
 
 enum enumPlayer { american, german }

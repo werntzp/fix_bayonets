@@ -1,4 +1,6 @@
 import 'package:fix_bayonets/const.dart';
+import 'package:fix_bayonets/models/game_model.dart';
+import 'dart:math';
 
 class GameCard {
   final int id;
@@ -67,7 +69,6 @@ class CardFactory {
         _selected.add(_masterDeck.firstWhere((element) => element.id == id));
       }
     } else {
-      // TODO: only let them select appropriate cards (based on phase, player use, etc.)
       clearSelectedCards();
       _selected.add(_masterDeck.singleWhere((element) => element.id == id));
     }
@@ -89,6 +90,27 @@ class CardFactory {
 
   bool cardsSelected() {
     return _selected.isNotEmpty;
+  }
+
+  bool germanCanNegate(enumCardNegate phase) {
+    bool canNegate = false;
+
+    // make sure card valid for this phase, and isn't restricted to the american player
+    for (GameCard card in _computerHand) {
+      if ((card.negate == phase) && (card.useby != enumPlayerUse.american)) {
+        // instead of always negating when they can, make it a 30% shot
+        if (Random().nextInt(3) == 0) {
+          // set the flag
+          canNegate = true;
+          // move that card to the discard pile
+          _discardPile.add(card);
+          _computerHand.removeWhere((element) => element.id == card.id);
+          break;
+        }
+      }
+    }
+
+    return canNegate;
   }
 
   void drawCards() {

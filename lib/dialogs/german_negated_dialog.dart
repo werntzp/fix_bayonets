@@ -1,21 +1,26 @@
+import 'package:fix_bayonets/const.dart';
 import 'package:flutter/material.dart';
-import 'package:fix_bayonets/main.dart';
 
-String _dialogText(bool won) {
-  if (won) {
-    return 'You won!';
+String _message(enumPhase phase) {
+  String message = "";
+
+  // format the type of unit killed nicely
+  if (phase == enumPhase.move) {
+    message = "move";
   } else {
-    return 'You lost!';
+    message = "attack";
   }
+
+  return message;
 }
 
-void showGameOverDialog(BuildContext context, bool won) {
+void showNegatedDialog(BuildContext context, enumPhase gamePhase) {
   showDialog<String>(
     context: context,
     builder: (BuildContext context) => AlertDialog(
-      title: const Text('Game Over',
-          style: TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),
-      content: Text(_dialogText(won),
+      backgroundColor: const Color(0xffd3d3d3),
+      content: Text(
+          'The German player negated your ' + _message(gamePhase) + '.',
           style: const TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),
       actions: <Widget>[
         OutlinedButton(
