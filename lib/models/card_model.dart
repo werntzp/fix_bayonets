@@ -20,8 +20,8 @@ class GameCard {
 class CardFactory {
   List<GameCard> _masterDeck = [];
   List<GameCard> _drawPile = [];
-  List<GameCard> _playerHand = [];
-  List<GameCard> _computerHand = [];
+  List<GameCard> _americanHand = [];
+  List<GameCard> _germanHand = [];
   List<GameCard> _discardPile = [];
   List<GameCard> _selected = [];
 
@@ -31,10 +31,14 @@ class CardFactory {
     _selected.clear();
   }
 
-  void discardCards() {
+  void discardCards(enumPlayer player) {
     for (GameCard c in _selected) {
       _discardPile.add(c);
-      _playerHand.removeWhere((element) => element.id == c.id);
+      if (player == enumPlayer.american) {
+        _americanHand.removeWhere((element) => element.id == c.id);
+      } else {
+        _germanHand.removeWhere((element) => element.id == c.id);
+      }
     }
 
     clearSelectedCards();
@@ -46,7 +50,7 @@ class CardFactory {
 
   void discardSelectedCard() {
     _discardPile.add(_selected[0]);
-    _playerHand.removeWhere((element) => element.id == _selected[0].id);
+    _americanHand.removeWhere((element) => element.id == _selected[0].id);
     clearSelectedCards();
   }
 
@@ -84,19 +88,61 @@ class CardFactory {
     }
   }
 
-  List<GameCard> playerHand() {
-    return _playerHand;
+  List<GameCard> americanHand() {
+    return _americanHand;
+  }
+
+  List<GameCard> germanHand() {
+    return _germanHand;
   }
 
   bool cardsSelected() {
     return _selected.isNotEmpty;
   }
 
+  void discardOtherPlayersCards(enumPlayer currentPlayer) {
+    currentPlayer == enumPlayer.american
+        ? _discardAmericanCards()
+        : _discardGermanCards();
+  }
+
+  void _discardAmericanCards() {
+    List<int> remove = [];
+    for (GameCard card in _germanHand) {
+      if (card.player == enumPlayerUse.american) {
+        // move that card to the discard pile
+        _discardPile.add(card);
+        remove.add(card.id);
+      }
+    }
+
+    // remove any cards now
+    for (int i = 0; i < remove.length; i++) {
+      _germanHand.removeWhere((element) => element.id == remove[i]);
+    }
+  }
+
+  void _discardGermanCards() {
+    List<int> remove = [];
+    for (GameCard card in _americanHand) {
+      if (card.player == enumPlayerUse.german) {
+        // move that card to the discard pile
+        _discardPile.add(card);
+        remove.add(card.id);
+      }
+    }
+
+    // remove any cards now
+    for (int i = 0; i < remove.length; i++) {
+      _germanHand.removeWhere((element) => element.id == remove[i]);
+    }
+  }
+
   bool germanCanNegate(enumCardNegate phase) {
     bool canNegate = false;
 
     // make sure card valid for this phase, and isn't restricted to the american player
-    for (GameCard card in _computerHand) {
+    for (GameCard card in _germanHand) {
       if ((card.negate == phase) && (card.useby != enumPlayerUse.american)) {
         // instead of always negating when they can, make it a 30% shot
         if (Random().nextInt(3) == 0) {
@@ -104,7 +150,7 @@ class CardFactory {
           canNegate = true;
           // move that card to the discard pile
           _discardPile.add(card);
-          _computerHand.removeWhere((element) => element.id == card.id);
+          _germanHand.removeWhere((element) => element.id == card.id);
           break;
         }
       }
@@ -123,16 +169,17 @@ class CardFactory {
       _drawPile.shuffle();
     }
 
-    // draw 3 cards for american and german
+    // draw 3 cards for american
     for (int i = 0; i < 3; i++) {
-      _playerHand.add(_drawPile[i]);
+      _americanHand.add(_drawPile[i]);
       _drawPile.remove(_drawPile[i]);
     }
 
     // check german hand -- only draw if 3 or fewer cards
-    if (_computerHand.length <= 3) {
-      for (int i = 0; i < 3; i++) {
-        _computerHand.add(_drawPile[i]);
+    if (_germanHand.length < 3) {
+      // only draw up to 3 total
+      for (int i = 0; i < (constMaxCardsInHand - _germanHand.length); i++) {
+        _germanHand.add(_drawPile[i]);
         _drawPile.remove(_drawPile[i]);
       }
     }

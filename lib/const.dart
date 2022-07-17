@@ -3,6 +3,8 @@ const appSplashGraphic = "images/fix_bayonets_splash.jpg";
 const appVersion = "Version 1.0, May 2022";
 const sdsLogo = "images/sds_logo.png";
 
+const constMapSize = 63;
+const constMaxCardsInHand = 3;
 const constNoCardSelected = -1;
 const constZigZag = -1;
 const constValidSpace = 1;

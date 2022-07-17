@@ -11,7 +11,7 @@ class MapSquare {
 }
 
 class MapFactory {
-  var b = List<String>.filled(64, gfxForest);
+  var b = List<String>.filled((constMapSize + 1), gfxForest);
   final _distanceArray =
       List.generate(8, (i) => List.filled(8, 0), growable: false);
 
@@ -69,7 +69,7 @@ class MapFactory {
   }
 
   List<int> getValidMoves(int start, int minDistance, int maxDistance) {
-    var _moves = List<int>.filled(64, constInvalidSpace);
+    var _moves = List<int>.filled((constMapSize + 1), constInvalidSpace);
 
     int startRow = 0;
     int startCol = 0;
@@ -193,7 +193,7 @@ class MapFactory {
     List<MapSquare> _map = [];
 
     // add 64 map squares to list
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i <= constMapSize; i++) {
       MapSquare m = MapSquare();
       m.terrain = _randomizeTerrain();
       _map.add(m);
@@ -220,7 +220,7 @@ class MapFactory {
         max = 8;
       } else {
         min = 56;
-        max = 64;
+        max = (constMapSize + 1);
       }
       // get a starting map location; if that map location already has two units in it, keep repeating until we get one
       do {

@@ -3,18 +3,19 @@ import 'package:fix_bayonets/dialogs/game_over_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_all_dialog.dart';
 import 'package:fix_bayonets/dialogs/german_negated_dialog.dart';
+import 'package:fix_bayonets/models/german_player_model.dart';
 import 'package:flutter/material.dart';
 import '../const.dart';
 import '../models/unit_model.dart';
 import '../models/game_model.dart';
 import '../models/card_model.dart';
 import '../models/map_model.dart';
-import 'dart:async';
 
 GameModel _gm = GameModel();
 CardFactory _cf = CardFactory();
 UnitFactory _uf = UnitFactory();
 MapFactory _mf = MapFactory();
+GermanPlayer _gp = GermanPlayer();
 List<Unit> _units = [];
 List<MapSquare> _map = [];
 bool _showMapSquaresForMove = false;
@@ -47,7 +48,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _discardCards() {
-    _cf.discardCards();
+    _cf.discardCards(enumPlayer.american);
     setState(() {});
   }
 
@@ -159,6 +160,19 @@ class _GameScreenState extends State<GameScreen> {
         });
   }
 
+  bool _playerCanNegate(enumCardNegate negate) {
+    bool canNegate = false;
+
+    for (GameCard card in _cf.americanHand()) {
+      if ((card.type == enumCardType.negate) && (card.negate == negate)) {
+        canNegate = true;
+        break;
+      }
+    }
+
+    return canNegate;
+  }
+
   void _resetSelectedSquare() {
     for (MapSquare mapSquare in _map) {
       mapSquare.isSelected = false;
@@ -171,23 +185,6 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  void _showGermanTurnDialog() {
-    showDialog(
-        context: context,
-        builder: (BuildContext builderContext) {
-          Timer _timer = Timer(const Duration(seconds: 5), () {
-            Navigator.of(context).pop();
-          });
-
-          return const AlertDialog(
-            backgroundColor: Color(0xffd3d3d3),
-            title: Text('German planning move'),
-            content: SingleChildScrollView(
-                child: LinearProgressIndicator(value: null)),
-          );
-        });
-  }
-
   Widget _nextButton() {
     return OutlinedButton(
         child: const Text(
@@ -197,6 +194,9 @@ class _GameScreenState extends State<GameScreen> {
         ),
         onPressed: () {
           _gm.incrementPhase();
+          setState(() {
+            // redraw interface
+          });
           _cf.clearSelectedCards();
           _resetSelectedUnit();
           _resetSelectedSquare();
@@ -204,17 +204,36 @@ class _GameScreenState extends State<GameScreen> {
           if (_gm.phase == enumPhase.orders) {
             _resetUnitFlags();
           }
+
           // if now the german turn, do different stuff
           if (_gm.player == enumPlayer.german) {
-            // draw up cards
-            _cf.drawCards();
-            _showGermanTurnDialog();
-            _gm.jump();
-          } else {
-            if (_gm.phase == enumPhase.orders) {
-              _cf.drawCards();
+            _gp.doOrdersPhase(context, _cf);
+            List<GermanMove> moves = _gp.doMovePhase(context, _cf, _mf, _map);
+
+            if (moves.isNotEmpty) {
+              bool moveNegated = false;
+
+              // go through each one
+              for (GermanMove move in moves) {
+                if (_playerCanNegate(enumCardNegate.move)) {
+                  // TODO: display a dialog w/yes/no for player
+                }
+                if (!moveNegated) {
+                  // move the unit
+                  _map[move.end].units.add(move.unit);
+                  _map[move.begin].units.remove(move.unit);
+                }
+              }
             }
+
+            _gm.jump();
           }
+
+          // draw up cards for both if orders phase
+          if (_gm.phase == enumPhase.orders) {
+            _cf.drawCards();
+          }
+
           setState(() {
             // redraw interface
           });
@@ -249,20 +268,20 @@ class _GameScreenState extends State<GameScreen> {
         height: 60.0,
         width: 5.0,
       ),
-      for (int i = 0; i < _cf.playerHand().length; i++)
+      for (int i = 0; i < _cf.americanHand().length; i++)
         GestureDetector(
           onTap: () {
-            _toggleSelectedCard(_cf.playerHand()[i].id);
+            _toggleSelectedCard(_cf.americanHand()[i].id);
           },
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: _getCardBorderColor(_cf.playerHand()[i].id),
+              color: _getCardBorderColor(_cf.americanHand()[i].id),
               //border: Border.all(width: 1),
             ),
             height: 68,
             width: 58,
-            child: Image.asset(_cf.playerHand()[i].graphic),
+            child: Image.asset(_cf.americanHand()[i].graphic),
           ),
         ),
     ]);
