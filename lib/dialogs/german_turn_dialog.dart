@@ -2,12 +2,12 @@ import 'package:fix_bayonets/const.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-String _message(enumPhase currentPhase) {
+String _message(EnumPhase currentPhase) {
   String message = "";
 
-  if (currentPhase == enumPhase.orders) {
+  if (currentPhase == EnumPhase.orders) {
     message = "discarding cards";
-  } else if (currentPhase == enumPhase.move) {
+  } else if (currentPhase == EnumPhase.move) {
     message = "deciding on moves";
   } else {
     message = "planning attacks";
@@ -16,7 +16,7 @@ String _message(enumPhase currentPhase) {
   return message;
 }
 
-void showGermanTurnDialog(BuildContext context, enumPhase currentPhase) {
+void showGermanTurnDialog(BuildContext context, EnumPhase currentPhase) {
   showDialog(
       context: context,
       builder: (BuildContext builderContext) {

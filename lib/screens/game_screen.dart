@@ -48,7 +48,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _discardCards() {
-    _cf.discardCards(enumPlayer.american);
+    _cf.discardCards(EnumPlayer.american);
     setState(() {});
   }
 
@@ -103,14 +103,14 @@ class _GameScreenState extends State<GameScreen> {
     GameCard card = _cf.getCardById(id);
 
     // if they have more than 3 cards, player is able to multi-select
-    if (_gm.phase == enumPhase.orders) {
+    if (_gm.phase == EnumPhase.orders) {
       multiselect = true;
     }
 
     // if they are trying to pick a german card during move or attack phase, just bail
-    if (card.player == enumPlayerUse.german) {
+    if (card.player == EnumPlayerUse.german) {
       // must be during orders phase
-      if (_gm.phase == enumPhase.orders) {
+      if (_gm.phase == EnumPhase.orders) {
         _cf.toggleSelected(id, multiselect);
       } else {
         print(
@@ -119,14 +119,14 @@ class _GameScreenState extends State<GameScreen> {
       // they selected an american card
     } else {
       // make sure they are selecting card based on phase
-      if ((_gm.phase == enumPhase.move) && (card.type == enumCardType.move)) {
+      if ((_gm.phase == EnumPhase.move) && (card.type == EnumCardType.move)) {
         _cf.toggleSelected(id, multiselect);
         _checkMove();
-      } else if ((_gm.phase == enumPhase.attack) &&
-          (card.type == enumCardType.attack)) {
+      } else if ((_gm.phase == EnumPhase.attack) &&
+          (card.type == EnumCardType.attack)) {
         _cf.toggleSelected(id, multiselect);
         _checkAttack();
-      } else if (_gm.phase == enumPhase.orders) {
+      } else if (_gm.phase == EnumPhase.orders) {
         _cf.toggleSelected(id, multiselect);
       } else {
         print('_toggleSelectedCard() - card not allowed for this situation');
@@ -160,11 +160,11 @@ class _GameScreenState extends State<GameScreen> {
         });
   }
 
-  bool _playerCanNegate(enumCardNegate negate) {
+  bool _playerCanNegate(EnumCardNegate negate) {
     bool canNegate = false;
 
     for (GameCard card in _cf.americanHand()) {
-      if ((card.type == enumCardType.negate) && (card.negate == negate)) {
+      if ((card.type == EnumCardType.negate) && (card.negate == negate)) {
         canNegate = true;
         break;
       }
@@ -201,13 +201,16 @@ class _GameScreenState extends State<GameScreen> {
           _resetSelectedUnit();
           _resetSelectedSquare();
           // if it is an orders phase (regardless of player), reset all the move/attack flags
-          if (_gm.phase == enumPhase.orders) {
+          if (_gm.phase == EnumPhase.orders) {
             _resetUnitFlags();
           }
 
           // if now the german turn, do different stuff
-          if (_gm.player == enumPlayer.german) {
+          if (_gm.player == EnumPlayer.german) {
+            // orders phase
             _gp.doOrdersPhase(context, _cf);
+
+            // move phase
             List<GermanMove> moves = _gp.doMovePhase(context, _cf, _mf, _map);
 
             if (moves.isNotEmpty) {
@@ -215,7 +218,7 @@ class _GameScreenState extends State<GameScreen> {
 
               // go through each one
               for (GermanMove move in moves) {
-                if (_playerCanNegate(enumCardNegate.move)) {
+                if (_playerCanNegate(EnumCardNegate.move)) {
                   // TODO: display a dialog w/yes/no for player
                 }
                 if (!moveNegated) {
@@ -226,11 +229,29 @@ class _GameScreenState extends State<GameScreen> {
               }
             }
 
+            // attack phase
+            List<GermanAttack> attacks =
+                _gp.doAttackPhase(context, _cf, _mf, _map);
+            if (attacks.isNotEmpty) {
+              bool attackNegated = false;
+
+              // go through each one
+              for (GermanAttack attack in attacks) {
+                if (_playerCanNegate(EnumCardNegate.attack)) {
+                  // TODO: display a dialog w/yes/no for player
+                }
+                if (!attackNegated) {
+                  // do the attack
+
+                }
+              }
+            }
+
             _gm.jump();
           }
 
           // draw up cards for both if orders phase
-          if (_gm.phase == enumPhase.orders) {
+          if (_gm.phase == EnumPhase.orders) {
             _cf.drawCards();
           }
 
@@ -249,8 +270,8 @@ class _GameScreenState extends State<GameScreen> {
         ),
         onPressed: () {
           // cancel move or attack (depending on phase)
-          if ((_gm.phase == enumPhase.move) ||
-              (_gm.phase == enumPhase.attack)) {
+          if ((_gm.phase == EnumPhase.move) ||
+              (_gm.phase == EnumPhase.attack)) {
             _cf.clearSelectedCards();
             _resetSelectedUnit();
             _ableToCancelAction = false;
@@ -437,14 +458,14 @@ class _GameScreenState extends State<GameScreen> {
     // if they have a unit selected, and if they have selected an appropriate attack card, go!
     try {
       Unit unit = _getSelectedUnit();
-      if (unit.owner == enumUnitOwner.american) {
+      if (unit.owner == EnumUnitOwner.american) {
         GameCard card = _cf.getSelectedCard();
         // must be an attack card, and unit must be able to attack
-        if ((card.type == enumCardType.attack) &&
-            (card.player != enumPlayerUse.german) &&
+        if ((card.type == EnumCardType.attack) &&
+            (card.player != EnumPlayerUse.german) &&
             (!unit.hasAttacked)) {
           // we got this far, let's see if there are other attack restrictions
-          if ((card.useby != unit.type) && (card.useby != enumUnitType.all)) {
+          if ((card.useby != unit.type) && (card.useby != EnumUnitType.all)) {
             _cf.clearSelectedCards();
             setState(() {});
             return;
@@ -474,11 +495,11 @@ class _GameScreenState extends State<GameScreen> {
     // if they have a unit selected, and if they have selected an appropriate move card, go!
     try {
       Unit unit = _getSelectedUnit();
-      if (unit.owner == enumUnitOwner.american) {
+      if (unit.owner == EnumUnitOwner.american) {
         GameCard card = _cf.getSelectedCard();
         // must be a move card, and unit must be able to move
-        if ((card.type == enumCardType.move) &&
-            (card.player != enumPlayerUse.german) &&
+        if ((card.type == EnumCardType.move) &&
+            (card.player != EnumPlayerUse.german) &&
             (!unit.hasMoved)) {
           // show valid move options
           _showMapSquaresForMove = true;
@@ -506,8 +527,8 @@ class _GameScreenState extends State<GameScreen> {
     for (int i = 0; i < _map.length; i++) {
       if (_map[i].units.isNotEmpty) {
         for (Unit unit in _map[i].units) {
-          if ((unit.owner == enumUnitOwner.german) &&
-              (unit.type == enumUnitType.officer)) {
+          if ((unit.owner == EnumUnitOwner.german) &&
+              (unit.type == EnumUnitType.officer)) {
             officerCount++;
           }
         }
@@ -524,7 +545,7 @@ class _GameScreenState extends State<GameScreen> {
     MapSquare mapSquare = _map[pos];
     if (mapSquare.units.isNotEmpty) {
       for (Unit u in mapSquare.units) {
-        if (u.owner == enumUnitOwner.german) {
+        if (u.owner == EnumUnitOwner.german) {
           enemyUnits = true;
           break;
         }
@@ -534,7 +555,7 @@ class _GameScreenState extends State<GameScreen> {
     return enemyUnits;
   }
 
-  bool _germanNegates(enumCardNegate cardNegate) {
+  bool _germanNegates(EnumCardNegate cardNegate) {
     return _cf.germanCanNegate(cardNegate);
   }
 
@@ -545,14 +566,14 @@ class _GameScreenState extends State<GameScreen> {
         (_attackOptions[pos] == constValidSpace) &&
         (_enemyUnitsInMapSquare(pos))) {
       // so yes an attack can occur, but check first to see if german player negates it
-      if (!_germanNegates(enumCardNegate.attack)) {
+      if (!_germanNegates(EnumCardNegate.attack)) {
         // if attack was with grenade, machine gun, or flame thrower, kill every unit
         // otherwise,
         // if there's only one unit in the spot, eliminate it
         GameCard gameCard = _cf.getSelectedCard();
-        if ((gameCard.name == enumCardName.grenade) ||
-            (gameCard.name == enumCardName.flamethrower) ||
-            (gameCard.name == enumCardName.machinegun)) {
+        if ((gameCard.name == EnumCardName.grenade) ||
+            (gameCard.name == EnumCardName.flamethrower) ||
+            (gameCard.name == EnumCardName.machinegun)) {
           // every unit in square dies
           _map[pos].units.clear();
           if (_isGameOver()) showUnitKilledAllDialog(context);
@@ -610,7 +631,7 @@ class _GameScreenState extends State<GameScreen> {
         (!_enemyUnitsInMapSquare(pos))) {
       Unit unit = _getSelectedUnit();
       // before actually making the move, decide if the german player can negate it
-      if (!_germanNegates(enumCardNegate.move)) {
+      if (!_germanNegates(EnumCardNegate.move)) {
         // move the unit to the new square
         _map[_getMapSquarePosition(_getSelectedSquare())]
             .units
@@ -630,9 +651,9 @@ class _GameScreenState extends State<GameScreen> {
       // move the unit to the spot
       unit.numTimesMoved++;
       // if runner unit, then don't set hasMoved until times == 2
-      if ((unit.type == enumUnitType.runner) && (unit.numTimesMoved == 2)) {
+      if ((unit.type == EnumUnitType.runner) && (unit.numTimesMoved == 2)) {
         unit.hasMoved = true;
-      } else if (unit.type != enumUnitType.runner) {
+      } else if (unit.type != EnumUnitType.runner) {
         unit.hasMoved = true;
       }
 
@@ -642,7 +663,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _setSelectedUnit(Unit selectedUnit) {
     // if not player unit, just bail
-    if (selectedUnit.owner == enumUnitOwner.american) {
+    if (selectedUnit.owner == EnumUnitOwner.american) {
       for (int i = 0; i < _map.length; i++) {
         if (_map[i].units.isNotEmpty) {
           for (Unit unit in _map[i].units) {
@@ -656,9 +677,9 @@ class _GameScreenState extends State<GameScreen> {
           }
         }
       }
-      if (_gm.phase == enumPhase.move) {
+      if (_gm.phase == EnumPhase.move) {
         _checkMove();
-      } else if (_gm.phase == enumPhase.attack) {
+      } else if (_gm.phase == EnumPhase.attack) {
         _checkAttack();
       }
       setState(() {});
@@ -686,7 +707,7 @@ class _GameScreenState extends State<GameScreen> {
           for (var u in _map[_getMapSquarePosition(_getSelectedSquare())].units)
             GestureDetector(
                 onTap: () {
-                  if (_gm.phase != enumPhase.orders) _setSelectedUnit(u);
+                  if (_gm.phase != EnumPhase.orders) _setSelectedUnit(u);
                 },
                 child: Container(
                     decoration: BoxDecoration(
@@ -809,9 +830,9 @@ class _GameScreenState extends State<GameScreen> {
               ),
               _cardRow(),
               const Padding(padding: EdgeInsets.all(5.0)),
-              if (_gm.phase == enumPhase.orders)
+              if (_gm.phase == EnumPhase.orders)
                 _phaseNotice(ordersNotice)
-              else if (_gm.phase == enumPhase.move)
+              else if (_gm.phase == EnumPhase.move)
                 _phaseNotice(moveNotice)
               else
                 _phaseNotice(attackNotice),
@@ -819,7 +840,7 @@ class _GameScreenState extends State<GameScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  if ((_cf.cardsSelected()) && (_gm.phase == enumPhase.orders))
+                  if ((_cf.cardsSelected()) && (_gm.phase == EnumPhase.orders))
                     _discardButton()
                   else if (_ableToCancelAction)
                     _cancelButton()

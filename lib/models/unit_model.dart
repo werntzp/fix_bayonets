@@ -2,9 +2,9 @@ import '../const.dart';
 
 class Unit {
   final int id;
-  final enumUnitType type;
-  final enumUnitOwner owner;
-  final enumUnitMoveAllowed move;
+  final EnumUnitType type;
+  final EnumUnitOwner owner;
+  final EnumUnitMoveAllowed move;
   bool hasMoved = false;
   bool hasAttacked = false;
   bool isAlive = true;
@@ -26,35 +26,35 @@ class UnitFactory {
     String s = gfxUsRifle;
 
     // return based on image type
-    if ((u.type == enumUnitType.rifleman) &&
-        (u.owner == enumUnitOwner.american)) {
+    if ((u.type == EnumUnitType.rifleman) &&
+        (u.owner == EnumUnitOwner.american)) {
       s = gfxUsRifle.toString();
-    } else if ((u.type == enumUnitType.officer) &&
-        (u.owner == enumUnitOwner.american)) {
+    } else if ((u.type == EnumUnitType.officer) &&
+        (u.owner == EnumUnitOwner.american)) {
       s = gfxUsOfficer.toString();
-    } else if ((u.type == enumUnitType.heavyweapon) &&
-        (u.owner == enumUnitOwner.american)) {
+    } else if ((u.type == EnumUnitType.heavyweapon) &&
+        (u.owner == EnumUnitOwner.american)) {
       s = gfxUsHeavy.toString();
-    } else if ((u.type == enumUnitType.runner) &&
-        (u.owner == enumUnitOwner.american)) {
+    } else if ((u.type == EnumUnitType.runner) &&
+        (u.owner == EnumUnitOwner.american)) {
       s = gfxUsRunner.toString();
-    } else if ((u.type == enumUnitType.sniper) &&
-        (u.owner == enumUnitOwner.american)) {
+    } else if ((u.type == EnumUnitType.sniper) &&
+        (u.owner == EnumUnitOwner.american)) {
       s = gfxUsSniper.toString();
-    } else if ((u.type == enumUnitType.rifleman) &&
-        (u.owner == enumUnitOwner.german)) {
+    } else if ((u.type == EnumUnitType.rifleman) &&
+        (u.owner == EnumUnitOwner.german)) {
       s = gfxGermanRifle.toString();
-    } else if ((u.type == enumUnitType.officer) &&
-        (u.owner == enumUnitOwner.german)) {
+    } else if ((u.type == EnumUnitType.officer) &&
+        (u.owner == EnumUnitOwner.german)) {
       s = gfxGermanOfficer.toString();
-    } else if ((u.type == enumUnitType.heavyweapon) &&
-        (u.owner == enumUnitOwner.german)) {
+    } else if ((u.type == EnumUnitType.heavyweapon) &&
+        (u.owner == EnumUnitOwner.german)) {
       s = gfxGermanHeavy.toString();
-    } else if ((u.type == enumUnitType.runner) &&
-        (u.owner == enumUnitOwner.german)) {
+    } else if ((u.type == EnumUnitType.runner) &&
+        (u.owner == EnumUnitOwner.german)) {
       s = gfxGermanRunner.toString();
-    } else if ((u.type == enumUnitType.sniper) &&
-        (u.owner == enumUnitOwner.german)) {
+    } else if ((u.type == EnumUnitType.sniper) &&
+        (u.owner == EnumUnitOwner.german)) {
       s = gfxGermanSniper.toString();
     }
 
@@ -64,70 +64,70 @@ class UnitFactory {
   List<Unit> prepareUnits() {
     List<Unit> units = [];
 
-    units.add(Unit(1, enumUnitType.officer, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(2, enumUnitType.officer, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(3, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(4, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(5, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(6, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(7, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(8, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(9, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(10, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(11, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(12, enumUnitType.rifleman, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(13, enumUnitType.heavyweapon, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(14, enumUnitType.heavyweapon, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(15, enumUnitType.sniper, enumUnitOwner.german,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(16, enumUnitType.runner, enumUnitOwner.german,
-        enumUnitMoveAllowed.two));
-    units.add(Unit(17, enumUnitType.officer, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(18, enumUnitType.officer, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(19, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(20, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(21, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(22, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(23, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(24, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(25, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(26, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(27, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(28, enumUnitType.rifleman, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(29, enumUnitType.heavyweapon, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(30, enumUnitType.heavyweapon, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(31, enumUnitType.sniper, enumUnitOwner.american,
-        enumUnitMoveAllowed.one));
-    units.add(Unit(32, enumUnitType.runner, enumUnitOwner.american,
-        enumUnitMoveAllowed.two));
+    units.add(Unit(1, EnumUnitType.officer, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(2, EnumUnitType.officer, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(3, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(4, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(5, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(6, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(7, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(8, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(9, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(10, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(11, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(12, EnumUnitType.rifleman, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(13, EnumUnitType.heavyweapon, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(14, EnumUnitType.heavyweapon, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(15, EnumUnitType.sniper, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(16, EnumUnitType.runner, EnumUnitOwner.german,
+        EnumUnitMoveAllowed.two));
+    units.add(Unit(17, EnumUnitType.officer, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(18, EnumUnitType.officer, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(19, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(20, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(21, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(22, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(23, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(24, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(25, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(26, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(27, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(28, EnumUnitType.rifleman, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(29, EnumUnitType.heavyweapon, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(30, EnumUnitType.heavyweapon, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(31, EnumUnitType.sniper, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.one));
+    units.add(Unit(32, EnumUnitType.runner, EnumUnitOwner.american,
+        EnumUnitMoveAllowed.two));
 
     return units;
   }

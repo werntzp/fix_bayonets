@@ -33,7 +33,7 @@ class MapFactory {
         graphic = unitFactory.getUnitImage(mapSquare.units.first);
       } else {
         // stacked units, so decide whether to show US or German icon
-        if (mapSquare.units.first.owner == enumUnitOwner.american) {
+        if (mapSquare.units.first.owner == EnumUnitOwner.american) {
           graphic = gfxUsStacked;
         } else {
           graphic = gfxGermanStacked;
@@ -215,7 +215,7 @@ class MapFactory {
 
     for (Unit u in units) {
       // top row for american units, bottom for german to start
-      if (u.owner == enumUnitOwner.american) {
+      if (u.owner == EnumUnitOwner.american) {
         min = 0;
         max = 8;
       } else {

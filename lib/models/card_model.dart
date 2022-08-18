@@ -1,16 +1,15 @@
 import 'package:fix_bayonets/const.dart';
-import 'package:fix_bayonets/models/game_model.dart';
 import 'dart:math';
 
 class GameCard {
   final int id;
-  final enumCardName name;
-  final enumCardType type;
+  final EnumCardName name;
+  final EnumCardType type;
   final int minrange;
   final int maxrange;
-  final enumPlayerUse player;
-  final enumCardNegate negate;
-  final enumUnitType useby;
+  final EnumPlayerUse player;
+  final EnumCardNegate negate;
+  final EnumUnitType useby;
   final String graphic;
 
   GameCard(this.id, this.name, this.type, this.minrange, this.maxrange,
@@ -31,10 +30,10 @@ class CardFactory {
     _selected.clear();
   }
 
-  void discardCards(enumPlayer player) {
+  void discardCards(EnumPlayer player) {
     for (GameCard c in _selected) {
       _discardPile.add(c);
-      if (player == enumPlayer.american) {
+      if (player == EnumPlayer.american) {
         _americanHand.removeWhere((element) => element.id == c.id);
       } else {
         _germanHand.removeWhere((element) => element.id == c.id);
@@ -100,8 +99,8 @@ class CardFactory {
     return _selected.isNotEmpty;
   }
 
-  void discardOtherPlayersCards(enumPlayer currentPlayer) {
-    currentPlayer == enumPlayer.american
+  void discardOtherPlayersCards(EnumPlayer currentPlayer) {
+    currentPlayer == EnumPlayer.american
         ? _discardAmericanCards()
         : _discardGermanCards();
   }
@@ -109,7 +108,7 @@ class CardFactory {
   void _discardAmericanCards() {
     List<int> remove = [];
     for (GameCard card in _germanHand) {
-      if (card.player == enumPlayerUse.american) {
+      if (card.player == EnumPlayerUse.american) {
         // move that card to the discard pile
         _discardPile.add(card);
         remove.add(card.id);
@@ -125,7 +124,7 @@ class CardFactory {
   void _discardGermanCards() {
     List<int> remove = [];
     for (GameCard card in _americanHand) {
-      if (card.player == enumPlayerUse.german) {
+      if (card.player == EnumPlayerUse.german) {
         // move that card to the discard pile
         _discardPile.add(card);
         remove.add(card.id);
@@ -138,12 +137,12 @@ class CardFactory {
     }
   }
 
-  bool germanCanNegate(enumCardNegate phase) {
+  bool germanCanNegate(EnumCardNegate phase) {
     bool canNegate = false;
 
     // make sure card valid for this phase, and isn't restricted to the american player
     for (GameCard card in _germanHand) {
-      if ((card.negate == phase) && (card.useby != enumPlayerUse.american)) {
+      if ((card.negate == phase) && (card.useby != EnumPlayerUse.american)) {
         // instead of always negating when they can, make it a 30% shot
         if (Random().nextInt(3) == 0) {
           // set the flag
@@ -176,9 +175,10 @@ class CardFactory {
     }
 
     // check german hand -- only draw if 3 or fewer cards
-    if (_germanHand.length < 3) {
+    int diff = _germanHand.length;
+    if (diff < 3) {
       // only draw up to 3 total
-      for (int i = 0; i < (constMaxCardsInHand - _germanHand.length); i++) {
+      for (int i = 0; i < (constMaxCardsInHand - diff); i++) {
         _germanHand.add(_drawPile[i]);
         _drawPile.remove(_drawPile[i]);
       }
@@ -193,13 +193,13 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.bayonet,
-          enumCardType.attack,
+          EnumCardName.bayonet,
+          EnumCardType.attack,
           1,
           1,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxAttack1));
     }
     // pistol x3
@@ -207,13 +207,13 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.pistol,
-          enumCardType.attack,
+          EnumCardName.pistol,
+          EnumCardType.attack,
           1,
           2,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.officer,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.officer,
           gfxAttack2Officer));
     }
     // flamer thrower x3
@@ -221,13 +221,13 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.flamethrower,
-          enumCardType.attack,
+          EnumCardName.flamethrower,
+          EnumCardType.attack,
           2,
           3,
-          enumPlayerUse.german,
-          enumCardNegate.neither,
-          enumUnitType.heavyweapon,
+          EnumPlayerUse.german,
+          EnumCardNegate.neither,
+          EnumUnitType.heavyweapon,
           gfxAttack23German));
     }
     // grenade x3
@@ -235,13 +235,13 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.grenade,
-          enumCardType.attack,
+          EnumCardName.grenade,
+          EnumCardType.attack,
           constZigZag,
           constZigZag,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxAttackZ));
     }
     // rifle x3
@@ -249,39 +249,39 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.grenade,
-          enumCardType.attack,
+          EnumCardName.grenade,
+          EnumCardType.attack,
           3,
           3,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxAttack3));
     } // rifle x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.rifle,
-          enumCardType.attack,
+          EnumCardName.rifle,
+          EnumCardType.attack,
           4,
           4,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxAttack4));
     } // machine gun x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.machinegun,
-          enumCardType.attack,
+          EnumCardName.machinegun,
+          EnumCardType.attack,
           4,
           5,
-          enumPlayerUse.american,
-          enumCardNegate.neither,
-          enumUnitType.heavyweapon,
+          EnumPlayerUse.american,
+          EnumCardNegate.neither,
+          EnumUnitType.heavyweapon,
           gfxAttack45American));
     }
     // sniper x3
@@ -289,13 +289,13 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.sniper,
-          enumCardType.attack,
+          EnumCardName.sniper,
+          EnumCardType.attack,
           5,
           6,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.sniper,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.sniper,
           gfxAttack56Sniper));
     }
     // crawl x3
@@ -303,52 +303,52 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.crawl,
-          enumCardType.move,
+          EnumCardName.crawl,
+          EnumCardType.move,
           1,
           1,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMove1));
     } // march x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.march,
-          enumCardType.move,
+          EnumCardName.march,
+          EnumCardType.move,
           1,
           2,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMove2));
     } // double time x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.doubletime,
-          enumCardType.move,
+          EnumCardName.doubletime,
+          EnumCardType.move,
           1,
           3,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMove3));
     } // zig zag x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.zigzag,
-          enumCardType.move,
+          EnumCardName.zigzag,
+          EnumCardType.move,
           constZigZag,
           constZigZag,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMoveZ));
     }
     // run x3
@@ -356,26 +356,26 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.run,
-          enumCardType.move,
+          EnumCardName.run,
+          EnumCardType.move,
           1,
           4,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMove4));
     } // charge x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.charge,
-          enumCardType.move,
+          EnumCardName.charge,
+          EnumCardType.move,
           1,
           5,
-          enumPlayerUse.both,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMove5));
     }
     // advance x3
@@ -383,13 +383,13 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.advance,
-          enumCardType.move,
+          EnumCardName.advance,
+          EnumCardType.move,
           1,
           2,
-          enumPlayerUse.german,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.german,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMove2German));
     }
     // counter attack
@@ -397,52 +397,52 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.counterattack,
-          enumCardType.move,
+          EnumCardName.counterattack,
+          EnumCardType.move,
           1,
           3,
-          enumPlayerUse.american,
-          enumCardNegate.neither,
-          enumUnitType.all,
+          EnumPlayerUse.american,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
           gfxMove3American));
     } // smoke x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.smoke,
-          enumCardType.negate,
+          EnumCardName.smoke,
+          EnumCardType.negate,
           0,
           0,
-          enumPlayerUse.both,
-          enumCardNegate.attack,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.attack,
+          EnumUnitType.all,
           gfxNegateAttack));
     } // artillery x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.artillery,
-          enumCardType.negate,
+          EnumCardName.artillery,
+          EnumCardType.negate,
           0,
           0,
-          enumPlayerUse.american,
-          enumCardNegate.attack,
-          enumUnitType.all,
+          EnumPlayerUse.american,
+          EnumCardNegate.attack,
+          EnumUnitType.all,
           gfxNegateAttackAmerican));
     } // wire x3
     for (int i = 0; i < 3; i++) {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.wire,
-          enumCardType.negate,
+          EnumCardName.wire,
+          EnumCardType.negate,
           0,
           0,
-          enumPlayerUse.both,
-          enumCardNegate.move,
-          enumUnitType.all,
+          EnumPlayerUse.both,
+          EnumCardNegate.move,
+          EnumUnitType.all,
           gfxNegateMove));
     }
     // landmine x3
@@ -450,13 +450,13 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          enumCardName.landmine,
-          enumCardType.negate,
+          EnumCardName.landmine,
+          EnumCardType.negate,
           0,
           0,
-          enumPlayerUse.german,
-          enumCardNegate.move,
-          enumUnitType.all,
+          EnumPlayerUse.german,
+          EnumCardNegate.move,
+          EnumUnitType.all,
           gfxNegateMoveGerman));
     }
 

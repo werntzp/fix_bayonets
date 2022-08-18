@@ -1,11 +1,11 @@
 import 'package:fix_bayonets/const.dart';
 import 'package:flutter/material.dart';
 
-String _message(enumPhase phase) {
+String _message(EnumPhase phase) {
   String message = "";
 
   // format the type of unit killed nicely
-  if (phase == enumPhase.move) {
+  if (phase == EnumPhase.move) {
     message = "move";
   } else {
     message = "attack";
@@ -14,7 +14,7 @@ String _message(enumPhase phase) {
   return message;
 }
 
-void showNegatedDialog(BuildContext context, enumPhase gamePhase) {
+void showNegatedDialog(BuildContext context, EnumPhase gamePhase) {
   showDialog<String>(
     context: context,
     builder: (BuildContext context) => AlertDialog(

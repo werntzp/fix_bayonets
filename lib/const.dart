@@ -3,6 +3,7 @@ const appSplashGraphic = "images/fix_bayonets_splash.jpg";
 const appVersion = "Version 1.0, May 2022";
 const sdsLogo = "images/sds_logo.png";
 
+const constInvalidUnit = -99;
 const constMapSize = 63;
 const constMaxCardsInHand = 3;
 const constNoCardSelected = -1;
@@ -58,27 +59,27 @@ const moveNotice =
 const attackNotice =
     'Attack Phase: Choose an Attack (red) card, then a unit to attack with, and a target.';
 
-enum enumPhase { orders, move, attack }
+enum EnumPhase { orders, move, attack }
 
-enum enumMoveType { regular, zigzag }
+enum EnumMoveType { regular, zigzag }
 
-enum enumPlayer { american, german }
+enum EnumPlayer { american, german }
 
-enum enumUnitType { officer, rifleman, heavyweapon, runner, sniper, all }
+enum EnumUnitType { officer, rifleman, heavyweapon, runner, sniper, all }
 
-enum enumUnitOwner { american, german, neither }
+enum EnumUnitOwner { american, german, neither }
 
-enum enumUnitMoveAllowed { one, two }
+enum EnumUnitMoveAllowed { one, two }
 
-enum enumCardType { attack, move, negate }
+enum EnumCardType { attack, move, negate }
 
-enum enumCardLocation { american, german, draw, discard }
+enum EnumCardLocation { american, german, draw, discard }
 
-enum enumPlayerUse { american, german, both }
+enum EnumPlayerUse { american, german, both }
 
-enum enumCardNegate { move, attack, neither }
+enum EnumCardNegate { move, attack, neither }
 
-enum enumCardName {
+enum EnumCardName {
   bayonet,
   pistol,
   flamethrower,

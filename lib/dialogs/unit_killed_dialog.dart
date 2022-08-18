@@ -7,21 +7,21 @@ extension StringExtension on String {
   }
 }
 
-String _name(enumUnitType unitType) {
-  return enumUnitType.values[unitType.index].name.toString().capitalize();
+String _name(EnumUnitType unitType) {
+  return EnumUnitType.values[unitType.index].name.toString().capitalize();
 }
 
-String _unitKilledMessage(enumUnitType unitType) {
+String _unitKilledMessage(EnumUnitType unitType) {
   String name = "";
 
   // format the type of unit killed nicely
-  if (unitType == enumUnitType.heavyweapon) {
+  if (unitType == EnumUnitType.heavyweapon) {
     name = "a Heavy Weappn Specialist";
-  } else if (unitType == enumUnitType.officer) {
+  } else if (unitType == EnumUnitType.officer) {
     name = "an Officer";
-  } else if (unitType == enumUnitType.rifleman) {
+  } else if (unitType == EnumUnitType.rifleman) {
     name = "a Rifelman";
-  } else if (unitType == enumUnitType.runner) {
+  } else if (unitType == EnumUnitType.runner) {
     name = "a Runner";
   } else {
     name = "a Sniper";
@@ -31,7 +31,7 @@ String _unitKilledMessage(enumUnitType unitType) {
 }
 
 void showUnitKilledDialog(
-    BuildContext context, enumUnitType unitType, int unitID) {
+    BuildContext context, EnumUnitType unitType, int unitID) {
   showDialog<String>(
     context: context,
     builder: (BuildContext context) => AlertDialog(

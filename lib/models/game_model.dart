@@ -2,45 +2,45 @@ import 'package:fix_bayonets/const.dart';
 
 class GameModel {
   int round = 1;
-  enumPhase phase = enumPhase.orders;
-  enumPlayer player = enumPlayer.american;
+  EnumPhase phase = EnumPhase.orders;
+  EnumPlayer player = EnumPlayer.american;
 
   GameModel();
 
   void incrementPhase() {
     // if we throw an error incrementing the phase, we've got too far,
     try {
-      phase = enumPhase.values[phase.index + 1];
+      phase = EnumPhase.values[phase.index + 1];
     } catch (e) {
-      phase = enumPhase.orders;
+      phase = EnumPhase.orders;
     }
 
     // if we cycle through to a new orders phase,
-    if (phase == enumPhase.orders) {
+    if (phase == EnumPhase.orders) {
       // if german player, increment the round
-      if (player == enumPlayer.german) {
+      if (player == EnumPlayer.german) {
         round++;
       }
       // switch the player
-      player == enumPlayer.german
-          ? player = enumPlayer.american
-          : player = enumPlayer.german;
+      player == EnumPlayer.german
+          ? player = EnumPlayer.american
+          : player = EnumPlayer.german;
     }
   }
 
   void newGame() {
     round = 1;
-    phase = enumPhase.orders;
-    player = enumPlayer.american;
+    phase = EnumPhase.orders;
+    player = EnumPlayer.american;
   }
 
   void jump() {
     round++;
-    phase = enumPhase.orders;
-    player = enumPlayer.american;
+    phase = EnumPhase.orders;
+    player = EnumPlayer.american;
   }
 
   String displayPlayer() {
-    return player == enumPlayer.german ? gfxGermanFlag : gfxAmericanFlag;
+    return player == EnumPlayer.german ? gfxGermanFlag : gfxAmericanFlag;
   }
 }

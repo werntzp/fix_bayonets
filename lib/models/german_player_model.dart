@@ -15,10 +15,10 @@ class GermanMove {
 }
 
 class GermanAttack {
-  final Unit unit;
-  final int target;
+  final Unit selectedUnit;
+  final Unit targetUnit;
 
-  GermanAttack(this.unit, this.target);
+  GermanAttack(this.selectedUnit, this.targetUnit);
 }
 
 class GermanPlayer {
@@ -56,15 +56,62 @@ class GermanPlayer {
     return unitToMove;
   }
 
+  Unit _getTargetUnit(
+      MapFactory mapFactory,
+      List<MapSquare> mapSquares,
+      int selectedUnitPos,
+      Unit selectedUnit,
+      int minDistance,
+      int maxDistance) {
+    Unit targetUnit = Unit(constInvalidUnit, EnumUnitType.all,
+        EnumUnitOwner.neither, EnumUnitMoveAllowed.one);
+
+    // figure out which spaces are in range for the selected unit
+    List<int> validMoves =
+        mapFactory.getValidMoves(selectedUnitPos, minDistance, maxDistance);
+
+    // go through and see if any american units in that space
+    for (int i = validMoves.length; i >= 0; i--) {
+      if (validMoves[i] == constValidSpace) {
+        // is there a unit in there?
+        if (mapSquares[i].units.isNotEmpty) {
+          if (mapSquares[i].units.first.owner == EnumUnitOwner.american) {
+            targetUnit = mapSquares[i].units.first;
+            break;
+          }
+        }
+      }
+    }
+
+    // return that unit (or raise an error)
+    if (targetUnit.id == constInvalidUnit) {
+      throw Exception('No unit to attack');
+    } else {
+      return targetUnit;
+    }
+  }
+
+  bool _unitIsInRange(MapFactory mapFactory, int selectedUnitPos,
+      int targetUnitPos, int minDistance, int maxDistance) {
+    bool isInRange = false;
+
+    // get the list of valid moves, the figure out if the target unit is in a spot that can be attacked
+    List<int> validMoves =
+        mapFactory.getValidMoves(selectedUnitPos, minDistance, maxDistance);
+    if (validMoves[targetUnitPos] == constValidSpace) isInRange = true;
+
+    return isInRange;
+  }
+
   void doOrdersPhase(BuildContext context, CardFactory cardFactory) {
     // Discard any cards that are restricted to American use
-    cardFactory.discardOtherPlayersCards(enumPlayer.american);
+    cardFactory.discardOtherPlayersCards(EnumPlayer.american);
 
     // Discard any cards it can’t use (e.g., a sniper card when they don’t have a sniper unit left)
     // TODO: add logic for this
 
     // throw up a dialog just so they know what's going on
-    showGermanTurnDialog(context, enumPhase.orders);
+    showGermanTurnDialog(context, EnumPhase.orders);
   }
 
   List<GermanMove> doMovePhase(BuildContext context, CardFactory cardFactory,
@@ -79,7 +126,7 @@ class GermanPlayer {
     // find every German unit and drop it into a temp list
     for (MapSquare mapSquare in mapSquares) {
       if ((mapSquare.units.isNotEmpty) &&
-          (mapSquare.units.first.owner == enumUnitOwner.german)) {
+          (mapSquare.units.first.owner == EnumUnitOwner.german)) {
         for (Unit unit in mapSquare.units) {
           units.add(unit);
         }
@@ -88,8 +135,8 @@ class GermanPlayer {
 
     // does the german player have any move cards?
     for (GameCard card in cardFactory.germanHand()) {
-      if ((card.player != enumPlayerUse.american) &&
-          (card.type == enumCardType.move)) {
+      if ((card.player != EnumPlayerUse.american) &&
+          (card.type == EnumCardType.move)) {
         // select the card
         cardFactory.toggleSelected(card.id, false);
         // pick a random unit (that hasn't already moved)
@@ -98,10 +145,10 @@ class GermanPlayer {
         for (Unit u in units) {
           if (u.id == selectedUnit.id) {
             u.numTimesMoved++;
-            if ((u.numTimesMoved == 1) && (u.type != enumUnitType.runner)) {
+            if ((u.numTimesMoved == 1) && (u.type != EnumUnitType.runner)) {
               u.hasMoved = true;
             } else if ((u.numTimesMoved == 2) &&
-                (u.type == enumUnitType.runner)) {
+                (u.type == EnumUnitType.runner)) {
               u.hasMoved = true;
             }
           }
@@ -117,7 +164,7 @@ class GermanPlayer {
           if ((validMoves[endingPos] == constValidSpace) &&
               ((mapSquares[endingPos].units.isEmpty) ||
                   (mapSquares[endingPos].units.first.owner ==
-                      enumUnitOwner.german))) {
+                      EnumUnitOwner.german))) {
             // we have a valid move
             isValidMove = true;
           }
@@ -129,7 +176,7 @@ class GermanPlayer {
     }
 
     // discard any cards used
-    cardFactory.discardCards(enumPlayer.german);
+    cardFactory.discardCards(EnumPlayer.german);
 
     return moves;
   }
@@ -140,66 +187,140 @@ class GermanPlayer {
       MapFactory mapFactory,
       List<MapSquare> mapSquares) {
     List<GermanAttack> attacks = [];
-    List<Unit> units = [];
-    bool isValidMove = false;
-    int startingPos = constInvalidSpace;
-    int endingPos = constInvalidSpace;
-    Unit selectedUnit;
+    List<Unit> germanUnits = [];
+    List<Unit> americanUnits = [];
+    int targetUnitPos = constInvalidSpace;
+    int selectedUnitPos = constInvalidSpace;
+    Unit selectedUnit = Unit(constInvalidUnit, EnumUnitType.all,
+        EnumUnitOwner.neither, EnumUnitMoveAllowed.one);
+    Unit targetUnit = Unit(constInvalidUnit, EnumUnitType.all,
+        EnumUnitOwner.neither, EnumUnitMoveAllowed.one);
 
-    // find every German unit and drop it into a temp list
+    // put all the units into two lists for use later
     for (MapSquare mapSquare in mapSquares) {
-      if ((mapSquare.units.isNotEmpty) &&
-          (mapSquare.units.first.owner == enumUnitOwner.german)) {
-        for (Unit unit in mapSquare.units) {
-          units.add(unit);
+      if (mapSquare.units.isNotEmpty) {
+        if (mapSquare.units.first.owner == EnumUnitOwner.german) {
+          for (Unit unit in mapSquare.units) {
+            germanUnits.add(unit);
+          }
+        } else {
+          for (Unit unit in mapSquare.units) {
+            americanUnits.add(unit);
+          }
         }
       }
     }
 
-    // does the german player have any move cards?
+    // does the german player have any attack cards?
     for (GameCard card in cardFactory.germanHand()) {
-      if ((card.player != enumPlayerUse.american) &&
-          (card.type == enumCardType.move)) {
-        // select the card
-        cardFactory.toggleSelected(card.id, false);
-        // pick a random unit (that hasn't already moved)
-        selectedUnit = _randomUnit(units);
-        // increment number of times they've moved (if only one and not runner, mark them as have moved)
-        for (Unit u in units) {
-          if (u.id == selectedUnit.id) {
-            u.numTimesMoved++;
-            if ((u.numTimesMoved == 1) && (u.type != enumUnitType.runner)) {
-              u.hasMoved = true;
-            } else if ((u.numTimesMoved == 2) &&
-                (u.type == enumUnitType.runner)) {
-              u.hasMoved = true;
+      if ((card.player != EnumPlayerUse.american) &&
+          (card.type == EnumCardType.attack)) {
+        // first to check -- is there an american officer in range
+        // of a german unit that can use the attack card
+        // look for an officer unit
+        for (Unit u in americanUnits) {
+          if (u.type == EnumUnitType.officer) {
+            targetUnit = u;
+            targetUnitPos = _getUnitPosition(mapSquares, u);
+            break;
+          }
+        }
+
+        // check all the german units
+        for (Unit u in germanUnits) {
+          // can any of them hit the american officer unit?
+          selectedUnitPos = _getUnitPosition(mapSquares, u);
+          if (_unitIsInRange(mapFactory, selectedUnitPos, targetUnitPos,
+              card.minrange, card.maxrange)) {
+            // add to the array
+            attacks.add(GermanAttack(u, targetUnit));
+            // then break out
+            break;
+          }
+        }
+
+        // second to check -- are there any snipers units in range
+        // of a american unit that can use the attack card
+        if (attacks.isEmpty) {
+          for (Unit u in germanUnits) {
+            selectedUnit = u;
+            if (selectedUnit.type == EnumUnitType.sniper) {
+              // get position of german sniper
+              selectedUnitPos = _getUnitPosition(mapSquares, selectedUnit);
+              // is there a potential target unit?
+              try {
+                targetUnit = _getTargetUnit(
+                    mapFactory,
+                    mapSquares,
+                    selectedUnitPos,
+                    selectedUnit,
+                    card.minrange,
+                    card.maxrange);
+                // add that to the attack array
+                attacks.add(GermanAttack(u, targetUnit));
+              } catch (e) {
+                // no unit exists that can be attacked
+                break;
+              }
             }
           }
         }
-        // get where that unit is
-        startingPos = _getUnitPosition(mapSquares, selectedUnit);
-        // get the list of valid moves now
-        List<int> validMoves =
-            mapFactory.getValidMoves(startingPos, card.minrange, card.maxrange);
-        // use that list to find a spot where there are no enemy units so it can move
-        do {
-          endingPos = Random().nextInt(validMoves.length);
-          if ((validMoves[endingPos] == constValidSpace) &&
-              ((mapSquares[endingPos].units.isEmpty) ||
-                  (mapSquares[endingPos].units.first.owner ==
-                      enumUnitOwner.german))) {
-            // we have a valid move
-            isValidMove = true;
+
+        // third to check -- are there any machine gun units in range
+        // of an american unit that can use the attack card
+        if (attacks.isEmpty) {
+          for (Unit u in germanUnits) {
+            selectedUnit = u;
+            if (selectedUnit.type == EnumUnitType.heavyweapon) {
+              // get position of german sniper
+              selectedUnitPos = _getUnitPosition(mapSquares, selectedUnit);
+              // is there a potential target unit?
+              try {
+                targetUnit = _getTargetUnit(
+                    mapFactory,
+                    mapSquares,
+                    selectedUnitPos,
+                    selectedUnit,
+                    card.minrange,
+                    card.maxrange);
+                // add that to the attack array
+                attacks.add(GermanAttack(u, targetUnit));
+              } catch (e) {
+                // no unit exists that can be attacked
+                break;
+              }
+            }
           }
-        } while (!isValidMove);
+        }
 
-        // add that to the list of valid moves
-        moves.add(GermanMove(selectedUnit, startingPos, endingPos));
+        // finally -- just find an american unit that can be attacked
+        if (attacks.isEmpty) {
+          for (Unit u in germanUnits) {
+            selectedUnit = u;
+            // get position of german sniper
+            selectedUnitPos = _getUnitPosition(mapSquares, selectedUnit);
+            // is there a potential target unit?
+            try {
+              targetUnit = _getTargetUnit(mapFactory, mapSquares,
+                  selectedUnitPos, selectedUnit, card.minrange, card.maxrange);
+              // add that to the attack array
+              attacks.add(GermanAttack(u, targetUnit));
+            } catch (e) {
+              // no unit exists that can be attacked
+              break;
+            }
+          }
+        }
+
+        // if the german unit actually plans to attack, select the card and set the unit's flag
+        if (attacks.isNotEmpty) {
+          cardFactory.toggleSelected(card.id, false);
+        }
       }
-    }
 
-    // discard any cards used
-    cardFactory.discardCards(enumPlayer.german);
+      // discard any cards used
+      cardFactory.discardCards(EnumPlayer.german);
+    }
 
     return attacks;
   }
