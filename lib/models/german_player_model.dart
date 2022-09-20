@@ -305,9 +305,9 @@ class GermanPlayer {
                   selectedUnitPos, selectedUnit, card.minrange, card.maxrange);
               // add that to the attack array
               attacks.add(GermanAttack(u, targetUnit));
+              break;
             } catch (e) {
               // no unit exists that can be attacked
-              break;
             }
           }
         }
@@ -317,10 +317,10 @@ class GermanPlayer {
           cardFactory.toggleSelected(card.id, false);
         }
       }
-
-      // discard any cards used
-      cardFactory.discardCards(EnumPlayer.german);
     }
+
+    // discard any cards used
+    cardFactory.discardCards(EnumPlayer.german);
 
     return attacks;
   }

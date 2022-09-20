@@ -369,6 +369,64 @@ class _GameScreenState extends State<GameScreen> {
             ]));
   }
 
+  Widget _labelOrders() {
+    return Container(
+        color: Colors.white,
+        alignment: Alignment.center,
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
+          const SizedBox(width: 5),
+          Text(_gm.phase.name.toUpperCase(),
+              style: const TextStyle(
+                  color: Colors.black,
+                  fontFamily: 'HeadlinerNo45',
+                  fontSize: 30)),
+          const SizedBox(width: 5),
+        ]));
+  }
+
+  Widget _labelMove() {
+    return Container(
+        color: Colors.green,
+        alignment: Alignment.center,
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
+          const SizedBox(width: 5),
+          Text(_gm.phase.name.toUpperCase(),
+              style: const TextStyle(
+                  color: Colors.black,
+                  fontFamily: 'HeadlinerNo45',
+                  fontSize: 30)),
+          const SizedBox(width: 5),
+        ]));
+  }
+
+  Widget _labelAttack() {
+    return Container(
+        color: Colors.red,
+        alignment: Alignment.center,
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
+          const SizedBox(width: 5),
+          Text(_gm.phase.name.toUpperCase(),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'HeadlinerNo45',
+                  fontSize: 30)),
+          const SizedBox(width: 5),
+        ]));
+  }
+
+  Widget _displayPhase() {
+    if (_gm.phase == EnumPhase.orders) {
+      return _labelOrders();
+    } else if (_gm.phase == EnumPhase.move) {
+      return _labelMove();
+    } else {
+      return _labelAttack();
+    }
+  }
+
   Widget _displayText(String txt) {
     return Container(
         alignment: Alignment.center,
@@ -795,7 +853,12 @@ class _GameScreenState extends State<GameScreen> {
                   children: <Widget>[
                     _displayPlayer(_gm.displayPlayer()),
                     _displayText('Round: ' + _gm.round.toString()),
-                    _displayText('Phase: ' + _gm.phase.name.toUpperCase()),
+                    const Text("Phase: ",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: 'HeadlinerNo45',
+                            fontSize: 30)),
+                    _displayPhase(),
                   ],
                 ),
               ),
