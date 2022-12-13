@@ -3,6 +3,7 @@ import 'package:fix_bayonets/dialogs/game_over_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_all_dialog.dart';
 import 'package:fix_bayonets/dialogs/german_negated_dialog.dart';
+import 'package:fix_bayonets/dialogs/ask_to_negate_dialog.dart';
 import 'package:fix_bayonets/models/german_player_model.dart';
 import 'package:flutter/material.dart';
 import '../const.dart';
@@ -21,6 +22,7 @@ List<MapSquare> _map = [];
 bool _showMapSquaresForMove = false;
 bool _showMapSquaresForAttack = false;
 bool _ableToCancelAction = false;
+bool _negateAction = false;
 List<int> _moveOptions = List<int>.filled(64, constInvalidSpace);
 List<int> _attackOptions = List<int>.filled(64, constInvalidSpace);
 
@@ -219,12 +221,32 @@ class _GameScreenState extends State<GameScreen> {
               // go through each one
               for (GermanMove move in moves) {
                 if (_playerCanNegate(EnumCardNegate.move)) {
-                  // TODO: display a dialog w/yes/no for player
-                }
-                if (!moveNegated) {
-                  // move the unit
-                  _map[move.end].units.add(move.unit);
-                  _map[move.begin].units.remove(move.unit);
+                  showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Negate the German move?'),
+                      content:
+                          const Text('Do you want to negate the German move?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Yes'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('No'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  //showNegateDialog(context, EnumCardNegate.move);
+                  //negateGermanAction(EnumCardNegate.move);
+                  //if (!_negateAction) {
+                  // allow the unit to move
+                  //  _map[move.end].units.add(move.unit);
+                  //  _map[move.begin].units.remove(move.unit);
+                  // }
                 }
               }
             }
@@ -746,13 +768,25 @@ class _GameScreenState extends State<GameScreen> {
 
   bool _unitsToShow() {
     // check if there is more than one unit in the map square
+    bool showUnits = false;
+
     try {
-      return _map[_getMapSquarePosition(_getSelectedSquare())].units.length > 1
-          ? true
-          : false;
+      // is there at least one unit in the square?
+      if (_map[_getMapSquarePosition(_getSelectedSquare())].units.length > 1) {
+        // if yes, make sure it isn't a german unit
+        if (_map[_getMapSquarePosition(_getSelectedSquare())]
+                .units
+                .first
+                .owner ==
+            EnumUnitOwner.american) {
+          showUnits = true;
+        }
+      }
     } catch (e) {
-      return false;
+      // do nothing
     }
+
+    return showUnits;
   }
 
   Widget _unitRow() {

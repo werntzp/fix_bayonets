@@ -168,17 +168,17 @@ class CardFactory {
       _drawPile.shuffle();
     }
 
-    // draw 3 cards for american
-    for (int i = 0; i < 3; i++) {
+    // draw cards for american
+    for (int i = 0; i < constAmericanMaxCardsInHand; i++) {
       _americanHand.add(_drawPile[i]);
       _drawPile.remove(_drawPile[i]);
     }
 
     // check german hand -- only draw if 3 or fewer cards
     int diff = _germanHand.length;
-    if (diff < 3) {
-      // only draw up to 3 total
-      for (int i = 0; i < (constMaxCardsInHand - diff); i++) {
+    if (diff < constGermanMaxCardsInHand) {
+      // draw up
+      for (int i = 0; i < (constGermanMaxCardsInHand - diff); i++) {
         _germanHand.add(_drawPile[i]);
         _drawPile.remove(_drawPile[i]);
       }

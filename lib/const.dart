@@ -5,7 +5,8 @@ const sdsLogo = "images/sds_logo.png";
 
 const constInvalidUnit = -99;
 const constMapSize = 63;
-const constMaxCardsInHand = 3;
+const constAmericanMaxCardsInHand = 3;
+const constGermanMaxCardsInHand = 5;
 const constNoCardSelected = -1;
 const constZigZag = -1;
 const constValidSpace = 1;
@@ -100,3 +101,5 @@ enum EnumCardName {
   wire,
   landmine
 }
+
+enum EnumNegateAction { yes, no }
