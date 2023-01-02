@@ -43,6 +43,10 @@ class CardFactory {
     clearSelectedCards();
   }
 
+  EnumCardName getCardNameById(int id) {
+    return _masterDeck.firstWhere((element) => element.id == id).name;
+  }
+
   GameCard getCardById(int id) {
     return _masterDeck.firstWhere((element) => element.id == id);
   }

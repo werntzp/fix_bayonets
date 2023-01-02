@@ -17,8 +17,9 @@ class GermanMove {
 class GermanAttack {
   final Unit selectedUnit;
   final Unit targetUnit;
+  final GameCard gameCard;
 
-  GermanAttack(this.selectedUnit, this.targetUnit);
+  GermanAttack(this.selectedUnit, this.targetUnit, this.gameCard);
 }
 
 class GermanPlayer {
@@ -98,8 +99,9 @@ class GermanPlayer {
     // get the list of valid moves, the figure out if the target unit is in a spot that can be attacked
     List<int> validMoves =
         mapFactory.getValidMoves(selectedUnitPos, minDistance, maxDistance);
-    if (validMoves[targetUnitPos] == constValidSpace) isInRange = true;
-
+    if (targetUnitPos > 0) {
+      if (validMoves[targetUnitPos] == constValidSpace) isInRange = true;
+    }
     return isInRange;
   }
 
@@ -233,7 +235,7 @@ class GermanPlayer {
           if (_unitIsInRange(mapFactory, selectedUnitPos, targetUnitPos,
               card.minrange, card.maxrange)) {
             // add to the array
-            attacks.add(GermanAttack(u, targetUnit));
+            attacks.add(GermanAttack(u, targetUnit, card));
             // then break out
             break;
           }
@@ -257,7 +259,7 @@ class GermanPlayer {
                     card.minrange,
                     card.maxrange);
                 // add that to the attack array
-                attacks.add(GermanAttack(u, targetUnit));
+                attacks.add(GermanAttack(u, targetUnit, card));
               } catch (e) {
                 // no unit exists that can be attacked
                 break;
@@ -284,7 +286,7 @@ class GermanPlayer {
                     card.minrange,
                     card.maxrange);
                 // add that to the attack array
-                attacks.add(GermanAttack(u, targetUnit));
+                attacks.add(GermanAttack(u, targetUnit, card));
               } catch (e) {
                 // no unit exists that can be attacked
                 break;
@@ -304,7 +306,7 @@ class GermanPlayer {
               targetUnit = _getTargetUnit(mapFactory, mapSquares,
                   selectedUnitPos, selectedUnit, card.minrange, card.maxrange);
               // add that to the attack array
-              attacks.add(GermanAttack(u, targetUnit));
+              attacks.add(GermanAttack(u, targetUnit, card));
               break;
             } catch (e) {
               // no unit exists that can be attacked

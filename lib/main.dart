@@ -33,7 +33,7 @@ class FixBayonetsHome extends StatelessWidget {
   void _showGameScreen(context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => GameScreen()),
+      MaterialPageRoute(builder: (context) => const GameScreen()),
     );
   }
 

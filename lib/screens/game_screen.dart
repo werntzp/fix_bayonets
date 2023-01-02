@@ -4,6 +4,7 @@ import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_all_dialog.dart';
 import 'package:fix_bayonets/dialogs/german_negated_dialog.dart';
 import 'package:fix_bayonets/dialogs/ask_to_negate_dialog.dart';
+import 'package:fix_bayonets/dialogs/card_info_dialog.dart';
 import 'package:fix_bayonets/models/german_player_model.dart';
 import 'package:flutter/material.dart';
 import '../const.dart';
@@ -216,8 +217,6 @@ class _GameScreenState extends State<GameScreen> {
             List<GermanMove> moves = _gp.doMovePhase(context, _cf, _mf, _map);
 
             if (moves.isNotEmpty) {
-              bool moveNegated = false;
-
               // go through each one
               for (GermanMove move in moves) {
                 if (_playerCanNegate(EnumCardNegate.move)) {
@@ -233,20 +232,20 @@ class _GameScreenState extends State<GameScreen> {
                           child: const Text('Yes'),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pop(context, false),
+                          onPressed: () {
+                            _map[move.end].units.add(move.unit);
+                            _map[move.begin].units.remove(move.unit);
+                            Navigator.pop(context, false);
+                          },
                           child: const Text('No'),
                         ),
                       ],
                     ),
                   );
-
-                  //showNegateDialog(context, EnumCardNegate.move);
-                  //negateGermanAction(EnumCardNegate.move);
-                  //if (!_negateAction) {
-                  // allow the unit to move
-                  //  _map[move.end].units.add(move.unit);
-                  //  _map[move.begin].units.remove(move.unit);
-                  // }
+                } else {
+                  // no negate cards
+                  _map[move.end].units.add(move.unit);
+                  _map[move.begin].units.remove(move.unit);
                 }
               }
             }
@@ -255,19 +254,73 @@ class _GameScreenState extends State<GameScreen> {
             List<GermanAttack> attacks =
                 _gp.doAttackPhase(context, _cf, _mf, _map);
             if (attacks.isNotEmpty) {
-              bool attackNegated = false;
-
               // go through each one
               for (GermanAttack attack in attacks) {
                 if (_playerCanNegate(EnumCardNegate.attack)) {
-                  // TODO: display a dialog w/yes/no for player
-                }
-                if (!attackNegated) {
-                  // do the attack
-
+                  showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Negate the German attack?'),
+                      content: const Text(
+                          'Do you want to negate the German attack?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Yes'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            // loop through to find where the unit is on the map
+                            for (int i = 0; i < _map.length; i++) {
+                              if (_map[i].units.isNotEmpty) {
+                                if (_map[i].units.contains(attack.targetUnit)) {
+                                  // unit is in that map square; depending on the weapon used,
+                                  // it may kill all units in there
+                                  if ((attack.gameCard.name ==
+                                          EnumCardName.grenade) ||
+                                      (attack.gameCard.name ==
+                                          EnumCardName.flamethrower) ||
+                                      (attack.gameCard.name ==
+                                          EnumCardName.machinegun)) {
+                                    _map[i].units.clear();
+                                  } else {
+                                    _map[i].units.remove(attack.targetUnit);
+                                  }
+                                }
+                              }
+                            }
+                            Navigator.pop(context, false);
+                          },
+                          // TODO: set the selected unit so it attacked
+                          child: const Text('No'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  // loop through to find where the unit is on the map
+                  for (int i = 0; i < _map.length; i++) {
+                    if (_map[i].units.isNotEmpty) {
+                      if (_map[i].units.contains(attack.targetUnit)) {
+                        // unit is in that map square; depending on the weapon used,
+                        // it may kill all units in there
+                        if ((attack.gameCard.name == EnumCardName.grenade) ||
+                            (attack.gameCard.name ==
+                                EnumCardName.flamethrower) ||
+                            (attack.gameCard.name == EnumCardName.machinegun)) {
+                          _map[i].units.clear();
+                        } else {
+                          _map[i].units.remove(attack.targetUnit);
+                        }
+                      }
+                    }
+                  }
+                  // TODO: set the selected unit so it attacked
                 }
               }
             }
+
+            // TODO: is the game over? are both officers dead?
 
             _gm.jump();
           }
@@ -315,6 +368,10 @@ class _GameScreenState extends State<GameScreen> {
         GestureDetector(
           onTap: () {
             _toggleSelectedCard(_cf.americanHand()[i].id);
+          },
+          onLongPress: () {
+            showCardInfoDialog(
+                context, _cf.getCardNameById(_cf.americanHand()[i].id));
           },
           child: Container(
             alignment: Alignment.center,

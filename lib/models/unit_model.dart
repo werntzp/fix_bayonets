@@ -22,8 +22,33 @@ class Unit {
 }
 
 class UnitFactory {
+  String _getUnitImageModifiers(String file, Unit u) {
+    String modifier = "";
+
+    // can they move? runners are a little odd
+    if (u.type == EnumUnitType.runner) {
+      if (u.numTimesMoved == 0) {
+        modifier = "_m_m";
+      } else if (u.numTimesMoved == 1) {
+        modifier = "_m";
+      }
+    } else {
+      if (!u.hasMoved) {
+        modifier += "_m";
+      }
+    }
+
+    // can they attack?
+    if (!u.hasAttacked) {
+      modifier += "_a";
+    }
+
+    return modifier;
+  }
+
   String getUnitImage(Unit u) {
     String s = gfxUsRifle;
+    String image = "";
 
     // return based on image type
     if ((u.type == EnumUnitType.rifleman) &&
@@ -58,7 +83,14 @@ class UnitFactory {
       s = gfxGermanSniper.toString();
     }
 
-    return s;
+    // now that we have the base graphic, time to add any modifiers (only if american!)
+    if (u.owner == EnumUnitOwner.american) {
+      image = s + _getUnitImageModifiers(s, u) + gfxImageType.toString();
+    } else {
+      image = s + gfxImageType.toString();
+    }
+
+    return image;
   }
 
   List<Unit> prepareUnits() {

@@ -19,7 +19,13 @@ void showGameOverDialog(BuildContext context, bool won) {
           style: const TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),
       actions: <Widget>[
         OutlinedButton(
-            onPressed: () => Navigator.pop(context, 'OK'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const FixBayonetsHome()),
+              );
+            },
             child: const Text('OK',
                 style: TextStyle(
                     fontFamily: 'HeadlinerNo45',

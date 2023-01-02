@@ -21,16 +21,17 @@ const gfxOpen = "images/open42x42.png"; // 0xff7c9c3b
 const gfxThick = "images/thick42x42.png"; // 0xff536e1c
 const gfxUsStacked = "images/us_multiple.png";
 const gfxGermanStacked = "images/german_multiple.png";
-const gfxGermanOfficer = "images/german_officer.png";
-const gfxGermanRifle = "images/german_rifle.png";
-const gfxGermanHeavy = "images/german_machinegun.png";
-const gfxGermanRunner = "images/german_runner.png";
-const gfxGermanSniper = "images/german_sniper.png";
-const gfxUsOfficer = "images/us_officer.png";
-const gfxUsRifle = "images/us_rifle.png";
-const gfxUsHeavy = "images/us_machinegun.png";
-const gfxUsRunner = "images/us_runner.png";
-const gfxUsSniper = "images/us_sniper.png";
+const gfxGermanOfficer = "images/german_officer";
+const gfxGermanRifle = "images/german_rifle";
+const gfxGermanHeavy = "images/german_machinegun";
+const gfxGermanRunner = "images/german_runner";
+const gfxGermanSniper = "images/german_sniper";
+const gfxUsOfficer = "images/us_officer";
+const gfxUsRifle = "images/us_rifle";
+const gfxUsHeavy = "images/us_machinegun";
+const gfxUsRunner = "images/us_runner";
+const gfxUsSniper = "images/us_sniper";
+const gfxImageType = ".png";
 const gfxAttack1 = "images/attack_1.png";
 const gfxAttack2Officer = "images/attack_2_officer.png";
 const gfxAttack23German = "images/attack_2-3_german.png";
@@ -59,6 +60,31 @@ const moveNotice =
     'Move Phase: Choose a Move (green) card, then a unit, and a valid square.';
 const attackNotice =
     'Attack Phase: Choose an Attack (red) card, then a unit to attack with, and a target.';
+
+const constCardBayonet = "Bayonet attack card.";
+const constCardPistol = "Pistol attack card. Only Officer units can use.";
+const constCardFlamethrower =
+    "Flamethrower attack card. Only German Heavy Weapons units can use.";
+const constCardGrenade = "Grenade attack card.";
+const constCardRifle = "Rifle attack card.";
+const constCardMachineGun =
+    "Machine Gun attack card. Only American Heavy Weapons can use.";
+const constCardSniper = "Sniper attack card. Only Sniper units can use. ";
+const constCardCrawl = "Crawl move card.";
+const constCardMarch = "March move card.";
+const constCardDoubletime = "Double time move card.";
+const constCardZigzag = "Combat rush move card.";
+const constCardRun = "Run move card.";
+const constCardCharge = "Charge move card.";
+const constCardAdvance = "Advance move card. Only German unit can use.";
+const constCardCounterattack =
+    "Counter Attack move card. Only American units can use.";
+const constCardSmoke = "Negate an attack with smoke.";
+const constCardArtillery =
+    "Negate an attack with artillery. Only American units can use.";
+const constCardWire = "Negate a move with wire.";
+const constCardLandmine =
+    "Negate a move with land mines. Only German units can use.";
 
 enum EnumPhase { orders, move, attack }
 
