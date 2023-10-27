@@ -69,7 +69,7 @@ class MapFactory {
   }
 
   List<int> getValidMoves(int start, int minDistance, int maxDistance) {
-    var _moves = List<int>.filled((constMapSize + 1), constInvalidSpace);
+    var moves = List<int>.filled((constMapSize + 1), constInvalidSpace);
 
     int startRow = 0;
     int startCol = 0;
@@ -104,7 +104,7 @@ class MapFactory {
             if ((numSteps <= maxDistance) && (numSteps >= minDistance)) {
               // find the actual map square at row,col
               mapPos = _distanceArray[row][col];
-              _moves[mapPos] = constValidSpace;
+              moves[mapPos] = constValidSpace;
             }
           }
         }
@@ -117,60 +117,60 @@ class MapFactory {
       destRow = startRow - 2;
       destCol = startCol - 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #2
       destRow = startRow - 1;
       destCol = startCol - 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #3
       destRow = startRow + 1;
       destCol = startCol - 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #4
       destRow = startRow + 2;
       destCol = startCol - 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #5
       destRow = startRow - 2;
       destCol = startCol + 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #6
       destRow = startRow - 1;
       destCol = startCol + 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #7
       destRow = startRow + 1;
       destCol = startCol + 2;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
 
       // position #8
       destRow = startRow + 2;
       destCol = startCol + 1;
       if (_checkRowCol(destRow, destCol) == constValidSpace) {
-        _moves[_distanceArray[destRow][destCol]] = constValidSpace;
+        moves[_distanceArray[destRow][destCol]] = constValidSpace;
       }
     }
 
-    return _moves;
+    return moves;
   }
 
   int _getStartingMapSquare(board, min, max) {
@@ -190,13 +190,13 @@ class MapFactory {
   }
 
   List<MapSquare> prepareMap(List<Unit> units) {
-    List<MapSquare> _map = [];
+    List<MapSquare> map = [];
 
     // add 64 map squares to list
     for (int i = 0; i <= constMapSize; i++) {
       MapSquare m = MapSquare();
       m.terrain = _randomizeTerrain();
-      _map.add(m);
+      map.add(m);
     }
 
     // also build up a 2d array for distance checking later
@@ -225,13 +225,13 @@ class MapFactory {
       // get a starting map location; if that map location already has two units in it, keep repeating until we get one
       do {
         x = _getRandomNumber(min, max);
-        if (_map[x].units.length != 2) {
-          _map[x].units.add(u);
+        if (map[x].units.length != 2) {
+          map[x].units.add(u);
           break;
         }
       } while (true);
     }
 
-    return _map;
+    return map;
   }
 }

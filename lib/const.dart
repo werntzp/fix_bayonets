@@ -53,7 +53,8 @@ const gfxNegateMove = "images/negate_move.png";
 const gfxNegateAttack = "images/negate_attack.png";
 const gfxNegateMoveGerman = "images/negate_move_german.png";
 const gfxNegateAttackAmerican = "images/negate_attack_american.png";
-const constYourHand = "Your Hand:";
+const constYourHand = "Your Cards:";
+const constGermanPanelHeader = "German Turn Actions:";
 const ordersNotice =
     'Orders Phase: Review the cards in your hand. If you have more than 3, you must discard some.';
 const moveNotice =

@@ -17,12 +17,12 @@ class GameCard {
 }
 
 class CardFactory {
-  List<GameCard> _masterDeck = [];
+  final List<GameCard> _masterDeck = [];
   List<GameCard> _drawPile = [];
-  List<GameCard> _americanHand = [];
-  List<GameCard> _germanHand = [];
-  List<GameCard> _discardPile = [];
-  List<GameCard> _selected = [];
+  final List<GameCard> _americanHand = [];
+  final List<GameCard> _germanHand = [];
+  final List<GameCard> _discardPile = [];
+  final List<GameCard> _selected = [];
 
   CardFactory();
 
@@ -86,7 +86,7 @@ class CardFactory {
       GameCard card = _masterDeck.firstWhere((element) => element.id == id);
       return _selected.contains(card);
     } catch (e) {
-      print('error ' + e.toString());
+      print('error $e');
       throw Exception('No card has been selected');
     }
   }
@@ -178,8 +178,21 @@ class CardFactory {
       _drawPile.remove(_drawPile[i]);
     }
 
-    // check german hand -- only draw if 3 or fewer cards
+    // discard any american cards in the german hand
+    for (int i = 0; i < _germanHand.length; i++) {
+      if (_germanHand[i].useby == EnumPlayer.american) {
+        _germanHand.removeAt(i);
+      }
+
+      // if we still have 5, just drop two
+      if (_germanHand.length == constGermanMaxCardsInHand) {
+        _germanHand.removeAt(4);
+        _germanHand.removeAt(0);
+      }
+    }
+
     int diff = _germanHand.length;
+
     if (diff < constGermanMaxCardsInHand) {
       // draw up
       for (int i = 0; i < (constGermanMaxCardsInHand - diff); i++) {
@@ -191,6 +204,13 @@ class CardFactory {
 
   void prepareInitialDeck() {
     int id = constNoCardSelected;
+
+    _masterDeck.clear();
+    _drawPile.clear();
+    _americanHand.clear();
+    _germanHand.clear();
+    _discardPile.clear();
+    _selected.clear();
 
     // bayonet x3
     for (int i = 0; i < 3; i++) {
@@ -253,7 +273,7 @@ class CardFactory {
       id++;
       _masterDeck.add(GameCard(
           id,
-          EnumCardName.grenade,
+          EnumCardName.rifle,
           EnumCardType.attack,
           3,
           3,

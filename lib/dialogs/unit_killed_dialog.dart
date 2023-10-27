@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 extension StringExtension on String {
   String capitalize() {
-    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }
 
@@ -36,7 +36,7 @@ void showUnitKilledDialog(
     context: context,
     builder: (BuildContext context) => AlertDialog(
       backgroundColor: const Color(0xffd3d3d3),
-      content: Text('You killed ' + _unitKilledMessage(unitType) + '!',
+      content: Text('You killed ${_unitKilledMessage(unitType)}!',
           style: const TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),
       actions: <Widget>[
         OutlinedButton(

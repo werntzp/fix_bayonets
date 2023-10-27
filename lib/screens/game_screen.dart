@@ -3,7 +3,6 @@ import 'package:fix_bayonets/dialogs/game_over_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_all_dialog.dart';
 import 'package:fix_bayonets/dialogs/german_negated_dialog.dart';
-import 'package:fix_bayonets/dialogs/ask_to_negate_dialog.dart';
 import 'package:fix_bayonets/dialogs/card_info_dialog.dart';
 import 'package:fix_bayonets/models/german_player_model.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +25,7 @@ bool _ableToCancelAction = false;
 bool _negateAction = false;
 List<int> _moveOptions = List<int>.filled(64, constInvalidSpace);
 List<int> _attackOptions = List<int>.filled(64, constInvalidSpace);
+String _germanPlayerTurnMessage = '';
 
 // main class
 class GameScreen extends StatefulWidget {
@@ -48,6 +48,7 @@ class _GameScreenState extends State<GameScreen> {
     _cf.drawCards();
     _units = _uf.prepareUnits();
     _map = _mf.prepareMap(_units);
+    _germanPlayerTurnMessage = '';
   }
 
   void _discardCards() {
@@ -163,6 +164,32 @@ class _GameScreenState extends State<GameScreen> {
         });
   }
 
+  Widget _germanOkButton() {
+    return OutlinedButton(
+        child: const Text(
+          "OK",
+          style: TextStyle(
+              fontFamily: 'HeadlinerNo45', color: Colors.black, fontSize: 30.0),
+        ),
+        onPressed: () {
+          _germanTurnOver();
+        });
+  }
+
+  void _removeUsedNegateCard(EnumCardNegate negate) {
+    // clear all the seleted cards
+    _cf.clearSelectedCards();
+
+    for (GameCard card in _cf.americanHand()) {
+      if ((card.type == EnumCardType.negate) && (card.negate == negate)) {
+        // remove that card from the player's hand
+        _cf.toggleSelected(card.id, false);
+        _cf.discardCards(EnumPlayer.american);
+        break;
+      }
+    }
+  }
+
   bool _playerCanNegate(EnumCardNegate negate) {
     bool canNegate = false;
 
@@ -196,13 +223,13 @@ class _GameScreenState extends State<GameScreen> {
               fontFamily: 'HeadlinerNo45', color: Colors.black, fontSize: 30.0),
         ),
         onPressed: () {
-          _gm.incrementPhase();
           setState(() {
-            // redraw interface
+            _gm.incrementPhase();
+            _germanPlayerTurnMessage = '';
+            _cf.clearSelectedCards();
+            _resetSelectedUnit();
+            _resetSelectedSquare();
           });
-          _cf.clearSelectedCards();
-          _resetSelectedUnit();
-          _resetSelectedSquare();
           // if it is an orders phase (regardless of player), reset all the move/attack flags
           if (_gm.phase == EnumPhase.orders) {
             _resetUnitFlags();
@@ -211,7 +238,9 @@ class _GameScreenState extends State<GameScreen> {
           // if now the german turn, do different stuff
           if (_gm.player == EnumPlayer.german) {
             // orders phase
-            _gp.doOrdersPhase(context, _cf);
+            setState(() {
+              _gp.doOrdersPhase(context, _cf);
+            });
 
             // move phase
             List<GermanMove> moves = _gp.doMovePhase(context, _cf, _mf, _map);
@@ -228,13 +257,26 @@ class _GameScreenState extends State<GameScreen> {
                           const Text('Do you want to negate the German move?'),
                       actions: <Widget>[
                         TextButton(
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () {
+                            Navigator.pop(context, true);
+                            // remove the card
+                            _removeUsedNegateCard(EnumCardNegate.move);
+                            String unitName =
+                                move.unit.type.name.toString().split('.').last;
+                            _addTextToGermanPanel(
+                                'You negated the German $unitName');
+                          },
                           child: const Text('Yes'),
                         ),
                         TextButton(
                           onPressed: () {
+                            // make the move
                             _map[move.end].units.add(move.unit);
                             _map[move.begin].units.remove(move.unit);
+                            // add move to the message
+                            String unitName =
+                                move.unit.type.name.toString().split('.').last;
+                            _addTextToGermanPanel('German $unitName moved');
                             Navigator.pop(context, false);
                           },
                           child: const Text('No'),
@@ -246,6 +288,9 @@ class _GameScreenState extends State<GameScreen> {
                   // no negate cards
                   _map[move.end].units.add(move.unit);
                   _map[move.begin].units.remove(move.unit);
+                  // add move to the message
+                  String unitName = move.unit.type.toString().split('.').last;
+                  _addTextToGermanPanel('German $unitName moved');
                 }
               }
             }
@@ -265,7 +310,13 @@ class _GameScreenState extends State<GameScreen> {
                           'Do you want to negate the German attack?'),
                       actions: <Widget>[
                         TextButton(
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () {
+                            // remove the card
+                            _removeUsedNegateCard(EnumCardNegate.attack);
+                            _addTextToGermanPanel(
+                                'You negated the German attack');
+                            Navigator.pop(context, true);
+                          },
                           child: const Text('Yes'),
                         ),
                         TextButton(
@@ -289,9 +340,20 @@ class _GameScreenState extends State<GameScreen> {
                                 }
                               }
                             }
+                            // add move to the message
+                            String attacker = attack.selectedUnit.type
+                                .toString()
+                                .split('.')
+                                .last;
+                            String target = attack.selectedUnit.type
+                                .toString()
+                                .split('.')
+                                .last;
+
+                            _addTextToGermanPanel(
+                                'German $attacker killed your $target');
                             Navigator.pop(context, false);
                           },
-                          // TODO: set the selected unit so it attacked
                           child: const Text('No'),
                         ),
                       ],
@@ -315,25 +377,37 @@ class _GameScreenState extends State<GameScreen> {
                       }
                     }
                   }
+                  // add move to the message
+                  _addTextToGermanPanel(
+                      'German ${attack.selectedUnit.type} attacked');
+
                   // TODO: set the selected unit so it attacked
                 }
               }
             }
 
+            // if the german player did nothing, say so
+            if (_isGermanPanelEmpty()) {
+              _addTextToGermanPanel('The Germans took no actions this turn');
+            }
+
             // TODO: is the game over? are both officers dead?
-
-            _gm.jump();
           }
-
-          // draw up cards for both if orders phase
-          if (_gm.phase == EnumPhase.orders) {
-            _cf.drawCards();
-          }
-
-          setState(() {
-            // redraw interface
-          });
         });
+  }
+
+  _germanTurnOver() {
+    // increment stuff
+    _gm.jump();
+
+    // draw up cards for both if orders phase
+    if (_gm.phase == EnumPhase.orders) {
+      _cf.drawCards();
+    }
+
+    setState(() {
+      // redraw interface
+    });
   }
 
   Widget _cancelButton() {
@@ -496,13 +570,29 @@ class _GameScreenState extends State<GameScreen> {
         ]));
   }
 
-  Widget _displayPhase() {
-    if (_gm.phase == EnumPhase.orders) {
-      return _labelOrders();
-    } else if (_gm.phase == EnumPhase.move) {
-      return _labelMove();
+  Widget _displayPhaseLabel() {
+    // if american player, show this
+    if (_gm.player == EnumPlayer.american) {
+      return const Text("Phase: ",
+          style: TextStyle(
+              color: Colors.black, fontFamily: 'HeadlinerNo45', fontSize: 30));
     } else {
-      return _labelAttack();
+      return const SizedBox();
+    }
+  }
+
+  Widget _displayPhaseSpecifics() {
+    // if american player, show this
+    if (_gm.player == EnumPlayer.american) {
+      if (_gm.phase == EnumPhase.orders) {
+        return _labelOrders();
+      } else if (_gm.phase == EnumPhase.move) {
+        return _labelMove();
+      } else {
+        return _labelAttack();
+      }
+    } else {
+      return const SizedBox();
     }
   }
 
@@ -510,7 +600,7 @@ class _GameScreenState extends State<GameScreen> {
     return Container(
         alignment: Alignment.center,
         child: Center(
-            child: Text(txt,
+            child: Text('Round: $txt',
                 style: const TextStyle(
                     fontFamily: 'HeadlinerNo45', fontSize: 30))));
   }
@@ -602,12 +692,16 @@ class _GameScreenState extends State<GameScreen> {
             (card.player != EnumPlayerUse.german) &&
             (!unit.hasAttacked)) {
           // we got this far, let's see if there are other attack restrictions
-          if ((card.useby != unit.type) && (card.useby != EnumUnitType.all)) {
+          if (((unit.type == EnumUnitType.officer) ||
+                  (unit.type == EnumUnitType.sniper) ||
+                  (unit.type == EnumUnitType.heavyweapon)) &&
+              (card.useby != unit.type)) {
+            // only those units can use cards that match their type,
+            // otherwise it is a use-by-all card
             _cf.clearSelectedCards();
             setState(() {});
             return;
           }
-
           // show valid move options
           _showMapSquaresForAttack = true;
           // set flag to show cancel button
@@ -622,7 +716,7 @@ class _GameScreenState extends State<GameScreen> {
       }
     } catch (e) {
       // do nothing, we're just done here for now
-      print('_checkAttack() error: ' + e.toString());
+      print('_checkAttack() error: $e');
       setState(() {});
       return;
     }
@@ -652,7 +746,7 @@ class _GameScreenState extends State<GameScreen> {
       }
     } catch (e) {
       // do nothing, we're just done here for now
-      print('_checkMove() error: ' + e.toString());
+      print('_checkMove() error: $e');
       setState(() {});
       return;
     }
@@ -869,6 +963,85 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  void _addTextToGermanPanel(String newMessage) {
+    setState(() {
+      _germanPlayerTurnMessage += '$newMessage\r\n';
+    });
+  }
+
+  bool _isGermanPanelEmpty() {
+    return (_germanPlayerTurnMessage.isEmpty);
+  }
+
+  Widget _whichPanel() {
+    if (_gm.player == EnumPlayer.american) {
+      return _americanPanel();
+    } else {
+      return _germanPanel();
+    }
+  }
+
+  Widget _americanPanel() {
+    return Column(children: <Widget>[
+      const Padding(
+        padding: EdgeInsets.all(1.0),
+      ),
+      _unitRow(),
+      const Padding(
+        padding: EdgeInsets.all(10.0),
+        child: Align(
+            alignment: Alignment.topLeft,
+            child: Text(
+              constYourHand,
+              style: TextStyle(
+                  fontFamily: "HeaderlinerNo45",
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline),
+            )),
+      ),
+      _cardRow(),
+      const Padding(padding: EdgeInsets.all(10.0)),
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+        if ((_cf.cardsSelected()) && (_gm.phase == EnumPhase.orders))
+          _discardButton()
+        else if (_ableToCancelAction)
+          _cancelButton()
+        else if (_cf.americanHand().length <= constAmericanMaxCardsInHand)
+          _nextButton(),
+        const SizedBox(width: 5.0, height: 10.0),
+        _helpButton()
+      ])
+    ]);
+  }
+
+  Widget _germanPanel() {
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          const Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(constGermanPanelHeader,
+                    style: TextStyle(
+                        fontFamily: "HeadlinerNo45",
+                        fontSize: 30.0,
+                        decoration: TextDecoration.underline)),
+              )),
+          Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(_germanPlayerTurnMessage,
+                    style: const TextStyle(color: Colors.black, fontSize: 18)),
+              )),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[_germanOkButton()])
+        ]);
+  }
+
   Widget _whichGrid() {
     if (_showMapSquaresForMove) {
       return _gridViewMove();
@@ -915,7 +1088,7 @@ class _GameScreenState extends State<GameScreen> {
       children: List.generate(64, (index) {
         return GestureDetector(
           onTap: () {
-            _setSelectedMapSquare(index);
+            if (_gm.player == EnumPlayer.american) _setSelectedMapSquare(index);
           },
           child:
               _drawUnitContainer(index, _mf.getMapSquareGraphic(_map[index])),
@@ -924,90 +1097,61 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+/*
+  Widget _getPhaseString() {
+    if (_gm.phase == EnumPhase.orders) {
+      return _phaseNotice(ordersNotice);
+    } else if (_gm.phase == EnumPhase.move) {
+      _phaseNotice(moveNotice);
+    } else {
+      _phaseNotice(attackNotice);
+    }
+  }
+*/
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: const Color(0xffd3d3d3),
       body: SingleChildScrollView(
         child: Container(
-          margin: const EdgeInsets.only(left: 10.0, right: 10.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    _displayPlayer(_gm.displayPlayer()),
-                    _displayText('Round: ' + _gm.round.toString()),
-                    const Text("Phase: ",
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontFamily: 'HeadlinerNo45',
-                            fontSize: 30)),
-                    _displayPhase(),
-                  ],
+            margin: const EdgeInsets.only(left: 10.0, right: 10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Padding(
+                  padding: EdgeInsets.all(10.0),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      width: 2,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      _displayPlayer(_gm.displayPlayer()),
+                      _displayText(_gm.round.toString()),
+                      _displayPhaseLabel(),
+                      _displayPhaseSpecifics(),
+                    ],
                   ),
-                  height: 370.0,
-                  child: _whichGrid(),
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(1.0),
-              ),
-              _unitRow(),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      constYourHand,
-                      style: TextStyle(
-                          fontFamily: "HeaderlinerNo45",
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline),
-                    )),
-              ),
-              _cardRow(),
-              const Padding(padding: EdgeInsets.all(5.0)),
-              if (_gm.phase == EnumPhase.orders)
-                _phaseNotice(ordersNotice)
-              else if (_gm.phase == EnumPhase.move)
-                _phaseNotice(moveNotice)
-              else
-                _phaseNotice(attackNotice),
-              const Padding(padding: EdgeInsets.all(10.0)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  if ((_cf.cardsSelected()) && (_gm.phase == EnumPhase.orders))
-                    _discardButton()
-                  else if (_ableToCancelAction)
-                    _cancelButton()
-                  else
-                    _nextButton(),
-                  const SizedBox(width: 5.0, height: 10.0),
-                  _helpButton()
-                ],
-              )
-            ],
-          ),
-        ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        width: 2,
+                      ),
+                    ),
+                    height: 370.0,
+                    child: _whichGrid(),
+                  ),
+                ),
+                const Padding(padding: EdgeInsets.all(5.0)),
+                _whichPanel(),
+              ],
+            )),
       ),
-    );
+    ));
   }
 }

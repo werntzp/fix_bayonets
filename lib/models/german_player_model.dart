@@ -2,7 +2,6 @@ import 'package:fix_bayonets/const.dart';
 import 'package:fix_bayonets/models/card_model.dart';
 import 'package:fix_bayonets/models/map_model.dart';
 import 'package:fix_bayonets/models/unit_model.dart';
-import '../dialogs/german_turn_dialog.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 
@@ -111,9 +110,6 @@ class GermanPlayer {
 
     // Discard any cards it can’t use (e.g., a sniper card when they don’t have a sniper unit left)
     // TODO: add logic for this
-
-    // throw up a dialog just so they know what's going on
-    showGermanTurnDialog(context, EnumPhase.orders);
   }
 
   List<GermanMove> doMovePhase(BuildContext context, CardFactory cardFactory,
@@ -165,8 +161,8 @@ class GermanPlayer {
           endingPos = Random().nextInt(validMoves.length);
           if ((validMoves[endingPos] == constValidSpace) &&
               ((mapSquares[endingPos].units.isEmpty) ||
-                  (mapSquares[endingPos].units.first.owner ==
-                      EnumUnitOwner.german))) {
+                  (mapSquares[endingPos].units.first.owner !=
+                      EnumUnitOwner.american))) {
             // we have a valid move
             isValidMove = true;
           }

@@ -13,7 +13,7 @@ class FixBayonetsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: '$appTitle',
+      title: appTitle,
       debugShowCheckedModeBanner: false,
       home: FixBayonetsHome(),
     );
@@ -39,11 +39,12 @@ class FixBayonetsHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: Stack(
+    return SafeArea(
+        child: Scaffold(
+            body: Stack(
       children: <Widget>[
         Image(
-          image: const AssetImage('$appSplashGraphic'),
+          image: const AssetImage(appSplashGraphic),
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
           fit: BoxFit.cover,
@@ -53,7 +54,7 @@ class FixBayonetsHome extends StatelessWidget {
           child: Align(
             alignment: Alignment.topCenter,
             child: Text(
-              "$appTitle",
+              appTitle,
               style: TextStyle(
                   fontFamily: 'HeadlinerNo45',
                   color: Colors.black,
@@ -66,7 +67,7 @@ class FixBayonetsHome extends StatelessWidget {
           child: Align(
             alignment: Alignment.bottomLeft,
             child: Image(
-              image: AssetImage("$sdsLogo"),
+              image: AssetImage(sdsLogo),
               width: 75.0,
               height: 75.0,
               fit: BoxFit.cover,
@@ -82,32 +83,40 @@ class FixBayonetsHome extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
-                Container(
+                SizedBox(
                   width: 125.0,
+                  height: 40.0,
                   child: OutlinedButton(
-                    child: const Text(
-                      "New Game",
-                      style: TextStyle(
-                          fontFamily: 'HeadlinerNo45',
-                          color: Colors.black,
-                          fontSize: 30.0),
-                    ),
+                    child: const Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Text(
+                          "Play",
+                          style: TextStyle(
+                              fontFamily: 'HeadlinerNo45',
+                              color: Colors.black,
+                              fontSize: 30.0),
+                        )),
                     onPressed: () {
                       _showGameScreen(context);
                     },
                   ),
                 ),
-                Container(
+                const SizedBox(
+                  height: 5.0,
+                ),
+                SizedBox(
                   width: 125.0,
+                  height: 40.0,
                   child: OutlinedButton(
-                    child: const Text(
-                      "Help",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontFamily: 'HeadlinerNo45',
-                          color: Colors.black,
-                          fontSize: 30.0),
-                    ),
+                    child: const Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Text(
+                          "Help",
+                          style: TextStyle(
+                              fontFamily: 'HeadlinerNo45',
+                              color: Colors.black,
+                              fontSize: 30.0),
+                        )),
                     onPressed: () {
                       _showHelpScreen(context);
                     },
@@ -118,6 +127,6 @@ class FixBayonetsHome extends StatelessWidget {
           ),
         ),
       ],
-    ));
+    )));
   }
 }

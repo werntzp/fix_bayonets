@@ -7,7 +7,7 @@ void showNegateDialog(BuildContext context, EnumCardNegate cardNegate) async {
     builder: (BuildContext context) => AlertDialog(
       backgroundColor: const Color(0xffd3d3d3),
       content: Text(
-          'Do you want to negate the German player\'s ' + cardNegate.name + '?',
+          'Do you want to negate the German player\'s ${cardNegate.name}?',
           style: const TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),
       actions: <Widget>[
         OutlinedButton(
