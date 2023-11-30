@@ -50,37 +50,33 @@ class UnitFactory {
     String s = gfxUsRifle;
     String image = "";
 
-    // return based on image type
-    if ((u.type == EnumUnitType.rifleman) &&
-        (u.owner == EnumUnitOwner.american)) {
-      s = gfxUsRifle.toString();
-    } else if ((u.type == EnumUnitType.officer) &&
-        (u.owner == EnumUnitOwner.american)) {
-      s = gfxUsOfficer.toString();
-    } else if ((u.type == EnumUnitType.heavyweapon) &&
-        (u.owner == EnumUnitOwner.american)) {
-      s = gfxUsHeavy.toString();
-    } else if ((u.type == EnumUnitType.runner) &&
-        (u.owner == EnumUnitOwner.american)) {
-      s = gfxUsRunner.toString();
-    } else if ((u.type == EnumUnitType.sniper) &&
-        (u.owner == EnumUnitOwner.american)) {
-      s = gfxUsSniper.toString();
-    } else if ((u.type == EnumUnitType.rifleman) &&
-        (u.owner == EnumUnitOwner.german)) {
-      s = gfxGermanRifle.toString();
-    } else if ((u.type == EnumUnitType.officer) &&
-        (u.owner == EnumUnitOwner.german)) {
-      s = gfxGermanOfficer.toString();
-    } else if ((u.type == EnumUnitType.heavyweapon) &&
-        (u.owner == EnumUnitOwner.german)) {
-      s = gfxGermanHeavy.toString();
-    } else if ((u.type == EnumUnitType.runner) &&
-        (u.owner == EnumUnitOwner.german)) {
-      s = gfxGermanRunner.toString();
-    } else if ((u.type == EnumUnitType.sniper) &&
-        (u.owner == EnumUnitOwner.german)) {
-      s = gfxGermanSniper.toString();
+    // if owner is american, just grab image type
+    if (u.owner == EnumUnitOwner.american) {
+      if (u.type == EnumUnitType.rifleman) {
+        s = gfxUsRifle.toString();
+      } else if (u.type == EnumUnitType.officer) {
+        s = gfxUsOfficer.toString();
+      } else if (u.type == EnumUnitType.heavyweapon) {
+        s = gfxUsHeavy.toString();
+      } else if (u.type == EnumUnitType.runner) {
+        s = gfxUsRunner.toString();
+      } else if (u.type == EnumUnitType.sniper) {
+        s = gfxUsSniper.toString();
+      }
+    } else {
+      // if german, only return the actual unit image if
+      // there's an american unit next to it
+      if (u.type == EnumUnitType.rifleman) {
+        s = gfxGermanRifle.toString();
+      } else if (u.type == EnumUnitType.officer) {
+        s = gfxGermanOfficer.toString();
+      } else if (u.type == EnumUnitType.heavyweapon) {
+        s = gfxGermanHeavy.toString();
+      } else if (u.type == EnumUnitType.runner) {
+        s = gfxGermanRunner.toString();
+      } else if (u.type == EnumUnitType.sniper) {
+        s = gfxGermanSniper.toString();
+      }
     }
 
     // now that we have the base graphic, time to add any modifiers (only if american!)

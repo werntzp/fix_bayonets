@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:fix_bayonets/dialogs/game_over_dialog.dart';
+import 'package:fix_bayonets/main.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_all_dialog.dart';
 import 'package:fix_bayonets/dialogs/german_negated_dialog.dart';
@@ -23,6 +23,7 @@ bool _showMapSquaresForMove = false;
 bool _showMapSquaresForAttack = false;
 bool _ableToCancelAction = false;
 bool _negateAction = false;
+bool _showgameOverPanel = false;
 List<int> _moveOptions = List<int>.filled(64, constInvalidSpace);
 List<int> _attackOptions = List<int>.filled(64, constInvalidSpace);
 String _germanPlayerTurnMessage = '';
@@ -49,6 +50,7 @@ class _GameScreenState extends State<GameScreen> {
     _units = _uf.prepareUnits();
     _map = _mf.prepareMap(_units);
     _germanPlayerTurnMessage = '';
+    _showgameOverPanel = false;
   }
 
   void _discardCards() {
@@ -345,7 +347,7 @@ class _GameScreenState extends State<GameScreen> {
                                 .toString()
                                 .split('.')
                                 .last;
-                            String target = attack.selectedUnit.type
+                            String target = attack.targetUnit.type
                                 .toString()
                                 .split('.')
                                 .last;
@@ -378,8 +380,12 @@ class _GameScreenState extends State<GameScreen> {
                     }
                   }
                   // add move to the message
-                  _addTextToGermanPanel(
-                      'German ${attack.selectedUnit.type} attacked');
+                  String attacker =
+                      attack.selectedUnit.type.toString().split('.').last;
+                  String target =
+                      attack.targetUnit.type.toString().split('.').last;
+
+                  _addTextToGermanPanel('German $attacker killed your $target');
 
                   // TODO: set the selected unit so it attacked
                 }
@@ -391,7 +397,14 @@ class _GameScreenState extends State<GameScreen> {
               _addTextToGermanPanel('The Germans took no actions this turn');
             }
 
-            // TODO: is the game over? are both officers dead?
+            // if no american officers left, you've lost
+            if (_isGameOver(EnumUnitOwner.american)) {
+              setState(() {
+                _showgameOverPanel = true;
+              });
+
+              //showGameOverDialog(context, false);
+            }
           }
         });
   }
@@ -408,6 +421,21 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       // redraw interface
     });
+  }
+
+  Widget _okButton() {
+    return OutlinedButton(
+        child: const Text(
+          "OK",
+          style: TextStyle(
+              fontFamily: 'HeadlinerNo45', color: Colors.black, fontSize: 30.0),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const FixBayonetsHome()),
+          );
+        });
   }
 
   Widget _cancelButton() {
@@ -752,14 +780,13 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  bool _isGameOver() {
+  bool _isGameOver(EnumUnitOwner owner) {
     // loop through all the german units to see if both officer units still exist
     int officerCount = 0;
     for (int i = 0; i < _map.length; i++) {
       if (_map[i].units.isNotEmpty) {
         for (Unit unit in _map[i].units) {
-          if ((unit.owner == EnumUnitOwner.german) &&
-              (unit.type == EnumUnitType.officer)) {
+          if ((unit.owner == owner) && (unit.type == EnumUnitType.officer)) {
             officerCount++;
           }
         }
@@ -807,7 +834,9 @@ class _GameScreenState extends State<GameScreen> {
             (gameCard.name == EnumCardName.machinegun)) {
           // every unit in square dies
           _map[pos].units.clear();
-          if (_isGameOver()) showUnitKilledAllDialog(context);
+          if (!_isGameOver(EnumUnitOwner.german)) {
+            showUnitKilledAllDialog(context);
+          }
         } else {
           Unit unit;
           int unitCount = _map[pos].units.length;
@@ -823,7 +852,9 @@ class _GameScreenState extends State<GameScreen> {
           _map[pos].units.remove(unit);
 
           // throw up dialog with unit info (unless end of game conditions were met)
-          if (_isGameOver()) showUnitKilledDialog(context, unit.type, unit.id);
+          if (!_isGameOver(EnumUnitOwner.german)) {
+            showUnitKilledDialog(context, unit.type, unit.id);
+          }
         }
       } else {
         // german negated
@@ -837,8 +868,12 @@ class _GameScreenState extends State<GameScreen> {
           .hasAttacked = true;
 
       // check to see if game end conditions have been met
-      if (_isGameOver()) {
-        showGameOverDialog(context, true);
+      if (_isGameOver(EnumUnitOwner.german)) {
+        setState(() {
+          _showgameOverPanel = true;
+        });
+
+        //showGameOverDialog(context, true);
       }
 
       // discard the selected card
@@ -931,6 +966,12 @@ class _GameScreenState extends State<GameScreen> {
                 .owner ==
             EnumUnitOwner.american) {
           showUnits = true;
+        } else {
+          // only show if there's an american unit adjacent
+          if (_mf.isAmericanUnitAdjacent(
+              _map, _getMapSquarePosition(_getSelectedSquare()))) {
+            showUnits = true;
+          }
         }
       }
     } catch (e) {
@@ -940,8 +981,23 @@ class _GameScreenState extends State<GameScreen> {
     return showUnits;
   }
 
+  Widget _showGermanUnits() {
+    // see if there are any American units next to the selected
+    // German unit, and if so, show the row
+    try {
+      if (_mf.isAmericanUnitAdjacent(
+          _map, _getMapSquarePosition(_getSelectedSquare()))) {
+        return _unitRow();
+      } else {
+        return const SizedBox(width: 5.0, height: 10.0);
+      }
+    } catch (e) {
+      return const SizedBox(width: 5.0, height: 10.0);
+    }
+  }
+
   Widget _unitRow() {
-    // for each unit in the map square, return an image of it
+    // for each unit in the map getUnitImagesquare, return an image of it
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
@@ -974,11 +1030,48 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _whichPanel() {
-    if (_gm.player == EnumPlayer.american) {
-      return _americanPanel();
+    // if game over, show the game over panel
+    if (_showgameOverPanel) {
+      return _gameOverPanel();
     } else {
-      return _germanPanel();
+      if (_gm.player == EnumPlayer.american) {
+        return _americanPanel();
+      } else {
+        return _germanPanel();
+      }
     }
+  }
+
+  Widget _gameOverPanel() {
+    String gameOverMessage = "";
+
+    if (_isGameOver(EnumUnitOwner.american)) {
+      gameOverMessage = constDefeatMessage;
+    } else {
+      gameOverMessage = constVictoryMessage;
+    }
+
+    return Column(children: <Widget>[
+      const Padding(
+        padding: EdgeInsets.all(1.0),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Align(
+            alignment: Alignment.topLeft,
+            child: Text(
+              gameOverMessage,
+              style: const TextStyle(
+                fontFamily: "HeadlinerNo45",
+                fontSize: 30.0,
+              ),
+            )),
+      ),
+      const Padding(padding: EdgeInsets.all(10.0)),
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+        _okButton(),
+      ])
+    ]);
   }
 
   Widget _americanPanel() {
@@ -994,9 +1087,8 @@ class _GameScreenState extends State<GameScreen> {
             child: Text(
               constYourHand,
               style: TextStyle(
-                  fontFamily: "HeaderlinerNo45",
+                  fontFamily: "HeadlinerNo45",
                   fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
                   decoration: TextDecoration.underline),
             )),
       ),
@@ -1061,7 +1153,7 @@ class _GameScreenState extends State<GameScreen> {
             _tryAttack(index);
           },
           child: _drawMapSquaresForAttack(
-              index, _mf.getMapSquareGraphic(_map[index])),
+              index, _mf.getMapSquareGraphic(_map, index)),
         );
       }),
     );
@@ -1076,7 +1168,7 @@ class _GameScreenState extends State<GameScreen> {
             _tryMove(index);
           },
           child: _drawMapSquaresForMove(
-              index, _mf.getMapSquareGraphic(_map[index])),
+              index, _mf.getMapSquareGraphic(_map, index)),
         );
       }),
     );
@@ -1091,7 +1183,7 @@ class _GameScreenState extends State<GameScreen> {
             if (_gm.player == EnumPlayer.american) _setSelectedMapSquare(index);
           },
           child:
-              _drawUnitContainer(index, _mf.getMapSquareGraphic(_map[index])),
+              _drawUnitContainer(index, _mf.getMapSquareGraphic(_map, index)),
         );
       }),
     );

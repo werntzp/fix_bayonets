@@ -71,7 +71,7 @@ class GermanPlayer {
         mapFactory.getValidMoves(selectedUnitPos, minDistance, maxDistance);
 
     // go through and see if any american units in that space
-    for (int i = validMoves.length; i >= 0; i--) {
+    for (int i = (validMoves.length - 1); i >= 0; i--) {
       if (validMoves[i] == constValidSpace) {
         // is there a unit in there?
         if (mapSquares[i].units.isNotEmpty) {
@@ -136,7 +136,7 @@ class GermanPlayer {
       if ((card.player != EnumPlayerUse.american) &&
           (card.type == EnumCardType.move)) {
         // select the card
-        cardFactory.toggleSelected(card.id, false);
+        cardFactory.toggleSelected(card.id, true);
         // pick a random unit (that hasn't already moved)
         selectedUnit = _randomUnit(units);
         // increment number of times they've moved (if only one and not runner, mark them as have moved)
@@ -157,19 +157,28 @@ class GermanPlayer {
         List<int> validMoves =
             mapFactory.getValidMoves(startingPos, card.minrange, card.maxrange);
         // use that list to find a spot where there are no enemy units so it can move
-        do {
-          endingPos = Random().nextInt(validMoves.length);
-          if ((validMoves[endingPos] == constValidSpace) &&
-              ((mapSquares[endingPos].units.isEmpty) ||
-                  (mapSquares[endingPos].units.first.owner !=
-                      EnumUnitOwner.american))) {
-            // we have a valid move
-            isValidMove = true;
-          }
-        } while (!isValidMove);
+        isValidMove = false;
+        // only jump into the loop if there are valid moves
+        if (validMoves.isNotEmpty) {
+          do {
+            endingPos = Random().nextInt(validMoves.length);
+            // spot has to be a valid one, an empty square, one where germans
+            // already are, or forward of where it was previously
+            if ((validMoves[endingPos] == constValidSpace) &&
+                (endingPos < startingPos) &&
+                ((mapSquares[endingPos].units.isEmpty) ||
+                    (mapSquares[endingPos].units.first.owner !=
+                        EnumUnitOwner.american))) {
+              // we have a valid move
+              isValidMove = true;
+            }
+          } while (!isValidMove);
+        }
 
         // add that to the list of valid moves
-        moves.add(GermanMove(selectedUnit, startingPos, endingPos));
+        if (isValidMove) {
+          moves.add(GermanMove(selectedUnit, startingPos, endingPos));
+        }
       }
     }
 
@@ -193,6 +202,7 @@ class GermanPlayer {
         EnumUnitOwner.neither, EnumUnitMoveAllowed.one);
     Unit targetUnit = Unit(constInvalidUnit, EnumUnitType.all,
         EnumUnitOwner.neither, EnumUnitMoveAllowed.one);
+    bool addedAnAttack = false;
 
     // put all the units into two lists for use later
     for (MapSquare mapSquare in mapSquares) {
@@ -213,6 +223,9 @@ class GermanPlayer {
     for (GameCard card in cardFactory.germanHand()) {
       if ((card.player != EnumPlayerUse.american) &&
           (card.type == EnumCardType.attack)) {
+        // reset the flag
+        addedAnAttack = false;
+
         // first to check -- is there an american officer in range
         // of a german unit that can use the attack card
         // look for an officer unit
@@ -232,6 +245,7 @@ class GermanPlayer {
               card.minrange, card.maxrange)) {
             // add to the array
             attacks.add(GermanAttack(u, targetUnit, card));
+            addedAnAttack = true;
             // then break out
             break;
           }
@@ -239,7 +253,7 @@ class GermanPlayer {
 
         // second to check -- are there any snipers units in range
         // of a american unit that can use the attack card
-        if (attacks.isEmpty) {
+        if (!addedAnAttack) {
           for (Unit u in germanUnits) {
             selectedUnit = u;
             if (selectedUnit.type == EnumUnitType.sniper) {
@@ -256,6 +270,7 @@ class GermanPlayer {
                     card.maxrange);
                 // add that to the attack array
                 attacks.add(GermanAttack(u, targetUnit, card));
+                addedAnAttack = true;
               } catch (e) {
                 // no unit exists that can be attacked
                 break;
@@ -266,7 +281,7 @@ class GermanPlayer {
 
         // third to check -- are there any machine gun units in range
         // of an american unit that can use the attack card
-        if (attacks.isEmpty) {
+        if (!addedAnAttack) {
           for (Unit u in germanUnits) {
             selectedUnit = u;
             if (selectedUnit.type == EnumUnitType.heavyweapon) {
@@ -283,6 +298,7 @@ class GermanPlayer {
                     card.maxrange);
                 // add that to the attack array
                 attacks.add(GermanAttack(u, targetUnit, card));
+                addedAnAttack = true;
               } catch (e) {
                 // no unit exists that can be attacked
                 break;
@@ -292,10 +308,10 @@ class GermanPlayer {
         }
 
         // finally -- just find an american unit that can be attacked
-        if (attacks.isEmpty) {
+        if (!addedAnAttack) {
           for (Unit u in germanUnits) {
             selectedUnit = u;
-            // get position of german sniper
+            // get position of
             selectedUnitPos = _getUnitPosition(mapSquares, selectedUnit);
             // is there a potential target unit?
             try {
@@ -303,6 +319,7 @@ class GermanPlayer {
                   selectedUnitPos, selectedUnit, card.minrange, card.maxrange);
               // add that to the attack array
               attacks.add(GermanAttack(u, targetUnit, card));
+              addedAnAttack = true;
               break;
             } catch (e) {
               // no unit exists that can be attacked
@@ -311,8 +328,8 @@ class GermanPlayer {
         }
 
         // if the german unit actually plans to attack, select the card and set the unit's flag
-        if (attacks.isNotEmpty) {
-          cardFactory.toggleSelected(card.id, false);
+        if (addedAnAttack) {
+          cardFactory.toggleSelected(card.id, true);
         }
       }
     }

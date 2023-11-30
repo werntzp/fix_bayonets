@@ -3,10 +3,12 @@ const appSplashGraphic = "images/fix_bayonets_splash.jpg";
 const appVersion = "Version 1.0, January 2023";
 const sdsLogo = "images/sds_logo.png";
 
+const constSpecialMove = 99;
+const constSpecialAttack = 100;
 const constInvalidUnit = -99;
 const constMapSize = 63;
 const constAmericanMaxCardsInHand = 3;
-const constGermanMaxCardsInHand = 5;
+const constGermanMaxCardsInHand = 3;
 const constNoCardSelected = -1;
 const constZigZag = -1;
 const constValidSpace = 1;
@@ -21,6 +23,7 @@ const gfxOpen = "images/open42x42.png"; // 0xff7c9c3b
 const gfxThick = "images/thick42x42.png"; // 0xff536e1c
 const gfxUsStacked = "images/us_multiple.png";
 const gfxGermanStacked = "images/german_multiple.png";
+const gfxGermanSingle = "images/german_single.png";
 const gfxGermanOfficer = "images/german_officer";
 const gfxGermanRifle = "images/german_rifle";
 const gfxGermanHeavy = "images/german_machinegun";
@@ -53,6 +56,11 @@ const gfxNegateMove = "images/negate_move.png";
 const gfxNegateAttack = "images/negate_attack.png";
 const gfxNegateMoveGerman = "images/negate_move_german.png";
 const gfxNegateAttackAmerican = "images/negate_attack_american.png";
+
+const constVictoryMessage =
+    "Congratulations, you killed both German officers. Their attack has been stopped!";
+const constDefeatMessage =
+    "The German forces have killed your officers and overrun your postion. You lost!";
 const constYourHand = "Your Cards:";
 const constGermanPanelHeader = "German Turn Actions:";
 const ordersNotice =
@@ -130,3 +138,5 @@ enum EnumCardName {
 }
 
 enum EnumNegateAction { yes, no }
+
+enum EnumSpecialCard { yes, no }

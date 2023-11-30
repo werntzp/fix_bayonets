@@ -11,9 +11,10 @@ class GameCard {
   final EnumCardNegate negate;
   final EnumUnitType useby;
   final String graphic;
+  final EnumSpecialCard special;
 
   GameCard(this.id, this.name, this.type, this.minrange, this.maxrange,
-      this.player, this.negate, this.useby, this.graphic);
+      this.player, this.negate, this.useby, this.graphic, this.special);
 }
 
 class CardFactory {
@@ -23,6 +24,8 @@ class CardFactory {
   final List<GameCard> _germanHand = [];
   final List<GameCard> _discardPile = [];
   final List<GameCard> _selected = [];
+  bool _toggleSpecialMove = false;
+  bool _toggleSpecialAttack = false;
 
   CardFactory();
 
@@ -40,6 +43,18 @@ class CardFactory {
       }
     }
 
+    // if german player, also see if we need to discard their special cards
+    if (player == EnumPlayer.german) {
+      if (_toggleSpecialMove) {
+        _germanHand.removeWhere((element) => element.id == constSpecialMove);
+        _toggleSpecialMove = false;
+      }
+      if (_toggleSpecialAttack) {
+        _germanHand.removeWhere((element) => element.id == constSpecialAttack);
+        _toggleSpecialAttack = false;
+      }
+    }
+
     clearSelectedCards();
   }
 
@@ -49,6 +64,11 @@ class CardFactory {
 
   GameCard getCardById(int id) {
     return _masterDeck.firstWhere((element) => element.id == id);
+  }
+
+  void _discardSpecialGermanCard(int id) {
+    // special card, so just drop it (doesn't go to discard pile)
+    _germanHand.removeWhere((element) => element.id == id);
   }
 
   void discardSelectedCard() {
@@ -66,6 +86,16 @@ class CardFactory {
   }
 
   void toggleSelected(int id, bool multiselect) {
+    // first check, are either of these the german special cards?
+    if (id == constSpecialMove) {
+      _toggleSpecialMove = true;
+      return;
+    }
+    if (id == constSpecialAttack) {
+      _toggleSpecialAttack = true;
+      return;
+    }
+
     if (multiselect) {
       // if they are picking a card that's already selected, clear it
       GameCard card = _masterDeck[id];
@@ -77,7 +107,11 @@ class CardFactory {
       }
     } else {
       clearSelectedCards();
-      _selected.add(_masterDeck.singleWhere((element) => element.id == id));
+      try {
+        _selected.add(_masterDeck.singleWhere((element) => element.id == id));
+      } catch (e) {
+        // do nothing
+      }
     }
   }
 
@@ -180,15 +214,14 @@ class CardFactory {
 
     // discard any american cards in the german hand
     for (int i = 0; i < _germanHand.length; i++) {
-      if (_germanHand[i].useby == EnumPlayer.american) {
+      if (_germanHand[i].player == EnumPlayerUse.american) {
         _germanHand.removeAt(i);
       }
+    }
 
-      // if we still have 5, just drop two
-      if (_germanHand.length == constGermanMaxCardsInHand) {
-        _germanHand.removeAt(4);
-        _germanHand.removeAt(0);
-      }
+    // if we still have 3, just drop one so they are always picking up
+    if (_germanHand.length == constGermanMaxCardsInHand) {
+      _germanHand.removeAt(0);
     }
 
     int diff = _germanHand.length;
@@ -200,6 +233,57 @@ class CardFactory {
         _drawPile.remove(_drawPile[i]);
       }
     }
+
+    // add two special cards so German always has a move and an attack
+    // unless they are already in the german player's hand
+    bool hasSpecialMove = false;
+    bool hasSpecialAttack = false;
+
+    for (GameCard card in _germanHand) {
+      if ((card.special == EnumSpecialCard.yes) &&
+          (card.type == EnumCardType.move)) {
+        hasSpecialMove = true;
+        break;
+      }
+    }
+
+    for (GameCard card in _germanHand) {
+      if ((card.special == EnumSpecialCard.yes) &&
+          (card.type == EnumCardType.attack)) {
+        hasSpecialAttack = true;
+        break;
+      }
+    }
+
+    if (!hasSpecialMove) {
+      _germanHand.add(GameCard(
+          constSpecialMove,
+          EnumCardName.run,
+          EnumCardType.move,
+          1,
+          Random().nextInt(3) + 1,
+          EnumPlayerUse.german,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
+          gfxMove4,
+          EnumSpecialCard.yes));
+    }
+
+    if (!hasSpecialAttack) {
+      _germanHand.add(GameCard(
+          constSpecialAttack,
+          EnumCardName.rifle,
+          EnumCardType.attack,
+          1,
+          Random().nextInt(2) + 1,
+          EnumPlayerUse.german,
+          EnumCardNegate.neither,
+          EnumUnitType.all,
+          gfxAttack3,
+          EnumSpecialCard.yes));
+    }
+
+    // all done
   }
 
   void prepareInitialDeck() {
@@ -215,16 +299,19 @@ class CardFactory {
     // bayonet x3
     for (int i = 0; i < 3; i++) {
       id++;
-      _masterDeck.add(GameCard(
-          id,
-          EnumCardName.bayonet,
-          EnumCardType.attack,
-          1,
-          1,
-          EnumPlayerUse.both,
-          EnumCardNegate.neither,
-          EnumUnitType.all,
-          gfxAttack1));
+      _masterDeck.add(
+        GameCard(
+            id,
+            EnumCardName.bayonet,
+            EnumCardType.attack,
+            1,
+            1,
+            EnumPlayerUse.both,
+            EnumCardNegate.neither,
+            EnumUnitType.all,
+            gfxAttack1,
+            EnumSpecialCard.no),
+      );
     }
     // pistol x3
     for (int i = 0; i < 3; i++) {
@@ -238,7 +325,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.officer,
-          gfxAttack2Officer));
+          gfxAttack2Officer,
+          EnumSpecialCard.no));
     }
     // flamer thrower x3
     for (int i = 0; i < 3; i++) {
@@ -252,7 +340,8 @@ class CardFactory {
           EnumPlayerUse.german,
           EnumCardNegate.neither,
           EnumUnitType.heavyweapon,
-          gfxAttack23German));
+          gfxAttack23German,
+          EnumSpecialCard.no));
     }
     // grenade x3
     for (int i = 0; i < 3; i++) {
@@ -266,7 +355,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxAttackZ));
+          gfxAttackZ,
+          EnumSpecialCard.no));
     }
     // rifle x3
     for (int i = 0; i < 3; i++) {
@@ -280,7 +370,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxAttack3));
+          gfxAttack3,
+          EnumSpecialCard.no));
     } // rifle x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -293,7 +384,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxAttack4));
+          gfxAttack4,
+          EnumSpecialCard.no));
     } // machine gun x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -306,7 +398,8 @@ class CardFactory {
           EnumPlayerUse.american,
           EnumCardNegate.neither,
           EnumUnitType.heavyweapon,
-          gfxAttack45American));
+          gfxAttack45American,
+          EnumSpecialCard.no));
     }
     // sniper x3
     for (int i = 0; i < 3; i++) {
@@ -320,7 +413,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.sniper,
-          gfxAttack56Sniper));
+          gfxAttack56Sniper,
+          EnumSpecialCard.no));
     }
     // crawl x3
     for (int i = 0; i < 3; i++) {
@@ -334,7 +428,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove1));
+          gfxMove1,
+          EnumSpecialCard.no));
     } // march x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -347,7 +442,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove2));
+          gfxMove2,
+          EnumSpecialCard.no));
     } // double time x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -360,7 +456,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove3));
+          gfxMove3,
+          EnumSpecialCard.no));
     } // zig zag x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -373,7 +470,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMoveZ));
+          gfxMoveZ,
+          EnumSpecialCard.no));
     }
     // run x3
     for (int i = 0; i < 3; i++) {
@@ -387,7 +485,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove4));
+          gfxMove4,
+          EnumSpecialCard.no));
     } // charge x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -400,7 +499,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove5));
+          gfxMove5,
+          EnumSpecialCard.no));
     }
     // advance x3
     for (int i = 0; i < 3; i++) {
@@ -414,7 +514,8 @@ class CardFactory {
           EnumPlayerUse.german,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove2German));
+          gfxMove2German,
+          EnumSpecialCard.no));
     }
     // counter attack
     for (int i = 0; i < 3; i++) {
@@ -428,7 +529,8 @@ class CardFactory {
           EnumPlayerUse.american,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove3American));
+          gfxMove3American,
+          EnumSpecialCard.no));
     } // smoke x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -441,7 +543,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.attack,
           EnumUnitType.all,
-          gfxNegateAttack));
+          gfxNegateAttack,
+          EnumSpecialCard.no));
     } // artillery x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -454,7 +557,8 @@ class CardFactory {
           EnumPlayerUse.american,
           EnumCardNegate.attack,
           EnumUnitType.all,
-          gfxNegateAttackAmerican));
+          gfxNegateAttackAmerican,
+          EnumSpecialCard.no));
     } // wire x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -467,7 +571,8 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.move,
           EnumUnitType.all,
-          gfxNegateMove));
+          gfxNegateMove,
+          EnumSpecialCard.no));
     }
     // landmine x3
     for (int i = 0; i < 3; i++) {
@@ -481,7 +586,8 @@ class CardFactory {
           EnumPlayerUse.german,
           EnumCardNegate.move,
           EnumUnitType.all,
-          gfxNegateMoveGerman));
+          gfxNegateMoveGerman,
+          EnumSpecialCard.no));
     }
 
     _drawPile = List.from(_masterDeck);

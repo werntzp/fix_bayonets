@@ -19,9 +19,59 @@ class MapFactory {
     return (min + Random().nextInt(max - min));
   }
 
-  String getMapSquareGraphic(MapSquare mapSquare) {
+  bool _checkAdjacent(int row, int col, List<MapSquare> map) {
+    int pos;
+    bool isAdjacent = false;
+
+    if (_checkRowCol(row, col) == constValidSpace) {
+      pos = _distanceArray[row][col];
+      if ((map[pos].units.isNotEmpty) &&
+          (map[pos].units.first.owner == EnumUnitOwner.american)) {
+        isAdjacent = true;
+      }
+    }
+
+    return isAdjacent;
+  }
+
+  bool isAmericanUnitAdjacent(List<MapSquare> map, int index) {
+    // first, figure out where we are at on the 2x2 grid
+    int startRow = 0;
+    int startCol = 0;
+
+    for (int row = 0; row < 8; row++) {
+      for (int col = 0; col < 8; col++) {
+        if (_distanceArray[row][col] == index) {
+          startRow = row;
+          startCol = col;
+          break;
+        }
+      }
+    }
+
+    // now, look "around" that map square to see if (a) it is a valid
+    // location and (b) whether there's an american unit next to it
+    // position #1
+    if ((_checkAdjacent(startRow, startCol - 1, map)) ||
+        (_checkAdjacent(startRow, startCol + 1, map)) ||
+        (_checkAdjacent(startRow - 1, startCol - 1, map)) ||
+        (_checkAdjacent(startRow - 1, startCol, map)) ||
+        (_checkAdjacent(startRow - 1, startCol + 1, map)) ||
+        (_checkAdjacent(startRow + 1, startCol - 1, map)) ||
+        (_checkAdjacent(startRow + 1, startCol, map)) ||
+        (_checkAdjacent(startRow + 1, startCol + 1, map))) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  String getMapSquareGraphic(List<MapSquare> map, int index) {
     String graphic = gfxForest;
     UnitFactory unitFactory = UnitFactory();
+
+    // grab the current mapSquare from the index pos
+    MapSquare mapSquare = map[index];
 
     // decide on which terrain to return
     if (mapSquare.units.isEmpty) {
@@ -29,8 +79,18 @@ class MapFactory {
       graphic = mapSquare.terrain;
     } else {
       if (mapSquare.units.length == 1) {
-        // only one unit, so just return that unit image string
-        graphic = unitFactory.getUnitImage(mapSquare.units.first);
+        // only one unit, so if american, show the unit
+        if (mapSquare.units.first.owner == EnumUnitOwner.american) {
+          graphic = unitFactory.getUnitImage(mapSquare.units.first);
+        } else {
+          // it is german, so show single german unit icon unless there
+          // is an american unit adjacent to it
+          if (isAmericanUnitAdjacent(map, index)) {
+            graphic = unitFactory.getUnitImage(mapSquare.units.first);
+          } else {
+            graphic = gfxGermanSingle;
+          }
+        }
       } else {
         // stacked units, so decide whether to show US or German icon
         if (mapSquare.units.first.owner == EnumUnitOwner.american) {
