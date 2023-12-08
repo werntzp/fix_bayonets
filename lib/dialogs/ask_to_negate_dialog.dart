@@ -1,7 +1,8 @@
 import 'package:fix_bayonets/const.dart';
 import 'package:flutter/material.dart';
 
-void showNegateDialog(BuildContext context, EnumCardNegate cardNegate) async {
+Future<bool> showNegateDialog(
+    BuildContext context, EnumCardNegate cardNegate) async {
   return await showDialog(
     context: context,
     builder: (BuildContext context) => AlertDialog(

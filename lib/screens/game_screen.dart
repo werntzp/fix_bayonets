@@ -3,6 +3,7 @@ import 'package:fix_bayonets/main.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_dialog.dart';
 import 'package:fix_bayonets/dialogs/unit_killed_all_dialog.dart';
 import 'package:fix_bayonets/dialogs/german_negated_dialog.dart';
+import 'package:fix_bayonets/dialogs/ask_to_negate_dialog.dart';
 import 'package:fix_bayonets/dialogs/card_info_dialog.dart';
 import 'package:fix_bayonets/models/german_player_model.dart';
 import 'package:flutter/material.dart';
@@ -217,6 +218,91 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  Future<void> _doGermanAttacks(List<GermanAttack> attacks) async {
+    String attackerName = "";
+    String targetName = "";
+
+    for (GermanAttack attack in attacks) {
+      if (_playerCanNegate(EnumCardNegate.attack)) {
+        bool? negate = await showNegateDialog(context, EnumCardNegate.attack);
+        if (negate) {
+          _removeUsedNegateCard(EnumCardNegate.attack);
+          _addTextToGermanPanel('You negated the German attack');
+        } else {
+          // loop through to find where the unit is on the map
+          for (int i = 0; i < _map.length; i++) {
+            if (_map[i].units.isNotEmpty) {
+              if (_map[i].units.contains(attack.targetUnit)) {
+                // unit is in that map square; depending on the weapon used,
+                // it may kill all units in there
+                if ((attack.gameCard.name == EnumCardName.grenade) ||
+                    (attack.gameCard.name == EnumCardName.flamethrower) ||
+                    (attack.gameCard.name == EnumCardName.machinegun)) {
+                  _map[i].units.clear();
+                } else {
+                  _map[i].units.remove(attack.targetUnit);
+                }
+              }
+            }
+          }
+          // add move to the message
+          attackerName = attack.selectedUnit.type.toString().split('.').last;
+          targetName = attack.targetUnit.type.toString().split('.').last;
+
+          _addTextToGermanPanel('German $attackerName killed your $targetName');
+        }
+      } else {
+        // loop through to find where the unit is on the map
+        for (int i = 0; i < _map.length; i++) {
+          if (_map[i].units.isNotEmpty) {
+            if (_map[i].units.contains(attack.targetUnit)) {
+              // unit is in that map square; depending on the weapon used,
+              // it may kill all units in there
+              if ((attack.gameCard.name == EnumCardName.grenade) ||
+                  (attack.gameCard.name == EnumCardName.flamethrower) ||
+                  (attack.gameCard.name == EnumCardName.machinegun)) {
+                _map[i].units.clear();
+              } else {
+                _map[i].units.remove(attack.targetUnit);
+              }
+            }
+          }
+        }
+        // add move to the message
+        attackerName = attack.selectedUnit.type.toString().split('.').last;
+        targetName = attack.targetUnit.type.toString().split('.').last;
+
+        _addTextToGermanPanel('German $attackerName killed your $targetName');
+      }
+    }
+  }
+
+  Future<void> _doGermanMoves(List<GermanMove> moves) async {
+    String unitName = "";
+
+    // loop through each move and see if they can negate
+    for (GermanMove move in moves) {
+      if (_playerCanNegate(EnumCardNegate.move)) {
+        bool? negate = await showNegateDialog(context, EnumCardNegate.move);
+        if (negate) {
+          _removeUsedNegateCard(EnumCardNegate.move);
+          unitName = move.unit.type.name.toString().split('.').last;
+          _addTextToGermanPanel('You negated the German $unitName');
+        } else {
+          _map[move.end].units.add(move.unit);
+          _map[move.begin].units.remove(move.unit);
+          unitName = move.unit.type.name.toString().split('.').last;
+          _addTextToGermanPanel('German $unitName moved');
+        }
+      } else {
+        _map[move.end].units.add(move.unit);
+        _map[move.begin].units.remove(move.unit);
+        unitName = move.unit.type.name.toString().split('.').last;
+        _addTextToGermanPanel('German $unitName moved');
+      }
+    }
+  }
+
   Widget _nextButton() {
     return OutlinedButton(
         child: const Text(
@@ -244,152 +330,17 @@ class _GameScreenState extends State<GameScreen> {
               _gp.doOrdersPhase(context, _cf);
             });
 
-            // move phase
+            // get moves
             List<GermanMove> moves = _gp.doMovePhase(context, _cf, _mf, _map);
-
             if (moves.isNotEmpty) {
-              // go through each one
-              for (GermanMove move in moves) {
-                if (_playerCanNegate(EnumCardNegate.move)) {
-                  showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Negate the German move?'),
-                      content:
-                          const Text('Do you want to negate the German move?'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context, true);
-                            // remove the card
-                            _removeUsedNegateCard(EnumCardNegate.move);
-                            String unitName =
-                                move.unit.type.name.toString().split('.').last;
-                            _addTextToGermanPanel(
-                                'You negated the German $unitName');
-                          },
-                          child: const Text('Yes'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // make the move
-                            _map[move.end].units.add(move.unit);
-                            _map[move.begin].units.remove(move.unit);
-                            // add move to the message
-                            String unitName =
-                                move.unit.type.name.toString().split('.').last;
-                            _addTextToGermanPanel('German $unitName moved');
-                            Navigator.pop(context, false);
-                          },
-                          child: const Text('No'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  // no negate cards
-                  _map[move.end].units.add(move.unit);
-                  _map[move.begin].units.remove(move.unit);
-                  // add move to the message
-                  String unitName = move.unit.type.toString().split('.').last;
-                  _addTextToGermanPanel('German $unitName moved');
-                }
-              }
+              _doGermanMoves(moves);
             }
 
-            // attack phase
+            // now get attacks (since that might depend on where units moved to)
             List<GermanAttack> attacks =
                 _gp.doAttackPhase(context, _cf, _mf, _map);
             if (attacks.isNotEmpty) {
-              // go through each one
-              for (GermanAttack attack in attacks) {
-                if (_playerCanNegate(EnumCardNegate.attack)) {
-                  showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Negate the German attack?'),
-                      content: const Text(
-                          'Do you want to negate the German attack?'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            // remove the card
-                            _removeUsedNegateCard(EnumCardNegate.attack);
-                            _addTextToGermanPanel(
-                                'You negated the German attack');
-                            Navigator.pop(context, true);
-                          },
-                          child: const Text('Yes'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // loop through to find where the unit is on the map
-                            for (int i = 0; i < _map.length; i++) {
-                              if (_map[i].units.isNotEmpty) {
-                                if (_map[i].units.contains(attack.targetUnit)) {
-                                  // unit is in that map square; depending on the weapon used,
-                                  // it may kill all units in there
-                                  if ((attack.gameCard.name ==
-                                          EnumCardName.grenade) ||
-                                      (attack.gameCard.name ==
-                                          EnumCardName.flamethrower) ||
-                                      (attack.gameCard.name ==
-                                          EnumCardName.machinegun)) {
-                                    _map[i].units.clear();
-                                  } else {
-                                    _map[i].units.remove(attack.targetUnit);
-                                  }
-                                }
-                              }
-                            }
-                            // add move to the message
-                            String attacker = attack.selectedUnit.type
-                                .toString()
-                                .split('.')
-                                .last;
-                            String target = attack.targetUnit.type
-                                .toString()
-                                .split('.')
-                                .last;
-
-                            _addTextToGermanPanel(
-                                'German $attacker killed your $target');
-                            Navigator.pop(context, false);
-                          },
-                          child: const Text('No'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  // loop through to find where the unit is on the map
-                  for (int i = 0; i < _map.length; i++) {
-                    if (_map[i].units.isNotEmpty) {
-                      if (_map[i].units.contains(attack.targetUnit)) {
-                        // unit is in that map square; depending on the weapon used,
-                        // it may kill all units in there
-                        if ((attack.gameCard.name == EnumCardName.grenade) ||
-                            (attack.gameCard.name ==
-                                EnumCardName.flamethrower) ||
-                            (attack.gameCard.name == EnumCardName.machinegun)) {
-                          _map[i].units.clear();
-                        } else {
-                          _map[i].units.remove(attack.targetUnit);
-                        }
-                      }
-                    }
-                  }
-                  // add move to the message
-                  String attacker =
-                      attack.selectedUnit.type.toString().split('.').last;
-                  String target =
-                      attack.targetUnit.type.toString().split('.').last;
-
-                  _addTextToGermanPanel('German $attacker killed your $target');
-
-                  // TODO: set the selected unit so it attacked
-                }
-              }
+              _doGermanAttacks(attacks);
             }
 
             // if the german player did nothing, say so
@@ -402,14 +353,12 @@ class _GameScreenState extends State<GameScreen> {
               setState(() {
                 _showgameOverPanel = true;
               });
-
-              //showGameOverDialog(context, false);
             }
           }
         });
   }
 
-  _germanTurnOver() {
+  void _germanTurnOver() {
     // increment stuff
     _gm.jump();
 

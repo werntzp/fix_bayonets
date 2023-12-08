@@ -16,7 +16,7 @@ String _unitKilledMessage(EnumUnitType unitType) {
 
   // format the type of unit killed nicely
   if (unitType == EnumUnitType.heavyweapon) {
-    name = "a Heavy Weappn Specialist";
+    name = "a Heavy Weapon Specialist";
   } else if (unitType == EnumUnitType.officer) {
     name = "an Officer";
   } else if (unitType == EnumUnitType.rifleman) {
