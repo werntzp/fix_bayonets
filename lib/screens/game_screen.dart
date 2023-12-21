@@ -218,16 +218,19 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  Future<void> _doGermanAttacks(List<GermanAttack> attacks) async {
+  Future<bool> _doGermanAttacks(List<GermanAttack> attacks) async {
     String attackerName = "";
     String targetName = "";
+    bool attackOccured = false;
 
     for (GermanAttack attack in attacks) {
+      attackOccured = false;
       if (_playerCanNegate(EnumCardNegate.attack)) {
         bool? negate = await showNegateDialog(context, EnumCardNegate.attack);
         if (negate) {
           _removeUsedNegateCard(EnumCardNegate.attack);
-          _addTextToGermanPanel('You negated the German attack');
+          attackerName = _gm.getUnitFriendlyName(attack.selectedUnit.type);
+          _addTextToGermanPanel('You negated the $attackerName\'s attack');
         } else {
           // loop through to find where the unit is on the map
           for (int i = 0; i < _map.length; i++) {
@@ -239,17 +242,20 @@ class _GameScreenState extends State<GameScreen> {
                     (attack.gameCard.name == EnumCardName.flamethrower) ||
                     (attack.gameCard.name == EnumCardName.machinegun)) {
                   _map[i].units.clear();
+                  attackOccured = true;
                 } else {
                   _map[i].units.remove(attack.targetUnit);
+                  attackOccured = true;
                 }
               }
             }
           }
           // add move to the message
-          attackerName = attack.selectedUnit.type.toString().split('.').last;
-          targetName = attack.targetUnit.type.toString().split('.').last;
-
-          _addTextToGermanPanel('German $attackerName killed your $targetName');
+          if (attackOccured) {
+            attackerName = _gm.getUnitFriendlyName(attack.selectedUnit.type);
+            targetName = _gm.getUnitFriendlyName(attack.targetUnit.type);
+            _addTextToGermanPanel('$attackerName killed your $targetName');
+          }
         }
       } else {
         // loop through to find where the unit is on the map
@@ -262,43 +268,85 @@ class _GameScreenState extends State<GameScreen> {
                   (attack.gameCard.name == EnumCardName.flamethrower) ||
                   (attack.gameCard.name == EnumCardName.machinegun)) {
                 _map[i].units.clear();
+                attackOccured = true;
               } else {
                 _map[i].units.remove(attack.targetUnit);
+                attackOccured = true;
               }
             }
           }
         }
         // add move to the message
-        attackerName = attack.selectedUnit.type.toString().split('.').last;
-        targetName = attack.targetUnit.type.toString().split('.').last;
-
-        _addTextToGermanPanel('German $attackerName killed your $targetName');
+        if (attackOccured) {
+          attackerName = _gm.getUnitFriendlyName(attack.selectedUnit.type);
+          targetName = _gm.getUnitFriendlyName(attack.targetUnit.type);
+          _addTextToGermanPanel('$attackerName killed your $targetName');
+        }
       }
     }
+
+    return true;
   }
 
-  Future<void> _doGermanMoves(List<GermanMove> moves) async {
+  void _doAGermanMove(GermanMove move) {
     String unitName = "";
 
+    _map[move.end].units.add(move.unit);
+    _map[move.begin].units.remove(move.unit);
+    unitName = _gm.getUnitFriendlyName(move.unit.type);
+    _addTextToGermanPanel('$unitName moved');
+  }
+
+  Future<bool> _doGermanMoves(List<GermanMove> moves) async {
     // loop through each move and see if they can negate
     for (GermanMove move in moves) {
       if (_playerCanNegate(EnumCardNegate.move)) {
         bool? negate = await showNegateDialog(context, EnumCardNegate.move);
         if (negate) {
           _removeUsedNegateCard(EnumCardNegate.move);
-          unitName = move.unit.type.name.toString().split('.').last;
-          _addTextToGermanPanel('You negated the German $unitName');
+          String unitName = _gm.getUnitFriendlyName(move.unit.type);
+          _addTextToGermanPanel('You negated the $unitName\'s move');
         } else {
-          _map[move.end].units.add(move.unit);
-          _map[move.begin].units.remove(move.unit);
-          unitName = move.unit.type.name.toString().split('.').last;
-          _addTextToGermanPanel('German $unitName moved');
+          _doAGermanMove(move);
         }
       } else {
-        _map[move.end].units.add(move.unit);
-        _map[move.begin].units.remove(move.unit);
-        unitName = move.unit.type.name.toString().split('.').last;
-        _addTextToGermanPanel('German $unitName moved');
+        _doAGermanMove(move);
+      }
+    }
+
+    return true;
+  }
+
+  void _checkGermanTurn() async {
+    // if now the german turn, do different stuff
+    if (_gm.player == EnumPlayer.german) {
+      // orders phase
+      setState(() {
+        _gp.doOrdersPhase(_cf);
+      });
+
+      // get moves
+      List<GermanMove> moves = _gp.doMovePhase(_cf, _mf, _map);
+      if (moves.isNotEmpty) {
+        await _doGermanMoves(moves);
+      }
+
+      // now get attacks (since that might depend on where units moved to)
+      List<GermanAttack> attacks = _gp.doAttackPhase(_cf, _mf, _map);
+      if (attacks.isNotEmpty) {
+        await _doGermanAttacks(attacks);
+      }
+
+      // if the german player did nothing, say so
+      if (_isGermanPanelEmpty()) {
+        _addTextToGermanPanel('The Germans took no actions this turn');
+      }
+
+      // if no american officers left, you've lost
+      if (_isGameOver(EnumUnitOwner.american)) {
+        setState(() {
+          _showgameOverPanel = true;
+        });
       }
     }
   }
@@ -318,43 +366,14 @@ class _GameScreenState extends State<GameScreen> {
             _resetSelectedUnit();
             _resetSelectedSquare();
           });
+
           // if it is an orders phase (regardless of player), reset all the move/attack flags
           if (_gm.phase == EnumPhase.orders) {
             _resetUnitFlags();
           }
 
-          // if now the german turn, do different stuff
-          if (_gm.player == EnumPlayer.german) {
-            // orders phase
-            setState(() {
-              _gp.doOrdersPhase(context, _cf);
-            });
-
-            // get moves
-            List<GermanMove> moves = _gp.doMovePhase(context, _cf, _mf, _map);
-            if (moves.isNotEmpty) {
-              _doGermanMoves(moves);
-            }
-
-            // now get attacks (since that might depend on where units moved to)
-            List<GermanAttack> attacks =
-                _gp.doAttackPhase(context, _cf, _mf, _map);
-            if (attacks.isNotEmpty) {
-              _doGermanAttacks(attacks);
-            }
-
-            // if the german player did nothing, say so
-            if (_isGermanPanelEmpty()) {
-              _addTextToGermanPanel('The Germans took no actions this turn');
-            }
-
-            // if no american officers left, you've lost
-            if (_isGameOver(EnumUnitOwner.american)) {
-              setState(() {
-                _showgameOverPanel = true;
-              });
-            }
-          }
+          // see if this is the German's turn
+          _checkGermanTurn();
         });
   }
 
@@ -1051,7 +1070,7 @@ class _GameScreenState extends State<GameScreen> {
         else if (_cf.americanHand().length <= constAmericanMaxCardsInHand)
           _nextButton(),
         const SizedBox(width: 5.0, height: 10.0),
-        _helpButton()
+        //_helpButton()
       ])
     ]);
   }

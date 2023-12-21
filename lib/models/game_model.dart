@@ -7,6 +7,25 @@ class GameModel {
 
   GameModel();
 
+  String getUnitFriendlyName(EnumUnitType unitType) {
+    String name = "";
+
+    // format the type of unit killed nicely
+    if (unitType == EnumUnitType.heavyweapon) {
+      name = "Heavy Weapon";
+    } else if (unitType == EnumUnitType.officer) {
+      name = "Officer";
+    } else if (unitType == EnumUnitType.rifleman) {
+      name = "Rifleman";
+    } else if (unitType == EnumUnitType.runner) {
+      name = "Runner";
+    } else {
+      name = "Sniper";
+    }
+
+    return name;
+  }
+
   void incrementPhase() {
     // if we throw an error incrementing the phase, we've got too far,
     try {

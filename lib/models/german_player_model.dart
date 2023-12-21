@@ -2,7 +2,6 @@ import 'package:fix_bayonets/const.dart';
 import 'package:fix_bayonets/models/card_model.dart';
 import 'package:fix_bayonets/models/map_model.dart';
 import 'package:fix_bayonets/models/unit_model.dart';
-import 'package:flutter/material.dart';
 import 'dart:math';
 
 class GermanMove {
@@ -104,7 +103,7 @@ class GermanPlayer {
     return isInRange;
   }
 
-  void doOrdersPhase(BuildContext context, CardFactory cardFactory) {
+  void doOrdersPhase(CardFactory cardFactory) {
     // Discard any cards that are restricted to American use
     cardFactory.discardOtherPlayersCards(EnumPlayer.american);
 
@@ -112,8 +111,8 @@ class GermanPlayer {
     // TODO: add logic for this
   }
 
-  List<GermanMove> doMovePhase(BuildContext context, CardFactory cardFactory,
-      MapFactory mapFactory, List<MapSquare> mapSquares) {
+  List<GermanMove> doMovePhase(CardFactory cardFactory, MapFactory mapFactory,
+      List<MapSquare> mapSquares) {
     List<GermanMove> moves = [];
     List<Unit> units = [];
     bool isValidMove = false;
@@ -188,11 +187,8 @@ class GermanPlayer {
     return moves;
   }
 
-  List<GermanAttack> doAttackPhase(
-      BuildContext context,
-      CardFactory cardFactory,
-      MapFactory mapFactory,
-      List<MapSquare> mapSquares) {
+  List<GermanAttack> doAttackPhase(CardFactory cardFactory,
+      MapFactory mapFactory, List<MapSquare> mapSquares) {
     List<GermanAttack> attacks = [];
     List<Unit> germanUnits = [];
     List<Unit> americanUnits = [];

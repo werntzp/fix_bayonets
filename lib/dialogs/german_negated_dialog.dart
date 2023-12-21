@@ -17,10 +17,11 @@ String _message(EnumPhase phase) {
 void showNegatedDialog(BuildContext context, EnumPhase gamePhase) {
   showDialog<String>(
     context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
       backgroundColor: const Color(0xffd3d3d3),
-      content: Text(
-          'The German player negated your ${_message(gamePhase)}.',
+      content: Text('The German player negated your ${_message(gamePhase)}.',
           style: const TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),
       actions: <Widget>[
         OutlinedButton(

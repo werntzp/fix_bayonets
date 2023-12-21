@@ -1,4 +1,4 @@
-package com.example.fix_bayonets
+package com.shadowdragonsoftware.fix_bayonets
 
 import io.flutter.embedding.android.FlutterActivity
 

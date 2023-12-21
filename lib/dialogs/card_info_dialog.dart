@@ -51,6 +51,8 @@ String _cardDisplayMessage(EnumCardName cardName) {
 void showCardInfoDialog(BuildContext context, EnumCardName cardName) {
   showDialog<String>(
     context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
       backgroundColor: const Color(0xffd3d3d3),
       content: Text(_cardDisplayMessage(cardName),

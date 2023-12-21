@@ -5,6 +5,8 @@ Future<bool> showNegateDialog(
     BuildContext context, EnumCardNegate cardNegate) async {
   return await showDialog(
     context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
       backgroundColor: const Color(0xffd3d3d3),
       content: Text(

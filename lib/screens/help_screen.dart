@@ -68,7 +68,7 @@ class HelpScreen extends StatelessWidget {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        backgroundColor: Colors.black,
+                        backgroundColor: Colors.white,
                         tooltip: "Back",
                         mini: true,
                         child: const Icon(Icons.arrow_back)),

@@ -12,6 +12,8 @@ String _dialogText(bool won) {
 void showGameOverDialog(BuildContext context, bool won) {
   showDialog<String>(
     context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
       title: const Text('Game Over',
           style: TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),

@@ -20,7 +20,7 @@ String _unitKilledMessage(EnumUnitType unitType) {
   } else if (unitType == EnumUnitType.officer) {
     name = "an Officer";
   } else if (unitType == EnumUnitType.rifleman) {
-    name = "a Rifelman";
+    name = "a Rifleman";
   } else if (unitType == EnumUnitType.runner) {
     name = "a Runner";
   } else {
@@ -34,6 +34,8 @@ void showUnitKilledDialog(
     BuildContext context, EnumUnitType unitType, int unitID) {
   showDialog<String>(
     context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
       backgroundColor: const Color(0xffd3d3d3),
       content: Text('You killed ${_unitKilledMessage(unitType)}!',
