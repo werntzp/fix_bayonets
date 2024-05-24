@@ -1,6 +1,6 @@
 const appTitle = "Fix Bayonets!";
 const appSplashGraphic = "images/fix_bayonets_splash.jpg";
-const appVersion = "Version 1.0, January 2023";
+const appVersion = "Version 1.0, January 2024";
 const sdsLogo = "images/sds_logo.png";
 
 const constSpecialMove = 99;

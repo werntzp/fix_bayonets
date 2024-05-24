@@ -250,7 +250,7 @@ class _GameScreenState extends State<GameScreen> {
               }
             }
           }
-          // add move to the message
+          // list out who was killed
           if (attackOccured) {
             attackerName = _gm.getUnitFriendlyName(attack.selectedUnit.type);
             targetName = _gm.getUnitFriendlyName(attack.targetUnit.type);

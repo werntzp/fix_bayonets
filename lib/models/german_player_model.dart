@@ -205,6 +205,7 @@ class GermanPlayer {
       if (mapSquare.units.isNotEmpty) {
         if (mapSquare.units.first.owner == EnumUnitOwner.german) {
           for (Unit unit in mapSquare.units) {
+            unit.hasAttacked = false;
             germanUnits.add(unit);
           }
         } else {
@@ -235,10 +236,13 @@ class GermanPlayer {
 
         // check all the german units
         for (Unit u in germanUnits) {
-          // can any of them hit the american officer unit?
+          // can any of them hit the american officer unit? and make sure it hasn't already attacked
           selectedUnitPos = _getUnitPosition(mapSquares, u);
-          if (_unitIsInRange(mapFactory, selectedUnitPos, targetUnitPos,
-              card.minrange, card.maxrange)) {
+          if ((_unitIsInRange(mapFactory, selectedUnitPos, targetUnitPos,
+                  card.minrange, card.maxrange)) &&
+              (!u.hasAttacked)) {
+            // flag the unit
+            u.hasAttacked = true;
             // add to the array
             attacks.add(GermanAttack(u, targetUnit, card));
             addedAnAttack = true;
@@ -252,7 +256,8 @@ class GermanPlayer {
         if (!addedAnAttack) {
           for (Unit u in germanUnits) {
             selectedUnit = u;
-            if (selectedUnit.type == EnumUnitType.sniper) {
+            if ((selectedUnit.type == EnumUnitType.sniper) &&
+                (!selectedUnit.hasAttacked)) {
               // get position of german sniper
               selectedUnitPos = _getUnitPosition(mapSquares, selectedUnit);
               // is there a potential target unit?
@@ -264,6 +269,8 @@ class GermanPlayer {
                     selectedUnit,
                     card.minrange,
                     card.maxrange);
+                // flag this unit so it can't attack again
+                u.hasAttacked = true;
                 // add that to the attack array
                 attacks.add(GermanAttack(u, targetUnit, card));
                 addedAnAttack = true;
@@ -280,7 +287,8 @@ class GermanPlayer {
         if (!addedAnAttack) {
           for (Unit u in germanUnits) {
             selectedUnit = u;
-            if (selectedUnit.type == EnumUnitType.heavyweapon) {
+            if ((selectedUnit.type == EnumUnitType.heavyweapon) &&
+                (!selectedUnit.hasAttacked)) {
               // get position of german sniper
               selectedUnitPos = _getUnitPosition(mapSquares, selectedUnit);
               // is there a potential target unit?
@@ -292,6 +300,8 @@ class GermanPlayer {
                     selectedUnit,
                     card.minrange,
                     card.maxrange);
+                // flag this unit so it can't attack again
+                u.hasAttacked = true;
                 // add that to the attack array
                 attacks.add(GermanAttack(u, targetUnit, card));
                 addedAnAttack = true;
@@ -313,9 +323,13 @@ class GermanPlayer {
             try {
               targetUnit = _getTargetUnit(mapFactory, mapSquares,
                   selectedUnitPos, selectedUnit, card.minrange, card.maxrange);
-              // add that to the attack array
-              attacks.add(GermanAttack(u, targetUnit, card));
-              addedAnAttack = true;
+              // add that to the attack array (if it hasn't already attacked)
+              if (!u.hasAttacked) {
+                // flag this unit so it can't attack again
+                u.hasAttacked = true;
+                attacks.add(GermanAttack(u, targetUnit, card));
+                addedAnAttack = true;
+              }
               break;
             } catch (e) {
               // no unit exists that can be attacked

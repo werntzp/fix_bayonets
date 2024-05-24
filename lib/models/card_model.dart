@@ -261,7 +261,7 @@ class CardFactory {
           EnumCardName.run,
           EnumCardType.move,
           1,
-          Random().nextInt(3) + 1,
+          Random().nextInt(4) + 1,
           EnumPlayerUse.german,
           EnumCardNegate.neither,
           EnumUnitType.all,
