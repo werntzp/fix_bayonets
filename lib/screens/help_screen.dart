@@ -47,7 +47,7 @@ class HelpScreen extends StatelessWidget {
                     child: Text(appVersion, style: TextStyle(fontSize: 15)),
                   ),
                   const Padding(
-                    padding: EdgeInsets.all(5.0),
+                    padding: EdgeInsets.all(1.0),
                   ),
                   Center(
                     child: FittedBox(
@@ -60,7 +60,7 @@ class HelpScreen extends StatelessWidget {
                     ),
                   ),
                   const Padding(
-                    padding: EdgeInsets.all(5.0),
+                    padding: EdgeInsets.all(1.0),
                   ),
                   Center(
                     child: FloatingActionButton(

@@ -1181,10 +1181,10 @@ class _GameScreenState extends State<GameScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 const Padding(
-                  padding: EdgeInsets.all(10.0),
+                  padding: EdgeInsets.all(5.0),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(5.0),
+                  padding: const EdgeInsets.all(3.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
@@ -1196,7 +1196,7 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(
@@ -1207,7 +1207,7 @@ class _GameScreenState extends State<GameScreen> {
                     child: _whichGrid(),
                   ),
                 ),
-                const Padding(padding: EdgeInsets.all(5.0)),
+                const Padding(padding: EdgeInsets.all(3.0)),
                 _whichPanel(),
               ],
             )),
