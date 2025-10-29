@@ -1,4 +1,4 @@
-import 'package:fix_bayonets/const.dart';
+import '../const.dart';
 import 'package:flutter/material.dart';
 
 Future<bool> showNegateDialog(
@@ -8,29 +8,51 @@ Future<bool> showNegateDialog(
     barrierDismissible: false,
     barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
-      backgroundColor: const Color(0xffd3d3d3),
+      backgroundColor: const Color.fromARGB(255, 129, 128, 108),
       content: Text(
           'Do you want to negate the German player\'s ${cardNegate.name}?',
-          style: const TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 40)),
+          style: const TextStyle(fontFamily: constAppTextFont, fontSize: 35)),
       actions: <Widget>[
-        OutlinedButton(
-            onPressed: () {
-              Navigator.pop(context, true);
-            },
-            child: const Text('Yes',
-                style: TextStyle(
-                    fontFamily: 'HeadlinerNo45',
-                    fontSize: 30,
-                    color: Colors.black))),
-        OutlinedButton(
-            onPressed: () {
-              Navigator.pop(context, false);
-            },
-            child: const Text('No',
-                style: TextStyle(
-                    fontFamily: 'HeadlinerNo45',
-                    fontSize: 30,
-                    color: Colors.black)))
+          SizedBox(
+            width: 125.0,
+            height: 45.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                side: BorderSide(color: Colors.black,   width: 5.0,), // Border color
+              ),     
+              child: Align(
+                  alignment: Alignment.center,
+                  child: const Text(constButtonYes, 
+                    style: TextStyle(
+                        fontFamily: constAppTitleFont,
+                        color: Colors.black,
+                        fontSize: 25.0),
+                  )),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+          ), 
+          SizedBox(
+            width: 125.0,
+            height: 45.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                side: BorderSide(color: Colors.black,   width: 5.0,), // Border color
+              ),     
+              child: Align(
+                  alignment: Alignment.center,
+                  child: const Text(constButtonNo, 
+                    style: TextStyle(
+                        fontFamily: constAppTitleFont,
+                        color: Colors.black,
+                        fontSize: 25.0),
+                  )),
+              onPressed: () => Navigator.pop(context, false ),
+            ),
+          ), 
       ],
     ),
   );

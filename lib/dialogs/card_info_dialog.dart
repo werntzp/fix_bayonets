@@ -1,4 +1,4 @@
-import 'package:fix_bayonets/const.dart';
+import '../const.dart';
 import 'package:flutter/material.dart';
 
 String _cardDisplayMessage(EnumCardName cardName) {
@@ -48,23 +48,56 @@ String _cardDisplayMessage(EnumCardName cardName) {
   return name;
 }
 
-void showCardInfoDialog(BuildContext context, EnumCardName cardName) {
+void showCardInfoDialog(BuildContext context, EnumCardName cardName, String graphic) {
   showDialog<String>(
     context: context,
     barrierDismissible: false,
     barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
-      backgroundColor: const Color(0xffd3d3d3),
-      content: Text(_cardDisplayMessage(cardName),
-          style: const TextStyle(fontFamily: 'HeadlinerNo45', fontSize: 25)),
-      actions: <Widget>[
-        OutlinedButton(
-            onPressed: () => Navigator.pop(context, 'OK'),
-            child: const Text('OK',
-                style: TextStyle(
-                    fontFamily: 'HeadlinerNo45',
-                    fontSize: 30,
-                    color: Colors.black))),
+      backgroundColor: const Color.fromARGB(255, 129, 128, 108),
+      content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left column: Image
+            Container(
+              width: 70,
+              height: 100,
+              margin: EdgeInsets.only(right: 16),
+              child: Image.asset(graphic, fit: BoxFit.fill),
+            ),
+            // Right column: Text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _cardDisplayMessage(cardName),
+                    style: const TextStyle(fontFamily: constAppTextFont, fontSize: 25)),
+                ],
+              ),
+            ),
+          ],
+      ), 
+      actions: [ SizedBox(
+                  width: 125.0,
+                  height: 45.0,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black, // Text and icon color
+                      backgroundColor: Colors.white, // Background color
+                      side: BorderSide(color: Colors.black,   width: 5.0,),),     
+                    child: Align(
+                        alignment: Alignment.center,
+                        child: Text(constButtonOK,
+                          style: TextStyle(
+                              fontFamily: constAppTitleFont,
+                              color: Colors.black,
+                              fontSize: 25.0),
+                        )),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
       ],
     ),
   );

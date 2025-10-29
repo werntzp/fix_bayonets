@@ -5,88 +5,55 @@ class Unit {
   final EnumUnitType type;
   final EnumUnitOwner owner;
   final EnumUnitMoveAllowed move;
-  bool hasMoved = false;
   bool hasAttacked = false;
-  bool isAlive = true;
   int numTimesMoved = 0;
   bool isSelected = false;
 
   void reset() {
     hasAttacked = false;
-    hasMoved = false;
     numTimesMoved = 0;
     isSelected = false;
+  }
+
+  // *********************************************
+  // canMove: runners have multiple move options, 
+  // so this helper function puts the logic here  
+  // *********************************************
+  bool canMove() {
+    bool result = false;
+    int moveAllowed = 1; 
+
+    if (move == EnumUnitMoveAllowed.two) { moveAllowed = 2; }
+    if ((moveAllowed - numTimesMoved) > 0) {
+      result = true;
+    }
+    return result; 
+
   }
 
   Unit(this.id, this.type, this.owner, this.move);
 }
 
 class UnitFactory {
-  String _getUnitImageModifiers(String file, Unit u) {
-    String modifier = "";
 
-    // can they move? runners are a little odd
-    if (u.type == EnumUnitType.runner) {
-      if (u.numTimesMoved == 0) {
-        modifier = "_m_m";
-      } else if (u.numTimesMoved == 1) {
-        modifier = "_m";
-      }
-    } else {
-      if (!u.hasMoved) {
-        modifier += "_m";
-      }
-    }
-
-    // can they attack?
-    if (!u.hasAttacked) {
-      modifier += "_a";
-    }
-
-    return modifier;
-  }
-
-  String getUnitImage(Unit u) {
-    String s = gfxUsRifle;
+  // *********************************************
+  // getUnitGraphic: return the proper graphic for the unit based
+  // on type and which player   
+  // *********************************************
+  static String getUnitGraphic(EnumUnitType t, EnumUnitOwner o, bool b) {
     String image = "";
+    String prefix = "";
+    String location = constAssetsLocation;
 
-    // if owner is american, just grab image type
-    if (u.owner == EnumUnitOwner.american) {
-      if (u.type == EnumUnitType.rifleman) {
-        s = gfxUsRifle.toString();
-      } else if (u.type == EnumUnitType.officer) {
-        s = gfxUsOfficer.toString();
-      } else if (u.type == EnumUnitType.heavyweapon) {
-        s = gfxUsHeavy.toString();
-      } else if (u.type == EnumUnitType.runner) {
-        s = gfxUsRunner.toString();
-      } else if (u.type == EnumUnitType.sniper) {
-        s = gfxUsSniper.toString();
-      }
-    } else {
-      // if german, only return the actual unit image if
-      // there's an american unit next to it
-      if (u.type == EnumUnitType.rifleman) {
-        s = gfxGermanRifle.toString();
-      } else if (u.type == EnumUnitType.officer) {
-        s = gfxGermanOfficer.toString();
-      } else if (u.type == EnumUnitType.heavyweapon) {
-        s = gfxGermanHeavy.toString();
-      } else if (u.type == EnumUnitType.runner) {
-        s = gfxGermanRunner.toString();
-      } else if (u.type == EnumUnitType.sniper) {
-        s = gfxGermanSniper.toString();
-      }
-    }
+    // usa or ger 
+    prefix = (o == EnumUnitOwner.american) ? "usa_" : "ger_";
 
-    // now that we have the base graphic, time to add any modifiers (only if american!)
-    if (u.owner == EnumUnitOwner.american) {
-      image = s + _getUnitImageModifiers(s, u) + gfxImageType.toString();
-    } else {
-      image = s + gfxImageType.toString();
-    }
+    // decide if stacked graphic, or individual unit 
+    image = b ? "stacked" : t.name;
 
-    return image;
+    // return it out 
+    return "$location$prefix$image.jpg";
+
   }
 
   List<Unit> prepareUnits() {
@@ -116,9 +83,9 @@ class UnitFactory {
         EnumUnitMoveAllowed.one));
     units.add(Unit(12, EnumUnitType.rifleman, EnumUnitOwner.german,
         EnumUnitMoveAllowed.one));
-    units.add(Unit(13, EnumUnitType.heavyweapon, EnumUnitOwner.german,
+    units.add(Unit(13, EnumUnitType.heavy, EnumUnitOwner.german,
         EnumUnitMoveAllowed.one));
-    units.add(Unit(14, EnumUnitType.heavyweapon, EnumUnitOwner.german,
+    units.add(Unit(14, EnumUnitType.heavy, EnumUnitOwner.german,
         EnumUnitMoveAllowed.one));
     units.add(Unit(15, EnumUnitType.sniper, EnumUnitOwner.german,
         EnumUnitMoveAllowed.one));
@@ -148,9 +115,9 @@ class UnitFactory {
         EnumUnitMoveAllowed.one));
     units.add(Unit(28, EnumUnitType.rifleman, EnumUnitOwner.american,
         EnumUnitMoveAllowed.one));
-    units.add(Unit(29, EnumUnitType.heavyweapon, EnumUnitOwner.american,
+    units.add(Unit(29, EnumUnitType.heavy, EnumUnitOwner.american,
         EnumUnitMoveAllowed.one));
-    units.add(Unit(30, EnumUnitType.heavyweapon, EnumUnitOwner.american,
+    units.add(Unit(30, EnumUnitType.heavy, EnumUnitOwner.american,
         EnumUnitMoveAllowed.one));
     units.add(Unit(31, EnumUnitType.sniper, EnumUnitOwner.american,
         EnumUnitMoveAllowed.one));

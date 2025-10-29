@@ -12,7 +12,7 @@ class FixBayonetsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return  MaterialApp(
       title: appTitle,
       debugShowCheckedModeBanner: false,
       home: FixBayonetsHome(),
@@ -21,7 +21,7 @@ class FixBayonetsApp extends StatelessWidget {
 }
 
 class FixBayonetsHome extends StatelessWidget {
-  const FixBayonetsHome({Key? key}) : super(key: key);
+   FixBayonetsHome({Key? key}) : super(key: key);
 
   void _showHelpScreen(context) {
     Navigator.push(
@@ -33,7 +33,7 @@ class FixBayonetsHome extends StatelessWidget {
   void _showGameScreen(context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const GameScreen()),
+      MaterialPageRoute(builder: (context) =>  GameScreen(key: UniqueKey())),
     );
   }
 
@@ -56,43 +56,51 @@ class FixBayonetsHome extends StatelessWidget {
             child: Text(
               appTitle,
               style: TextStyle(
-                  fontFamily: 'HeadlinerNo45',
+                  fontFamily: constAppTitleFont,
                   color: Colors.black,
-                  fontSize: 75.0),
+                  fontSize: 68.0),
             ),
           ),
         ),
-        const Padding(
+        Padding(
           padding: EdgeInsets.all(20.0),
           child: Align(
             alignment: Alignment.bottomLeft,
+            child: Container(
+                        decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 3)),
             child: Image(
               image: AssetImage(sdsLogo),
               width: 75.0,
               height: 75.0,
               fit: BoxFit.cover,
-            ),
+            )),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: const EdgeInsets.all(40.0),
           child: Align(
-            alignment: Alignment.centerRight,
+            alignment: Alignment.bottomRight,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
+                SizedBox(height: 125),
                 SizedBox(
                   width: 125.0,
-                  height: 40.0,
+                  height: 45.0,
                   child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black, // Text and icon color
+                      backgroundColor: Colors.white, // Background color
+                      side: BorderSide(color: Colors.black,   width: 3.0,), // Border color
+                    ),                    
                     child: const Align(
-                        alignment: Alignment.bottomCenter,
+                        alignment: Alignment.center,
                         child: Text(
                           "Play",
                           style: TextStyle(
-                              fontFamily: 'HeadlinerNo45',
+                              fontFamily: constAppTitleFont,
                               color: Colors.black,
                               fontSize: 30.0),
                         )),
@@ -106,14 +114,19 @@ class FixBayonetsHome extends StatelessWidget {
                 ),
                 SizedBox(
                   width: 125.0,
-                  height: 40.0,
+                  height: 45.0,
                   child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black, // Text and icon color
+                      backgroundColor: Colors.white, // Background color
+                      side: BorderSide(color: Colors.black,   width: 3.0,), // Border color
+                    ),     
                     child: const Align(
-                        alignment: Alignment.bottomCenter,
+                        alignment: Alignment.center,
                         child: Text(
                           "Help",
                           style: TextStyle(
-                              fontFamily: 'HeadlinerNo45',
+                              fontFamily: constAppTitleFont,
                               color: Colors.black,
                               fontSize: 30.0),
                         )),

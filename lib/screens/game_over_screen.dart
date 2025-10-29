@@ -1,28 +1,20 @@
 import "package:flutter/material.dart";
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter/services.dart';
+import '../main.dart';
 import '../const.dart';
 
-class HelpScreen extends StatefulWidget {
-  @override
-  HelpScreenState createState() => HelpScreenState();
+class GameOverScreen extends StatelessWidget {
+
+final bool won;
+
+const GameOverScreen({super.key, required this.won});
+
+String _dialogText() {
+  if (won) {
+    return 'You won!';
+  } else {
+    return 'You lost!';
+  }
 }
-
-class HelpScreenState extends State<HelpScreen> {
-
-  late final WebViewController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = WebViewController()..setJavaScriptMode(JavaScriptMode.disabled);
-    _loadHtmlFromAssets();
-  }
-
-  Future<void> _loadHtmlFromAssets() async {
-    final htmlString = await rootBundle.loadString(constHelpFileLocation);
-    _controller.loadHtmlString(htmlString);
-  }
 
   // main build function
   @override
@@ -40,40 +32,22 @@ class HelpScreenState extends State<HelpScreen> {
                     padding: EdgeInsets.all(10.0),
                   ),
                   const Center(
-                    child: Text("How to Play $appTitle",
+                    child: Text("Game Over!",
                         style: TextStyle(
                             fontFamily: constAppTitleFont,
-                            fontSize: 35)),
-                  ),
-                  SizedBox(
-                    height: 500.0,
-                    child: WebViewWidget(
-                      controller: _controller,
-                    ),
+                            fontSize: 40)),
                   ),
                   const Padding(
                     padding: EdgeInsets.all(5.0),
                   ),
-                  const Center(
-                    child: Text(appVersion, style: TextStyle(fontFamily: constAppTitleFont,fontSize: 20)),
+                   Center(
+                    child: Text(_dialogText(),
+                        style: TextStyle(
+                            fontFamily: constAppTitleFont,
+                            fontSize: 30)),
                   ),
                   const Padding(
-                    padding: EdgeInsets.all(5.0),
-                  ),
-                  Center(
-                  child: Container(
-                        decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 3)),
-                    child: FittedBox(
-                      fit: BoxFit.fill,
-                      child: Image.asset(
-                        sdsLogo,
-                        width: 100,
-                        height: 100,
-                      ),
-                    ),
-                  )),
-                  const Padding(
-                    padding: EdgeInsets.all(5.0),
+                    padding: EdgeInsets.all(15.0),
                   ),
                 Center(
                   child: SizedBox(
@@ -88,14 +62,17 @@ class HelpScreenState extends State<HelpScreen> {
                                         child: const Align(
                         alignment: Alignment.center,
                         child: Text(
-                          constButtonOK,
+                          constButtonHome,
                           style: TextStyle(
                               fontFamily: constAppTitleFont, 
                               color: Colors.black,
                               fontSize: 28.0),
                         )),
-                                        onPressed: () {
-                      Navigator.pop(context);
+                        onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => FixBayonetsApp()),
+                            );
                     },                 
                   ),
                 ),

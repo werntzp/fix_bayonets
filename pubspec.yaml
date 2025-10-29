@@ -1,6 +1,5 @@
 name: fix_bayonets
-description: A new Flutter project.
-
+description: "WWI hand-to-hand combat"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -12,13 +11,15 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # build by specifying --build-name and --build-number, respectively.
 # In Android, build-name is used as versionName while build-number used as versionCode.
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.2.0+3
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 2.0.0+4
 
 environment:
-  sdk: ">=2.12.0 <4.0.0"
+  sdk: ^3.9.2
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -29,11 +30,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  webview_flutter: ^4.7.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.8
+  hexagon: ^0.2.0
+  webview_flutter: ^4.7.0
+  number_to_words: ^1.0.0
 
 dev_dependencies:
   flutter_test:
@@ -44,12 +47,12 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
-# The following section is specific to Flutter.
+# The following section is specific to Flutter packages.
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -59,36 +62,18 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - images/
-    - assets/help.html
-    # - images/fix_bayonets_splash.jpg
-    # - images/sds_logo.png
-    # - images/fix_bayonets_background.jpg
-    # - images/bayonet.png
-    # - images/forest42x42.png
-    # - images/open42x42.png
-    # - images/thick42x42.png
-    # - images/us_multiple.png
-    # - images/us_officer.png
-    # - images/us_rifle.png
-    # - images/us_runner.png
-    # - images/us_machinegun.png
-    # - images/us_sniper.png
-    # - images/german_multiple.png
-    # - images/german_officer.png
-    # - images/german_rifle.png
-    # - images/german_runner.png
-    # - images/german_machinegun.png
-    # - images/german_sniper.png
-    # - images/attack_template.png
-    # - images/move_template.png
-    # - images/negate_template.png
+    - assets/images/
+    - assets/pages/help.html
+
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware.
+  # https://flutter.dev/to/resolution-aware-images
 
   # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/assets-and-images/#from-packages
+  # https://flutter.dev/to/asset-from-package
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
@@ -96,9 +81,18 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: HeadlinerNo45
+    - family: UnifrakturCook
       fonts:
-        - asset: assets/HeadlinerNo45-59y8.ttf
+        - asset: assets/fonts/UnifrakturCook-Bold.ttf
+
+    - family: Caudex
+      fonts:
+        - asset: assets/fonts/Caudex-Bold.ttf
+        - asset: assets/fonts/Caudex-BoldItalic.ttf
+        - asset: assets/fonts/Caudex-Italic.ttf
+        - asset: assets/fonts/Caudex-Regular.ttf
+
+
 
   # fonts:
   #   - family: Schyler
@@ -113,4 +107,4 @@ flutter:
   #         weight: 700
   #
   # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages
+  # see https://flutter.dev/to/font-from-package
