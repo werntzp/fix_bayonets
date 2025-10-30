@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:async';
 import 'package:hexagon/hexagon.dart';
 import '../const.dart';
 import '../dialogs/stacked_unit_picker_dialog.dart';
@@ -22,10 +23,18 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
+
+  OverlayEntry? _overlayEntry;
+  Completer<void>? _completer; 
+
   @override
   void initState() {
     super.initState();
     _newGame();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _phaseOverlayMessage(EnumPhase.orders);
+    });
+
   }
 
   @override
@@ -34,21 +43,176 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // display the overlay message after killing
+  // some germans 
+  // *********************************************
+  Future<void> _successfulKillOverlayMessage(String message) async {
+
+    _completer = Completer<void>();
+
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Align(alignment: Alignment.center,
+            child: Card(
+              elevation: 8.0,
+              color: const Color.fromARGB(255, 129, 128, 108),
+              child: Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                message,
+                style: TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // Remove after 1 second
+    Future.delayed(Duration(seconds: 2), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+    });
+
+    await _completer!.future; 
+
+  }
+
+  // *********************************************
+  // display the overlay message with a recap of
+  // the moves/attacks the Germans made 
+  // *********************************************
+  Future<void> _germanTurnRecapOverlayMessage(String message) async {
+
+    _completer = Completer<void>();
+
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Align(alignment: Alignment.center,
+            child: Card(
+              elevation: 8.0,
+              color: Colors.black,
+              child: Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                message,
+                style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    Future.delayed(Duration(seconds: 3), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+    });
+
+    await _completer!.future; 
+
+  }
+
+  // *********************************************
+  // display the overlay message when the germans
+  // negate a move or attack 
+  // *********************************************
+  Future<void> _negateOverlayMessage(EnumPhase phase) async {
+    String message = constNegateMoveMessage; 
+
+    if (phase == EnumPhase.attack) {
+      message = constNegateAttackMessage;
+    }
+
+    _completer = Completer<void>();
+
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Align(alignment: Alignment.center,
+            child: Card(
+              elevation: 8.0,
+              color: Colors.black,
+              child: Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                message,
+                style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // Remove after 1 second
+    Future.delayed(Duration(seconds: 2), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+    });
+
+    await _completer!.future; 
+
+  }
+
+  // *********************************************
+  // display the overlay message when starting
+  // the move phase 
+  // *********************************************
+  Future<void> _phaseOverlayMessage(EnumPhase phase) async {
+    String message = constStartingOrdersPhase;
+    Color color = Colors.white; 
+
+    _completer = Completer<void>();
+
+    // decide which to use 
+    if (phase == EnumPhase.move) {
+      message = constStartingMovePhase;
+      color = Colors.green;
+    }
+    else if (phase == EnumPhase.attack) {
+      message = constStartingAttackPhase;
+      color = Colors.red; 
+    }
+
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Align(alignment: Alignment.center,
+            child: Card(
+              elevation: 8.0,              
+              color: color,
+              child: Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                message,
+                style: TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // Remove after 1 second
+    Future.delayed(Duration(seconds: 1), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+    });
+
+    await _completer!.future; 
+
+  }
+
+  // *********************************************
   // init map and all elements 
   // *********************************************
   void _newGame() async {
     _gameModel.newGame();
     _phaseColor = Colors.white; 
-  }
 
-  // *********************************************
-  // helper function for all snack
-  // bar messages 
-  // *********************************************
-  void _displaySnackBar(String message, int duration)  {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: Duration(seconds: duration),),
-    );  
   }
 
   // *********************************************
@@ -107,7 +271,7 @@ class _GameScreenState extends State<GameScreen> {
               if (_gameModel.canNegateAction(EnumPlayer.german, EnumCardNegate.move)) {
                 if (Random().nextBool()) {
                   // german decided to block the move! 
-                  _displaySnackBar("The Germans negated your move!", 1);
+                  await _negateOverlayMessage(EnumPhase.move);
                   // also, increment the move, even if it didn't 
                   _gameModel.updateUnitStatus(u.id, EnumPhase.move);
                   // discard the negate card
@@ -122,8 +286,6 @@ class _GameScreenState extends State<GameScreen> {
                 if (_gameModel.moveUnit(u.id, row, col)) {
                   _distanceArray =  _gameModel.resetDistances(); // reset all distances 
                   _gameModel.discardCardById(card.id); // get rid of the move card
-                  String unitName = _gameModel.displayUnitName(u.type);
-                  _displaySnackBar("$unitName moved successfully.", 1);
                 }
                 else {
                   _gameModel.deSelectUnitById(u.id);
@@ -215,7 +377,7 @@ class _GameScreenState extends State<GameScreen> {
               if (_gameModel.canNegateAction(EnumPlayer.german, EnumCardNegate.attack)) {
                 if (Random().nextBool()) {
                   // german decided to block the move! 
-                  _displaySnackBar("The Germans negated your attack!", 1);
+                  await _negateOverlayMessage(EnumPhase.attack);
                   // also, increment the move, even if it didn't 
                   _gameModel.updateUnitStatus(u.id, EnumPhase.attack);
                   // discard their card
@@ -233,16 +395,16 @@ class _GameScreenState extends State<GameScreen> {
                   _gameModel.discardCardById(card.id); // get rid of the move card
                   // if we killed more than one, change what gets displayed 
                   String unitName = _gameModel.displayUnitName(u.type); 
-                  String killed = numKilled.toString();
+                  String killNumber = numKilled.toString();
+                  String killNames = _gameModel.displayListOfUnitsKilled(); 
                   String killedMessage = "";
-                  String cardName = card.name.name;
                   if (numKilled == 1) {
-                    killedMessage = "$unitName killed one German unit in that hex with $cardName.";
+                    killedMessage = "American $unitName killed a German $killNames.";
                   }
                   else {
-                    killedMessage = "$unitName killed $killed units in that hex with $cardName."; 
+                    killedMessage = "American $unitName killed $killNumber Germans ($killNames)."; 
                   }
-                  _displaySnackBar(killedMessage, 1);
+                  await _successfulKillOverlayMessage(killedMessage);
                 }
                 else {
                   _gameModel.deSelectUnitById(u.id);
@@ -261,7 +423,6 @@ class _GameScreenState extends State<GameScreen> {
           setState(() {      
               _distanceArray =  _gameModel.resetDistances();          
           });
-
 
           // check on game ending conditions
           if (_gameModel.isGameOver(EnumPlayer.american)) {
@@ -583,8 +744,8 @@ class _GameScreenState extends State<GameScreen> {
       return 
         Column(
           children: [SizedBox(
-          width: 125.0,
-          height: 45.0,
+          width: 160.0,
+          height: 55.0,
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.black, // Text and icon color
@@ -598,7 +759,7 @@ class _GameScreenState extends State<GameScreen> {
                   style: TextStyle(
                       fontFamily: constAppTitleFont,
                       color: Colors.black,
-                      fontSize: 20.0),
+                      fontSize: 25.0),
                 )),
                   onPressed: () {
               _doAction();
@@ -634,6 +795,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // advance the phase 
     _gameModel.nextPhase();
+
     // if the german player has moves, get them so we can check for negation
     if (_gameModel.isGermanTurn()) {
       print("--- new german turn ---");
@@ -689,14 +851,20 @@ class _GameScreenState extends State<GameScreen> {
       }      
 
       // let them know german turn ended  
-      message = "The Germans have completed all moves and attacks. They successfully moved $moveCount times and attacked $attackCount times";
+      String moveTimes = "time";
+      String attackTimes = "time";
+      String killedUnits = _gameModel.displayListOfUnitsKilled();
+      if (moveCount != 1) { moveTimes = "times"; }
+      if (attackCount != 1) { attackTimes = "times"; }
+
+      message = "The Germans moved $moveCount $moveTimes and attacked $attackCount $attackTimes";
       if (numKilled > 0) {
-        message += " (killing $numKilled units).";
+        message += " (killing $killedUnits).";
       }
       else { 
         message += ".";
       }
-      _displaySnackBar(message, 3);
+      await _germanTurnRecapOverlayMessage(message);
 
       // advance to next phase
       _gameModel.nextPhase();
@@ -714,11 +882,10 @@ class _GameScreenState extends State<GameScreen> {
         _phaseColor = Colors.red; 
       }
 
-      String displayPhase = _gameModel.displayPhase();  
-      _displaySnackBar("Starting $displayPhase phase.", 1);
-    
-    });
+      // overlay for the user 
+      _phaseOverlayMessage(_gameModel.phase());
 
+    });
 
   }
 
@@ -827,8 +994,8 @@ class _GameScreenState extends State<GameScreen> {
             height: 5.0),
           Column(
             children: [SizedBox(
-            width: 125.0,
-            height: 45.0,
+            width: 160.0,
+            height: 55.0,
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.black, // Text and icon color
@@ -842,7 +1009,7 @@ class _GameScreenState extends State<GameScreen> {
                     style: TextStyle(
                         fontFamily: constAppTitleFont,
                         color: Colors.black,
-                        fontSize: 20.0),
+                        fontSize: 25.0),
                   )),
                     onPressed: () { Navigator.pop(context); },                 
             ),

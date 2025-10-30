@@ -77,7 +77,7 @@ class FixBayonetsHome extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(40.0),
+          padding: const EdgeInsets.all(25.0),
           child: Align(
             alignment: Alignment.bottomRight,
             child: Column(
@@ -85,10 +85,10 @@ class FixBayonetsHome extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
-                SizedBox(height: 125),
+                SizedBox(height: 175),
                 SizedBox(
-                  width: 125.0,
-                  height: 45.0,
+                  width: 160.0,
+                  height: 55.0,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black, // Text and icon color
@@ -113,8 +113,8 @@ class FixBayonetsHome extends StatelessWidget {
                   height: 5.0,
                 ),
                 SizedBox(
-                  width: 125.0,
-                  height: 45.0,
+                  width: 160.0,
+                  height: 55.0,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black, // Text and icon color

@@ -77,8 +77,8 @@ class HelpScreenState extends State<HelpScreen> {
                   ),
                 Center(
                   child: SizedBox(
-                  width: 125.0,
-                  height: 45.0,
+                  width: 160.0,
+                  height: 55.0,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black, // Text and icon color
@@ -92,7 +92,7 @@ class HelpScreenState extends State<HelpScreen> {
                           style: TextStyle(
                               fontFamily: constAppTitleFont, 
                               color: Colors.black,
-                              fontSize: 28.0),
+                              fontSize: .0),
                         )),
                                         onPressed: () {
                       Navigator.pop(context);

@@ -58,9 +58,13 @@ const constButtonYes = "Yes";
 const constButtonNo = "No";
 const constButtonHome = "Home";
 
-
-
 // messages
+const constStartingMovePhase = "Starting Move Phase";
+const constStartingOrdersPhase = "Starting Orders Phase";
+const constStartingAttackPhase = "Starting Attack Phase";
+const constNegateMoveMessage = "Germans negated your move!";
+const constNegateAttackMessage = "Germans negated your attack!";
+
 const constStackedUnitPickerOrdersMessage = "Units in this map hex:";
 const constStackedUnitPickerMoveMessage = "Select an eligible unit to move, or Cancel to return.";
 const constStackedUnitPickerAttackMessage = "Select a unit to attack with, or Cancel to return.";

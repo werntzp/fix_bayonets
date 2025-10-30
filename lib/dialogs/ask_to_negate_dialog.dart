@@ -11,7 +11,7 @@ Future<bool> showNegateDialog(
       backgroundColor: const Color.fromARGB(255, 129, 128, 108),
       content: Text(
           'Do you want to negate the German player\'s ${cardNegate.name}?',
-          style: const TextStyle(fontFamily: constAppTextFont, fontSize: 35)),
+          style: const TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)),
       actions: <Widget>[
           SizedBox(
             width: 125.0,

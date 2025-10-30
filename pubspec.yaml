@@ -39,8 +39,14 @@ dependencies:
   number_to_words: ^1.0.0
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
+
   flutter_test:
     sdk: flutter
+
+flutter_launcher_icons:
+  android: true 
+  image_path: "assets/images/fix_bayonets_app_icon.png" 
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -63,6 +69,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/images/fix_bayonets_app_icon.png
     - assets/pages/help.html
 
   # assets:

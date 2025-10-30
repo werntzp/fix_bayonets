@@ -51,8 +51,8 @@ String _dialogText() {
                   ),
                 Center(
                   child: SizedBox(
-                  width: 125.0,
-                  height: 45.0,
+                  width: 160.0,
+                  height: 55.0,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black, // Text and icon color

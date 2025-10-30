@@ -39,6 +39,7 @@ class GameModel {
   final MapFactory _mapFactory = MapFactory();
   final List<GermanUnit> _germanUnits = []; 
   late List<List<MapHex>> _hexes;
+  String _displayUnitsKilled = ""; 
 
   // *********************************************
   // helper function to capitalize first letter ina  word 
@@ -98,6 +99,13 @@ class GameModel {
       }
 
       return name; 
+  }
+
+  // *********************************************
+  // friendly string name of the units killed for display
+  // *********************************************
+  String displayListOfUnitsKilled() {
+    return _displayUnitsKilled; 
   }
 
   // *********************************************
@@ -641,7 +649,7 @@ class GameModel {
         }
         i++; 
         if (i >= _drawPile.length) { break; }
-      } while (_germanHand.length <= constMaxCardsInHand);
+      } while (_germanHand.length < constMaxCardsInHand);
     }
 
   }
@@ -666,6 +674,7 @@ class GameModel {
     // if we throw an error incrementing the phase, we've got too far,
     try {
       _phase = EnumPhase.values[_phase.index + 1];
+      _displayUnitsKilled = "";
     } catch (e) {
       _phase = EnumPhase.orders;
     }
@@ -693,19 +702,22 @@ class GameModel {
         _phase = EnumPhase.attack;
       }
   
+      // reset the message
+      _displayUnitsKilled = ""; 
+
      }
     
   }
 
-// *********************************************
-  // unitsInHexCount: return how many units are in the selected hex 
+  // *********************************************
+  // return how many units are in the selected hex 
   // *********************************************
   int unitsInHexCount(int row, int col) {
       return _hexes[row][col].units.length;
   }
 
   // *********************************************
-  // unitsInHexOwner: return which player owns the unit(s) 
+  // return which player owns the unit(s) 
   // *********************************************
   EnumUnitOwner unitsInHexOwner(int row, int col) {
     late EnumUnitOwner owner;
@@ -721,7 +733,7 @@ class GameModel {
   }
 
   // *********************************************
-  // setSelectedByFirstPosition: mark unit in this hex as selected  
+  // mark unit in this hex as selected  
   // *********************************************
   void setSelectedUnitByFirstPosition(int row, int col) {
       // mark the appropriate unit as selected 
@@ -730,7 +742,7 @@ class GameModel {
   }
 
   // *********************************************
-  // setSelectedById: mark unit in this hex as selected  
+  // mark unit in this hex as selected  
   // *********************************************
   void setSelectedUnitById(int row, int col, int id) {
       // mark the appropriate unit as selected 
@@ -739,7 +751,7 @@ class GameModel {
   }
 
   // *********************************************
-  // deSelectUnitById: deselect this one unit   
+  // deselect this one unit   
   // *********************************************
   void deSelectUnitById(int id) {
 
@@ -760,7 +772,7 @@ class GameModel {
   }
 
   // *********************************************
-  // isHexOccupiedByGermans - return whether there are
+  // return whether there are
   // german units in this hex
   // *********************************************
   bool isHexOccupiedByGermans(int row, int col) {
@@ -782,7 +794,7 @@ class GameModel {
 
 
   // *********************************************
-  // isThereASelectedUnit - return whether any of the units
+  // return whether any of the units
   // are tagged as selected 
   // *********************************************
   bool isThereASelectedUnit() {
@@ -807,7 +819,7 @@ class GameModel {
   }
 
   // *********************************************
-  // getSelectedHex - return hex where the selected
+  // return hex where the selected
   // unit is   
   // *********************************************
   MapHex getSelectedHex() {
@@ -839,13 +851,16 @@ class GameModel {
   }
 
   // *********************************************
-  // attackUnit - attack the unit in this hex   
+  // attack the unit in this hex   
   // *********************************************
   int attackUnit (int id, int row, int col, EnumCardName cardName) {
     late List<Unit> units; 
     int numKilled = 0; 
     bool killAll = false; 
     int target = 0; 
+
+    // if the player is american, clear out the kill message every time we call this
+    if (_player == EnumPlayer.american) { _displayUnitsKilled = ""; }
 
     // get the units in the target hex 
     if (_hexes[row][col].units.isNotEmpty) {
@@ -872,12 +887,20 @@ class GameModel {
     // if we have a unit to kill, <arnold voice> do it 
     if ((target != 0) || (killAll)) {
       if (killAll) {
+        // build a string with unit names
+        for (Unit u in _hexes[row][col].units) {
+          if ((_displayUnitsKilled.length > 0) && (_displayUnitsKilled[_displayUnitsKilled.length-1] != ",")) { _displayUnitsKilled += ", "; }
+          _displayUnitsKilled += displayUnitName(u.type); 
+        }
+
         // remove all units 
         numKilled = _hexes[row][col].units.length;  
         _hexes[row][col].units.clear(); 
       }
       else { 
         // remove single unit from the hex
+        if ((_displayUnitsKilled.length > 0) && (_displayUnitsKilled[_displayUnitsKilled.length-1] != ",")) { _displayUnitsKilled += ", "; }
+        _displayUnitsKilled += displayUnitName(_hexes[row][col].units.firstWhere((element) => element.id == target).type);  
         _hexes[row][col].units.removeWhere((element) => element.id == target);    
         numKilled = 1;  
       }
@@ -903,7 +926,7 @@ class GameModel {
   }
 
   // *********************************************
-  // moveUnit - move the unit to a new hex   
+  // move the unit to a new hex   
   // *********************************************
   bool moveUnit (int id, int destRow, int destCol) {
     int origRow = 0;
@@ -945,7 +968,7 @@ class GameModel {
   }
 
   // *********************************************
-  // getSelectedUnit - return actual unit  
+  // return actual unit  
   // *********************************************
   Unit getSelectedUnit() {
     late Unit unit; 
@@ -976,7 +999,7 @@ class GameModel {
   }
 
   // *********************************************
-  // unitInHexSelected: is there a unit selected in this hex? (even
+  // is there a unit selected in this hex? (even
   // if part of a stack)
   // *********************************************
   bool unitInHexSelected(int row, int col) {
@@ -1067,7 +1090,7 @@ class GameModel {
   }
 
   // *********************************************
-  // unitInHexEligibleToMove: is there a unit eligible to move in this hex? (even
+  // is there a unit eligible to move in this hex? (even
   // if part of a stack)
   // *********************************************
   bool unitInHexEligibleToMove(int row, int col) {
@@ -1102,7 +1125,7 @@ class GameModel {
   }
 
   // *********************************************
-  // _identifyInvalidSpacesByPhase: ensure no one can attack
+  // ensure no one can attack
   // into a friendly spot, or move into an enemy spot
   // *********************************************
   List<List<int>> _identifyInvalidSpacesByPhase(List<List<int>> spaces, EnumPhase phase) {
@@ -1139,7 +1162,7 @@ class GameModel {
 
 
   // *********************************************
-  // unitInHexEligibleToAttack: is there a unit eligible to attack in this hex? (even
+  // is there a unit eligible to attack in this hex? (even
   // if part of a stack)
   // *********************************************
   bool unitInHexEligibleToAttack(int row, int col) {
@@ -1182,7 +1205,7 @@ class GameModel {
   }
 
   // *********************************************
-  // preConditionsMet: do we have everything in place for
+  // do we have everything in place for
   // a move or attack? 
   // *********************************************
   bool preConditionsMet(EnumPhase phase) {
@@ -1227,7 +1250,7 @@ class GameModel {
 
 
   // *********************************************
-  // getDistances: get distance from starting hex to
+  // get distance from starting hex to
   // every other hex 
   // *********************************************
   List<List<int>> getDistances(int row, int col, EnumPhase phase) {
@@ -1258,21 +1281,21 @@ class GameModel {
   }
 
   // *********************************************
-  // resetDistances: reset the distance array 
+  // reset the distance array 
   // *********************************************
   List<List<int>> resetDistances() {
     return _mapFactory.resetDistances();
   }
 
   // *********************************************
-  // showTerrain: sends back what will render on screen
+  // sends back what will render on screen
   // *********************************************
   String showTerrain(int row, int col) {
     return _hexes[row][col].terrain;
   }
 
   // *********************************************
-  // _unselectAllUnits: loop through and clear all units 
+  // loop through and clear all units 
   // in case any had been selected 
   // *********************************************
   void unselectAllUnits() {
@@ -1295,7 +1318,7 @@ class GameModel {
 
 
   // *********************************************
-  // showUnits: for american units: if more than one unit show stacked graphic,
+  // for american units: if more than one unit show stacked graphic,
   // otherwise, show actual unit; for germain units: show stacked graphic unless
   // there's only one unit and an american unit is adjacent  
   // *********************************************
@@ -1348,7 +1371,7 @@ class GameModel {
 
 
   // *********************************************
-  // discardNegateCard: go through hand, and drop 
+  // go through hand, and drop 
   // first negate card of this type    
   // *********************************************
   void discardNegateCard(EnumPlayer player, EnumCardNegate action) {
@@ -1377,7 +1400,7 @@ class GameModel {
   }
 
   // *********************************************
-  // discardCard: return this card to the 
+  // return this card to the 
   // discard pile for future use   
   // *********************************************
   void discardCardById(int id) {
@@ -1398,7 +1421,7 @@ class GameModel {
 
 
   // *********************************************
-  // discardSelectedCards: any cards that are marked
+  // any cards that are marked
   // as selected should go into the discard pile  
   // *********************************************
   void discardSelectedCards() {
@@ -1415,7 +1438,7 @@ class GameModel {
   }
 
   // *********************************************
-  // getSelectedCardCount: how many cards are selected   
+  // how many cards are selected   
   // *********************************************
   int getSelectedCardCount() {
     int count = 0; 
@@ -1433,7 +1456,7 @@ class GameModel {
 
 
   // *********************************************
-  // toggleSelected: if not selected, mark card as selected,
+  // if not selected, mark card as selected,
   // but if already selected, take that attribute off   
   // *********************************************
   void toggleSelected(int id) {
@@ -1454,7 +1477,7 @@ class GameModel {
   }
 
   // *********************************************
-  // canUseCard: can the american player utilize 
+  // can the american player utilize 
   // the card?    
   // *********************************************
   bool americanCanUseCard(int id) {
@@ -1471,7 +1494,7 @@ class GameModel {
   }
 
   // *********************************************
-  // americanHand: return the cards in the american's hand 
+  // return the cards in the american's hand 
   // *********************************************
   List<GameCard> americanHand() {
     return _americanHand;
@@ -1479,7 +1502,7 @@ class GameModel {
 
 
   // *********************************************
-  // newGame: reset to starting values
+  // reset to starting values
   // *********************************************
   void newGame() {
     _round = 1;
