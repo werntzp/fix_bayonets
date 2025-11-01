@@ -13,7 +13,7 @@ import '../models/unit_model.dart';
 
 GameModel _gameModel = GameModel();
   late List<List<int>> _distanceArray; 
-  Color _phaseColor = Colors.white; 
+  bool _overlayShowing = false; 
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -52,6 +52,7 @@ class _GameScreenState extends State<GameScreen> {
 
     if (_overlayEntry != null) return; // Prevent stacking
 
+    _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -73,6 +74,7 @@ class _GameScreenState extends State<GameScreen> {
       _completer?.complete(); 
       _overlayEntry = null; 
       _completer = null; 
+      _overlayShowing = false; 
     });
 
     await _completer!.future; 
@@ -89,6 +91,7 @@ class _GameScreenState extends State<GameScreen> {
 
     if (_overlayEntry != null) return; // Prevent stacking
 
+    _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -109,6 +112,7 @@ class _GameScreenState extends State<GameScreen> {
       _completer?.complete(); 
       _overlayEntry = null; 
       _completer = null; 
+      _overlayShowing = false; 
     });
 
     await _completer!.future; 
@@ -130,6 +134,7 @@ class _GameScreenState extends State<GameScreen> {
 
     if (_overlayEntry != null) return; // Prevent stacking
 
+    _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -151,6 +156,7 @@ class _GameScreenState extends State<GameScreen> {
       _completer?.complete(); 
       _overlayEntry = null; 
       _completer = null; 
+      _overlayShowing = false;
     });
 
     await _completer!.future; 
@@ -168,17 +174,33 @@ class _GameScreenState extends State<GameScreen> {
     _completer = Completer<void>();
 
     // decide which to use 
-    if (phase == EnumPhase.move) {
+    if ((phase == EnumPhase.orders) && (_gameModel.player() == EnumPlayerUse.american)) {
+      // do nothing, default values are fine
+    }
+    if ((phase == EnumPhase.move) && (!_gameModel.skipMovePhase())) {
       message = constStartingMovePhase;
       color = Colors.green;
     }
-    else if (phase == EnumPhase.attack) {
+    else if ((phase == EnumPhase.attack) && (!_gameModel.skipAttackPhase())) {
       message = constStartingAttackPhase;
       color = Colors.red; 
+    }
+    else if ((_gameModel.skipMovePhase()) && (_gameModel.skipAttackPhase()))  {
+      message = constSkippingMoveAndAttackPhase;
+      color = const Color.fromARGB(255, 129, 128, 108);
+    }
+    else if (_gameModel.skipMovePhase()) {
+      message = constSkippingMovePhase;
+      color = const Color.fromARGB(255, 129, 128, 108);
+    }
+    else if (_gameModel.skipAttackPhase()) {
+      message = constSkippingAttackPhase;
+      color = const Color.fromARGB(255, 129, 128, 108);
     }
 
     if (_overlayEntry != null) return; // Prevent stacking
 
+    _overlayShowing = true;
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -200,9 +222,31 @@ class _GameScreenState extends State<GameScreen> {
       _completer?.complete(); 
       _overlayEntry = null; 
       _completer = null; 
+      _overlayShowing = false;
     });
 
     await _completer!.future; 
+
+  }
+
+  // *********************************************
+  // phase determines some of the colors used 
+  // *********************************************
+  Color getPhaseColor() {
+    Color phaseColor = Colors.white; 
+
+    // top colors 
+    if (_gameModel.phase() == EnumPhase.orders) {
+      phaseColor = Colors.white;
+    }
+    else if (_gameModel.phase() == EnumPhase.move) {
+      phaseColor = Colors.green;
+    }
+    else {
+      phaseColor = Colors.red; 
+    }
+
+    return phaseColor; 
 
   }
 
@@ -211,8 +255,6 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   void _newGame() async {
     _gameModel.newGame();
-    _phaseColor = Colors.white; 
-
   }
 
   // *********************************************
@@ -375,15 +417,22 @@ class _GameScreenState extends State<GameScreen> {
             (_gameModel.isHexOccupiedByGermans(row, col))) {
               // can the german player negate this? if yes, flip a coin if they actually want to do it 
               if (_gameModel.canNegateAction(EnumPlayer.german, EnumCardNegate.attack)) {
-                if (Random().nextBool()) {
+                // first checj=k, if they can negate, and the attack is on their officer,
+                // always negate!
+                if (_gameModel.isGermanOfficerInHex(row, col)) {
+                  okToProceed = false;
+                }
+                else if (Random().nextBool()) {
+                  okToProceed = false;
+                }
+                // now actually negate it if that's the case 
+                if (okToProceed == false) {
                   // german decided to block the move! 
                   await _negateOverlayMessage(EnumPhase.attack);
                   // also, increment the move, even if it didn't 
                   _gameModel.updateUnitStatus(u.id, EnumPhase.attack);
                   // discard their card
                   _gameModel.discardNegateCard(EnumPlayer.german, EnumCardNegate.attack);
-                  // set flag
-                  okToProceed = false; 
                 }
               }
 
@@ -399,10 +448,10 @@ class _GameScreenState extends State<GameScreen> {
                   String killNames = _gameModel.displayListOfUnitsKilled(); 
                   String killedMessage = "";
                   if (numKilled == 1) {
-                    killedMessage = "American $unitName killed a German $killNames.";
+                    killedMessage = "American $unitName killed a German $killNames";
                   }
                   else {
-                    killedMessage = "American $unitName killed $killNumber Germans ($killNames)."; 
+                    killedMessage = "American $unitName killed $killNumber Germans ($killNames)"; 
                   }
                   await _successfulKillOverlayMessage(killedMessage);
                 }
@@ -562,7 +611,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _showBorder: decide whether to show a border
+  // decide whether to show a border
   // based on phase and if a unit is available to take
   // an action (move/attack) 
   // *********************************************
@@ -605,7 +654,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _showPhaseMessage: based on which phase it is,
+  // based on which phase it is,
   // display message to the player  
   // *********************************************
   String _showPhaseMessage() {
@@ -626,7 +675,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _getCardBorderColor: show all the current cards in
+  // show all the current cards in
   // the player's hand  
   // *********************************************
   Color _getCardBorderColor(GameCard card) {
@@ -638,7 +687,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _showCardInfo: pop up with more card details   
+  // pop up with more card details   
   // *********************************************
   void _showCardInfo(EnumCardName cardName, String graphic) {
     showCardInfoDialog(context, cardName, graphic);
@@ -646,7 +695,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _selectCard: mark this card as selected   
+  // mark this card as selected   
   // *********************************************
   void _selectCard(int id, EnumCardType type) {
 
@@ -725,7 +774,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _showActionButton: based on which phase it is,
+  // based on which phase it is,
   // set button text   
   // *********************************************
   Widget _showActionButton() {
@@ -761,7 +810,8 @@ class _GameScreenState extends State<GameScreen> {
                       color: Colors.black,
                       fontSize: 25.0),
                 )),
-                  onPressed: () {
+          onPressed:  () {
+              if (_overlayShowing) return; 
               _doAction();
             },                 
           ),
@@ -793,8 +843,28 @@ class _GameScreenState extends State<GameScreen> {
       return; 
     }
 
-    // advance the phase 
+    // advance the phase
     _gameModel.nextPhase();
+
+    // overlay for the user 
+    if (_gameModel.player() == EnumPlayer.american) {
+      await _phaseOverlayMessage(_gameModel.phase());
+    }
+
+    // manually set phase if they skipped something
+    if (_gameModel.player() == EnumPlayer.american) {
+      if ((_gameModel.skipMovePhase()) && (_gameModel.skipAttackPhase())) {
+        _gameModel.setPhase(EnumPhase.attack);
+        _gameModel.nextPhase(); 
+      }
+      else if ((_gameModel.phase() == EnumPhase.move) && (_gameModel.skipMovePhase())) {
+        _gameModel.setPhase(EnumPhase.attack);
+      }
+      else if  ((_gameModel.phase() == EnumPhase.attack) && (_gameModel.skipAttackPhase())) {
+        _gameModel.setPhase(EnumPhase.attack);
+        _gameModel.nextPhase(); 
+      }
+    }
 
     // if the german player has moves, get them so we can check for negation
     if (_gameModel.isGermanTurn()) {
@@ -859,32 +929,23 @@ class _GameScreenState extends State<GameScreen> {
 
       message = "The Germans moved $moveCount $moveTimes and attacked $attackCount $attackTimes";
       if (numKilled > 0) {
-        message += " (killing $killedUnits).";
+        message += " (killing $killedUnits)";
       }
       else { 
         message += ".";
       }
+
+      // recap what happened during German player phase
       await _germanTurnRecapOverlayMessage(message);
 
-      // advance to next phase
+      // advance to next American orders phase 
       _gameModel.nextPhase();
+      await _phaseOverlayMessage(_gameModel.phase());
 
     }
 
     setState(() {
-      if (_gameModel.phase() == EnumPhase.orders) {
-        _phaseColor = Colors.white;
-      }
-      else if (_gameModel.phase() == EnumPhase.move) {
-        _phaseColor = Colors.green;
-      }
-      else {
-        _phaseColor = Colors.red; 
-      }
-
-      // overlay for the user 
-      _phaseOverlayMessage(_gameModel.phase());
-
+      // force re-draw
     });
 
   }
@@ -906,21 +967,6 @@ class _GameScreenState extends State<GameScreen> {
         const Padding(padding: EdgeInsets.all(0.0),),
         Center(
           child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(text: _gameModel.displayPlayer(),
-                    style: TextStyle(fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 25, color: Colors.black),              
-                ),
-                TextSpan(
-                  text: ' player',
-                  style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, color: Colors.black),
-                ),
-            ],
-            ),
-          ),
-        ), 
-        Center(
-          child: RichText(
             textAlign: TextAlign.center, 
             text: TextSpan(
               children: [
@@ -936,7 +982,7 @@ class _GameScreenState extends State<GameScreen> {
                   style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, color: Colors.black),
                 ),                
                 TextSpan(text: _gameModel.displayPhase(),
-                    style: TextStyle(backgroundColor: _phaseColor, fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 25, color: Colors.black),              
+                    style: TextStyle(backgroundColor: getPhaseColor(), fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 25, color: Colors.black),              
                 ),
                 TextSpan(
                   text: ' Phase',
@@ -946,12 +992,13 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
         ),
+        const Padding(padding: EdgeInsets.all(5.0),),   
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(_showPhaseMessage(),
               style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, fontStyle: FontStyle.italic),  textAlign: TextAlign.center,))),
-        const Padding(padding: EdgeInsets.all(1.0),),              
+        const Padding(padding: EdgeInsets.all(5.0),),              
         HexagonOffsetGrid.oddFlat(
               color: const Color.fromARGB(255, 129, 128, 108),
               padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
@@ -966,7 +1013,7 @@ class _GameScreenState extends State<GameScreen> {
                         child: 
                           GestureDetector(
                             onTap: () { _handleTap(row, col); },
-                          child: Stack(
+                          child: Stack( 
                           children: [
                             AspectRatio( // base image 
                           aspectRatio: HexagonType.FLAT.ratio,
@@ -977,13 +1024,13 @@ class _GameScreenState extends State<GameScreen> {
                         _showUnits(row, col), // unit image
                         _showValidSpace(row, col), // valid space 
                         _showBorder(row, col), // border (top image) 
-                        Text("      $row, $col"), // for debugging  
+                        //Text("      $row, $col"), // for debugging  
                           ],
                         ),),
         )),
-        const Padding(padding: EdgeInsets.all(3.0),),
+        const Padding(padding: EdgeInsets.all(5.0),),
         _showCards(),
-        const Padding(padding: EdgeInsets.all(3.0),),
+        const Padding(padding: EdgeInsets.all(5.0),),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,

@@ -40,6 +40,8 @@ class GameModel {
   final List<GermanUnit> _germanUnits = []; 
   late List<List<MapHex>> _hexes;
   String _displayUnitsKilled = ""; 
+  bool _skipMove = false;
+  bool _skipAttack = false; 
 
   // *********************************************
   // helper function to capitalize first letter ina  word 
@@ -54,6 +56,13 @@ class GameModel {
   // *********************************************
   EnumPhase phase() {
     return _phase;
+  }
+
+  // *********************************************
+  // manually set phase
+  // *********************************************
+  void setPhase(EnumPhase phase) {
+    _phase = phase;
   }
 
   // *********************************************
@@ -106,6 +115,40 @@ class GameModel {
   // *********************************************
   String displayListOfUnitsKilled() {
     return _displayUnitsKilled; 
+  }
+
+
+  // *********************************************
+  // does the target hex contain a german officer?
+  // *********************************************
+  bool isGermanOfficerInHex(int row, int col) {
+    bool result = false; 
+
+    // if we got to this function, already know the hex
+    // contains german units, so don't have to check that
+    for (Unit u in _hexes[row][col].units) {
+      if (u.type == EnumUnitType.officer) {
+        result = true;
+        break; 
+      }
+    }
+
+    return result; 
+
+  }
+
+  // *********************************************
+  // return if we should skip the American move phase  
+  // *********************************************
+  bool skipMovePhase() {
+    return _skipMove; 
+  }
+
+  // *********************************************
+  // return if we should skip the American move phase  
+  // *********************************************
+  bool skipAttackPhase() {
+    return _skipAttack; 
   }
 
   // *********************************************
@@ -486,7 +529,7 @@ class GameModel {
   }
 
   // *********************************************
-  // getUnitsInHex: returns a list of the units in the hex 
+  // returns a list of the units in the hex 
   // *********************************************
   List<Unit> getUnitsInHex(int row, int col) {
     late List<Unit> units = []; 
@@ -573,7 +616,7 @@ class GameModel {
   }
 
   // *********************************************
-  // getSelectedCard: return the card that is active   
+  // return the card that is active   
   // *********************************************
   GameCard getSelectedCard() {
 
@@ -588,8 +631,7 @@ class GameModel {
   }
 
   // *********************************************
-  // clearSelectedCards:  clear out 
-  // any cards the player had selected 
+  // clear out any cards the player had selected 
   // *********************************************
   void clearAllSelectedCards() {
 
@@ -600,7 +642,7 @@ class GameModel {
   }
 
   // *********************************************
-  // _checkDrawPile: do we have enough cards to use?
+  //  do we have enough cards to use?
   // *********************************************
   void _checkDrawPile() {
 
@@ -616,10 +658,12 @@ class GameModel {
   }
 
   // *********************************************
-  // drawCards: add cards to hands for american and
+  // add cards to hands for american and
   // german player  
   // *********************************************
   void _drawCards() {
+    int numMoveNegate = 0;
+    int numAttackNegate = 0; 
 
     _checkDrawPile();
  
@@ -627,6 +671,25 @@ class GameModel {
     for (int i = 0; i < constMaxCardsInHand; i++) {
       _americanHand.add(_drawPile[i]);
       _drawPile.remove(_drawPile[i]);
+    }
+
+    // cheat: if german has more than one move/attack negate card,
+    // drop it so we focus on actual moves/attacks
+    for (int i = (_germanHand.length - 1); i >= 0; i--) {
+      if (_germanHand[i].negate == EnumCardNegate.move) { numMoveNegate++; }
+      if (_germanHand[i].negate == EnumCardNegate.attack) { numAttackNegate++; }
+      // now, check
+      if (numMoveNegate > 1) { 
+        numMoveNegate--;
+        _discardPile.add(_germanHand[i]);
+        _germanHand.remove(i);
+      }
+      if (numAttackNegate > 1) {
+        numAttackNegate--;  
+        _discardPile.add(_germanHand[i]);
+        _germanHand.remove(i);
+      }
+
     }
 
     // cheat: if german already has three, drop one just so we're
@@ -641,21 +704,23 @@ class GameModel {
     if (_germanHand.length <= constMaxCardsInHand) {
       // draw up to three 
       do {
-        _checkDrawPile();
+        if (i >= _drawPile.length) { _checkDrawPile(); }
+        
         // cheat: only add to the german's hand if they can use it 
         if (_drawPile[i].player != EnumPlayerUse.american) {
+          String cardName = _drawPile[i].name.name;
+          print("german added a $cardName card");
           _germanHand.add(_drawPile[i]);
           _drawPile.remove(_drawPile[i]);
         }
         i++; 
-        if (i >= _drawPile.length) { break; }
       } while (_germanHand.length < constMaxCardsInHand);
     }
 
   }
 
   // *********************************************
-  // isGermanTurn: are we going to look for their 
+  // are we going to look for their 
   // moves and attacks 
   // *********************************************
   bool isGermanTurn() {
@@ -667,21 +732,28 @@ class GameModel {
   }
 
   // *********************************************
-  // nextPhase: move to the next phase
+  // move to the next phase
   // *********************************************
   void nextPhase() {
+    int moveCards = 0; 
+    int attackCards = 0; 
 
-    // if we throw an error incrementing the phase, we've got too far,
-    try {
-      _phase = EnumPhase.values[_phase.index + 1];
-      _displayUnitsKilled = "";
-    } catch (e) {
-      _phase = EnumPhase.orders;
-    }
+    // always reset this
+    _displayUnitsKilled = ""; // reset 
 
-    // if we cycle through to a new orders phase,
+    // if we're coming into this phase as the german player, 
+    // set phase to attack so we can just flip to american orders
+    if (_player == EnumPlayer.german) { _phase = EnumPhase.attack; }
+
+    // increment phase 
     if (_phase == EnumPhase.orders) {
-
+      _phase = EnumPhase.move;
+    }
+    else if (_phase == EnumPhase.move) {
+      _phase = EnumPhase.attack;
+    }
+    else {
+      _phase = EnumPhase.orders;
       // switch the player
       _player == EnumPlayer.german
           ? _player = EnumPlayer.american
@@ -689,24 +761,36 @@ class GameModel {
 
       // if we flipped back to american player, also draw more cards, clear any selected, and reset all the units
       if (_player == EnumPlayer.american) { 
+        _skipMove = false;
+        _skipAttack = false; 
         _round++;
         _drawCards();
         clearAllSelectedCards();
         _resetUnits();
       }
-
-      // prep all the units so the computer can make decisions, and discard any cards as needed
-      if (_player == EnumPlayer.german) {
+      else {
+        // prep all the units so the computer can make decisions, and discard any cards as needed
         _doGermanOrdersPhase();
-        // advance phase so we can flip to next round 
-        _phase = EnumPhase.attack;
       }
-  
-      // reset the message
-      _displayUnitsKilled = ""; 
+    }
 
-     }
+    // for the american player, let's see if we have cards for move or attack
+    if ((_player == EnumPlayer.american) && (_phase == EnumPhase.move)) { 
+      for (GameCard card in _americanHand) {
+        if ((card.type == EnumCardType.move) && (card.player != EnumPlayerUse.german)) { moveCards++; }
+        if ((card.type == EnumCardType.attack) && (card.player != EnumPlayerUse.german)) { attackCards++; }        
+      }
+      // if no move cards, skip the move phase 
+      if (moveCards == 0) { 
+        _skipMove = true; 
+      }
+      if (attackCards == 0) {
+        _skipAttack = true; 
+      }
+    }
     
+    print("moving to $_phase.name");
+
   }
 
   // *********************************************

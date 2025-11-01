@@ -60,8 +60,11 @@ const constButtonHome = "Home";
 
 // messages
 const constStartingMovePhase = "Starting Move Phase";
+const constSkippingMovePhase = "Skipping Move Phase";
 const constStartingOrdersPhase = "Starting Orders Phase";
 const constStartingAttackPhase = "Starting Attack Phase";
+const constSkippingAttackPhase = "Skipping Attack Phase";
+const constSkippingMoveAndAttackPhase = "Skipping Move and Attack";
 const constNegateMoveMessage = "Germans negated your move!";
 const constNegateAttackMessage = "Germans negated your attack!";
 

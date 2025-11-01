@@ -92,7 +92,7 @@ class HelpScreenState extends State<HelpScreen> {
                           style: TextStyle(
                               fontFamily: constAppTitleFont, 
                               color: Colors.black,
-                              fontSize: .0),
+                              fontSize: 25.0),
                         )),
                                         onPressed: () {
                       Navigator.pop(context);
