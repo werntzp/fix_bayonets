@@ -99,8 +99,6 @@ flutter:
         - asset: assets/fonts/Caudex-Italic.ttf
         - asset: assets/fonts/Caudex-Regular.ttf
 
-
-
   # fonts:
   #   - family: Schyler
   #     fonts:

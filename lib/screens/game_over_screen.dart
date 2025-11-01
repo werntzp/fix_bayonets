@@ -10,9 +10,9 @@ const GameOverScreen({super.key, required this.won});
 
 String _dialogText() {
   if (won) {
-    return 'You won!';
+    return constVictoryMessage;
   } else {
-    return 'You lost!';
+    return constDefeatMessage;
   }
 }
 
@@ -33,17 +33,19 @@ String _dialogText() {
                   ),
                   const Center(
                     child: Text("Game Over!",
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                             fontFamily: constAppTitleFont,
-                            fontSize: 40)),
+                            fontSize: 40,)),
                   ),
                   const Padding(
                     padding: EdgeInsets.all(5.0),
                   ),
                    Center(
                     child: Text(_dialogText(),
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                            fontFamily: constAppTitleFont,
+                            fontFamily: constAppTextFont,
                             fontSize: 30)),
                   ),
                   const Padding(

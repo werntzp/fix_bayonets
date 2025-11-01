@@ -64,7 +64,8 @@ class _GameScreenState extends State<GameScreen> {
               padding: EdgeInsets.all(10.0),
               child: Text(
                 message,
-                style: TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+                style: TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold), 
+                textAlign: TextAlign.center))))]));
 
     Overlay.of(context).insert(_overlayEntry!);
 
@@ -103,7 +104,8 @@ class _GameScreenState extends State<GameScreen> {
               padding: EdgeInsets.all(10.0),
               child: Text(
                 message,
-                style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+                style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center))))]));
 
     Overlay.of(context).insert(_overlayEntry!);
 
@@ -146,7 +148,8 @@ class _GameScreenState extends State<GameScreen> {
               padding: EdgeInsets.all(10.0),
               child: Text(
                 message,
-                style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+                style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center))))]));
 
     Overlay.of(context).insert(_overlayEntry!);
 
@@ -164,8 +167,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // display the overlay message when starting
-  // the move phase 
+  // display the overlay message when changing phases 
   // *********************************************
   Future<void> _phaseOverlayMessage(EnumPhase phase) async {
     String message = constStartingOrdersPhase;
@@ -212,7 +214,8 @@ class _GameScreenState extends State<GameScreen> {
               padding: EdgeInsets.all(10.0),
               child: Text(
                 message,
-                style: TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)))))]));
+                style: TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center))))]));
 
     Overlay.of(context).insert(_overlayEntry!);
 
@@ -397,7 +400,6 @@ class _GameScreenState extends State<GameScreen> {
           }
         }
       }
-
     }
 
     // finally, attack phase
@@ -521,7 +523,6 @@ class _GameScreenState extends State<GameScreen> {
           if (!deselectedUnit) {
             final id = await showStackedUnitPickerDialog(context, units, _gameModel);
             if (id != null) {
-              print('User selected: unit $id');
               _gameModel.unselectAllUnits();
               setState(() {
                 _gameModel.setSelectedUnitById(row, col, int.parse(id));
@@ -543,7 +544,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _showUnits: return unit graphics to be stacked on
+  // return unit graphics to be stacked on
   // top of the base terrain 
   // *********************************************
   Widget _showUnits(int row, int col) {
@@ -562,7 +563,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // _showValidSpace: if this is move/attack phase, and they've
+  // if this is move/attack phase, and they've
   // selected card/unit, show where they can move that unit to, or 
   // what is open for attack  
   // *********************************************
@@ -590,13 +591,11 @@ class _GameScreenState extends State<GameScreen> {
               return 
                 Positioned(
                   top:15, left: 18, child: Icon(Icons.check_circle, color: Colors.green, size: 30));
-
             }
             else {
               return 
                 Positioned(
                   top:15, left: 18, child: Icon(Icons.cancel, color: Colors.red, size: 30));
-
             }
           }
           else {
@@ -675,8 +674,8 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // show all the current cards in
-  // the player's hand  
+  // change card border based on whether it has been
+  // selected or not  
   // *********************************************
   Color _getCardBorderColor(GameCard card) {
     Color c = Colors.black; 
@@ -740,15 +739,56 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // show all the current cards in
-  // the player's hand  
+  // show all the current cards in the player's hand 
   // *********************************************
   Widget _showCards() {
 
+    return SizedBox(
+      height: 75, // controls vertical size of the scroll area
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          //for (GameCard card in _gameModel.americanHand()) 
+          for (int i = 0; i < _gameModel.americanHand().length; i++) 
+            GestureDetector(
+              onTap: () {
+                _selectCard(_gameModel.americanHand()[i].id, _gameModel.americanHand()[i].type); 
+              },
+              onLongPress: () {
+                _showCardInfo(_gameModel.americanHand()[i].name, _gameModel.americanHand()[i].graphic);
+              },
+              child: Stack(
+                children: [
+                Card(
+                  elevation: 4.0,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(width: 1.5, color: _getCardBorderColor(_gameModel.americanHand()[i]))
+                    ),
+                  child: SizedBox(
+                    height: 75,
+                    width: 65, 
+                    child: Center(child: Image.asset(_gameModel.americanHand()[i].graphic, fit: BoxFit.fill,)))),
+                Positioned(
+                  top: -5,
+                  left: 0, 
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      shape: BoxShape.circle,
+                    ),
+                  child: Text((i+1).toString(), style: TextStyle(fontFamily: constAppTextFont, color: Colors.white, fontSize: 15),))
+            ),
+        ],
+      ),
+    )]));
+
+    /*
     return Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
       SizedBox(width: 5,),
       Text(constYourHandMessage,
-        style: TextStyle(fontSize: 18 , fontFamily: constAppTextFont),  textAlign: TextAlign.center,),
+        style: TextStyle(fontSize: 18 , fontFamily: constAppTextFont, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,),
       SizedBox(width: 1, height: 85,),
       for (GameCard card in _gameModel.americanHand())
         GestureDetector(
@@ -771,6 +811,8 @@ class _GameScreenState extends State<GameScreen> {
         ),
 
     ]);
+    */
+
   }
 
   // *********************************************
@@ -927,7 +969,7 @@ class _GameScreenState extends State<GameScreen> {
       if (moveCount != 1) { moveTimes = "times"; }
       if (attackCount != 1) { attackTimes = "times"; }
 
-      message = "The Germans moved $moveCount $moveTimes and attacked $attackCount $attackTimes";
+      message = "The Germans successfully moved $moveCount $moveTimes and attacked $attackCount $attackTimes";
       if (numKilled > 0) {
         message += " (killing $killedUnits)";
       }
@@ -951,7 +993,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // build: create screen layout 
+  // create screen layout 
   // *********************************************
   @override
   Widget build(BuildContext context) {
@@ -997,7 +1039,7 @@ class _GameScreenState extends State<GameScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(_showPhaseMessage(),
-              style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, fontStyle: FontStyle.italic),  textAlign: TextAlign.center,))),
+              style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,))),
         const Padding(padding: EdgeInsets.all(5.0),),              
         HexagonOffsetGrid.oddFlat(
               color: const Color.fromARGB(255, 129, 128, 108),
@@ -1029,6 +1071,9 @@ class _GameScreenState extends State<GameScreen> {
                         ),),
         )),
         const Padding(padding: EdgeInsets.all(5.0),),
+        Text(constYourHandMessage,
+          style: TextStyle(fontSize: 18, fontFamily: constAppTextFont, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,),
+        const Padding(padding: EdgeInsets.all(1.0),),
         _showCards(),
         const Padding(padding: EdgeInsets.all(5.0),),
         Row(
@@ -1066,5 +1111,4 @@ class _GameScreenState extends State<GameScreen> {
         ) 
       )) ;
   }
-
 }

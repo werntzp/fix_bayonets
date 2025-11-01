@@ -193,8 +193,7 @@ class GameModel {
   }
 
   // *********************************************
-  // _identifyInvalidSpaces: ensure no one can attack
-  // into a friendly spot, or move into an enemy spot
+  // ensure no one can attack into a friendly spot, or move into an enemy spot
   // *********************************************
   List<List<int>> _identifyInvalidSpaces(List<List<int>> spaces, EnumPhase phase) {
     EnumUnitOwner owner; 
@@ -229,13 +228,11 @@ class GameModel {
   }
 
   // *********************************************
-  // isGameOver - loop through the cards the
-  // german can't use and add them to the discard pile
+  // loop through the cards the german can't use and add them to the discard pile
   // *********************************************
   bool isGameOver(EnumPlayer player) {
-    bool result = false; 
+    bool result = true; 
     EnumUnitOwner playerToCheck = EnumUnitOwner.american;
-    int officerCount = 0; 
 
     // see if both officers are still left for the other player 
     player == EnumPlayer.german
@@ -249,18 +246,13 @@ class GameModel {
         if ((_hexes[r][c].units.isNotEmpty) && (_hexes[r][c].units.first.owner == playerToCheck))  {
             for (Unit u in _hexes[r][c].units) {
               if (u.type == EnumUnitType.officer) { 
-                officerCount++;
-                if (officerCount == 2) {
-                  break outerLoop; 
-                } 
+                // once we found at least one officer, can stop counting 
+                result = false; 
+                break outerLoop; 
               }
             }
         }
       }
-    }
-
-    if (officerCount == 0) {
-      result = true; 
     }
 
     return result; 
@@ -269,7 +261,7 @@ class GameModel {
 
 
   // *********************************************
-  // updateUnitStatus - increment move on this unit or 
+  // increment move on this unit or 
   // set attacked status based on phase
   // *********************************************
   void updateUnitStatus(int unitId, EnumPhase phase) {
@@ -296,7 +288,7 @@ class GameModel {
   }
 
   // *********************************************
-  // _doGermanOrdersPhase - loop through the cards the
+  // loop through the cards the
   // german can't use and add them to the discard pile
   // *********************************************
   void _doGermanOrdersPhase() {
@@ -338,7 +330,7 @@ class GameModel {
   }
 
   // *********************************************
-  // canNegateAction: does the player have a valid
+  // does the player have a valid
   // negate card to use? 
   // *********************************************
   bool canNegateAction(EnumPlayer player, EnumCardNegate phase) {
@@ -491,7 +483,7 @@ class GameModel {
           result = _mapFactory.getZigZagDistances(unitToMove.row, unitToMove.col);
         }
         else { 
-        result = _mapFactory.getDistances(unitToMove.row, unitToMove.col);
+          result = _mapFactory.getDistances(unitToMove.row, unitToMove.col);
         }
         // then, have to identify if any spaces are ineligible based on units in them
         result = _identifyInvalidSpaces(result, EnumPhase.move);
@@ -668,7 +660,7 @@ class GameModel {
     _checkDrawPile();
  
     // draw cards for american 
-    for (int i = 0; i < constMaxCardsInHand; i++) {
+    for (int i = 0; i < constDrawCards; i++) {
       _americanHand.add(_drawPile[i]);
       _drawPile.remove(_drawPile[i]);
     }
@@ -789,7 +781,7 @@ class GameModel {
       }
     }
     
-    print("moving to $_phase.name");
+    print("moving to $_phase");
 
   }
 

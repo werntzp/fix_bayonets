@@ -7,10 +7,8 @@ const constAppTextFont = "Caudex";
 
 const constMapRows = 8;
 const constMapCols = 8; 
-const constMapSize = 63;
-const constInvalidUnit = -99;
-const constMaxCardsInHand = 3;
-const constNoCardSelected = -1;
+const constMaxCardsInHand = 5;
+const constDrawCards = 3; 
 const constStartingCardIdNumber = -1; 
 const constZigZagSpace = -99;
 const constInvalidSpace = -1;
@@ -68,46 +66,46 @@ const constSkippingMoveAndAttackPhase = "Skipping Move and Attack";
 const constNegateMoveMessage = "Germans negated your move!";
 const constNegateAttackMessage = "Germans negated your attack!";
 
-const constStackedUnitPickerOrdersMessage = "Units in this map hex:";
-const constStackedUnitPickerMoveMessage = "Select an eligible unit to move, or Cancel to return.";
-const constStackedUnitPickerAttackMessage = "Select a unit to attack with, or Cancel to return.";
+const constStackedUnitPickerOrdersMessage = "Soldiers in this map hex:";
+const constStackedUnitPickerMoveMessage = "Select an eligible soldier to move, or Cancel to return.";
+const constStackedUnitPickerAttackMessage = "Select a soldier to attack with, or Cancel to return.";
 const constOrdersPhaseMessage =
-    "Review your cards. If you have more than 3, you must discard some.";
+    "Review your actions. If you have more than 5, you must discard some.";
 const constMovePhaseMessage =
-    "Choose a Move card, select an eligible unit, and then pick a destination hex.";
+    "Choose a Move action, select an eligible soldier, and then pick a destination hex.";
 const constAttackPhaseMessage =
-    "Choose an Attack card, select an eligible unit, and then a target.";
-const constYourHandMessage = "Your\r\nCards:";
+    "Choose an Attack action, select an eligible soldier, and then a target.";
+const constYourHandMessage = "Available Actions:";
 const constVictoryMessage =
-    "Congratulations, you killed both German officers. Their attack has been stopped!";
+    "Congratulations, you killed both German officers stopping their attack.";
 const constDefeatMessage =
-    "The German forces have killed your officers and overrun your postion. You lost!";
+    "The German forces have killed your officers and overrun your postion.";
 
 // card notes 
 const constCardBayonet = "Bayonet attack card.";
-const constCardPistol = "Pistol attack card. Only Officer units can use.";
+const constCardPistol = "Pistol attack card. Only Officers can use.";
 const constCardFlamethrower =
-    "Flamethrower attack card. Only German Heavy Weapons units can use.";
-const constCardGrenade = "Grenade attack card.";
+    "Flamethrower attack card. Only German Heavy Weapons  can use. Kills everyone in the target hex.";
+const constCardGrenade = "Grenade attack card. Kills everyone in the target hex.";
 const constCardRifle = "Rifle attack card.";
 const constCardMachineGun =
-    "Machine Gun attack card. Only American Heavy Weapons can use.";
-const constCardSniper = "Sniper attack card. Only Sniper units can use. ";
+    "Machine Gun attack card. Only American Heavy Weapons can use. Kills everyone in the target hex.";
+const constCardSniper = "Sniper attack card. Only Snipers can use. ";
 const constCardCrawl = "Crawl move card.";
 const constCardMarch = "March move card.";
 const constCardDoubletime = "Double time move card.";
 const constCardZigzag = "Combat rush move card.";
 const constCardRun = "Run move card.";
 const constCardCharge = "Charge move card.";
-const constCardAdvance = "Advance move card. Only German unit can use.";
+const constCardAdvance = "Advance move card. Only Germans can use.";
 const constCardCounterattack =
-    "Counter Attack move card. Only American units can use.";
+    "Counter Attack move card. Only Americans can use.";
 const constCardSmoke = "Negate an attack with smoke.";
 const constCardArtillery =
-    "Negate an attack with artillery. Only American units can use.";
+    "Negate an attack with artillery. Only Americans can use.";
 const constCardWire = "Negate a move with wire.";
 const constCardLandmine =
-    "Negate a move with land mines. Only German units can use.";
+    "Negate a move with land mines. Only Germans can use.";
 
 enum EnumPhase { orders, move, attack }
 enum EnumMoveType { regular, zigzag }

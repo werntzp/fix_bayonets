@@ -60,8 +60,8 @@ void showCardInfoDialog(BuildContext context, EnumCardName cardName, String grap
           children: [
             // Left column: Image
             Container(
-              width: 70,
-              height: 100,
+              height: 75,
+              width: 65,
               margin: EdgeInsets.only(right: 16),
               child: Image.asset(graphic, fit: BoxFit.fill),
             ),
