@@ -49,7 +49,7 @@ class CardFactory {
             EnumPlayerUse.both,
             EnumCardNegate.neither,
             EnumUnitType.all,
-            gfxAttack1),
+            constActionAttack),
       );
     }
     // pistol x3
@@ -64,7 +64,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.officer,
-          gfxAttack2Officer));
+          constActionAttack));
     }
     // flamer thrower x3
     for (int i = 0; i < 3; i++) {
@@ -78,7 +78,7 @@ class CardFactory {
           EnumPlayerUse.german,
           EnumCardNegate.neither,
           EnumUnitType.heavy,
-          gfxAttack23German));
+          constActionAttack));
     }
     // grenade x3
     for (int i = 0; i < 3; i++) {
@@ -92,7 +92,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxAttackZ));
+          constActionAttack));
     }
     // rifle x3
     for (int i = 0; i < 3; i++) {
@@ -106,7 +106,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxAttack3));
+          constActionAttack));
     } // rifle x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -119,7 +119,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxAttack4));
+          constActionAttack));
     } // machine gun x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -132,7 +132,7 @@ class CardFactory {
           EnumPlayerUse.american,
           EnumCardNegate.neither,
           EnumUnitType.heavy,
-          gfxAttack45American));
+          constActionAttack));
     }
     // sniper x3
     for (int i = 0; i < 3; i++) {
@@ -146,7 +146,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.sniper,
-          gfxAttack56Sniper));
+          constActionAttack));
     }
     // crawl x3
     for (int i = 0; i < 3; i++) {
@@ -160,7 +160,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove1));
+          constActionMove));
     } // march x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -173,7 +173,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove2));
+          constActionMove));
     } // double time x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -186,7 +186,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove3));
+          constActionMove));
     } // zig zag x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -199,7 +199,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMoveZ));
+          constActionMove));
     }
     // run x3
     for (int i = 0; i < 3; i++) {
@@ -213,7 +213,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove4));
+          constActionMove));
     } // charge x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -226,7 +226,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove5));
+          constActionMove));
     }
     // advance x3
     for (int i = 0; i < 3; i++) {
@@ -240,7 +240,7 @@ class CardFactory {
           EnumPlayerUse.german,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove2German));
+          constActionMove));
     }
     // counter attack
     for (int i = 0; i < 3; i++) {
@@ -254,7 +254,7 @@ class CardFactory {
           EnumPlayerUse.american,
           EnumCardNegate.neither,
           EnumUnitType.all,
-          gfxMove3American));
+          constActionMove));
     } // smoke x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -267,7 +267,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.attack,
           EnumUnitType.all,
-          gfxNegateAttack));
+          constActionNegateAttack));
     } // artillery x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -280,7 +280,7 @@ class CardFactory {
           EnumPlayerUse.american,
           EnumCardNegate.attack,
           EnumUnitType.all,
-          gfxNegateAttackAmerican));
+          constActionNegateAttack));
     } // wire x3
     for (int i = 0; i < 3; i++) {
       id++;
@@ -293,7 +293,7 @@ class CardFactory {
           EnumPlayerUse.both,
           EnumCardNegate.move,
           EnumUnitType.all,
-          gfxNegateMove));
+          constActionNegateMove));
     }
     // landmine x3
     for (int i = 0; i < 3; i++) {
@@ -307,7 +307,7 @@ class CardFactory {
           EnumPlayerUse.german,
           EnumCardNegate.move,
           EnumUnitType.all,
-          gfxNegateMoveGerman));
+          constActionNegateMove));
     }
 
     // initial shuffle, then pass cards back out 
