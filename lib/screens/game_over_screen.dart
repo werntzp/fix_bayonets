@@ -16,42 +16,48 @@ String _dialogText() {
   }
 }
 
+String _graphic() {
+  if (won) {
+    return constAmericanVictory;
+  } else {
+    return constGermanVictory;
+  }
+}
+
   // main build function
   @override
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-            backgroundColor:       const Color.fromARGB(255, 129, 128, 108),
-            body: Center(
-                child: Container(
-              margin: const EdgeInsets.only(left: 10.0, right: 10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Padding(
-                    padding: EdgeInsets.all(10.0),
+            body: Stack(
+              children: <Widget>[
+                Image(
+                  image: AssetImage(_graphic()),
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height,
+                  fit: BoxFit.cover,
+                ),              
+              Padding(
+                padding: EdgeInsets.all(1.0),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child:  Text(
+                    _dialogText(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.white,
+                        fontSize: 35.0),
                   ),
-                  const Center(
-                    child: Text("Game Over!",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontFamily: constAppTitleFont,
-                            fontSize: 40,)),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.all(5.0),
-                  ),
-                   Center(
-                    child: Text(_dialogText(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontFamily: constAppTextFont,
-                            fontSize: 30)),
-                  ),
+                ),
+              ),
                   const Padding(
                     padding: EdgeInsets.all(15.0),
                   ),
-                Center(
+                Positioned(
+                  top: 750,
+                  left: 125, 
+                child: Center(
                   child: SizedBox(
                   width: 160.0,
                   height: 55.0,
@@ -66,8 +72,9 @@ String _dialogText() {
                         child: Text(
                           constButtonHome,
                           style: TextStyle(
-                              fontFamily: constAppTitleFont, 
+                              fontFamily: constAppTextFont, 
                               color: Colors.black,
+                              fontWeight: FontWeight.bold,
                               fontSize: 28.0),
                         )),
                         onPressed: () {
@@ -78,9 +85,9 @@ String _dialogText() {
                     },                 
                   ),
                 ),
-                  ),
-                ],
-              ),
-            ))));
+                  )),
+              ],)
+
+            ));
   }
 }

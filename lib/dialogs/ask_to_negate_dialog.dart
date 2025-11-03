@@ -26,7 +26,7 @@ Future<bool> showNegateDialog(
                   alignment: Alignment.center,
                   child: const Text(constButtonYes, 
                     style: TextStyle(
-                        fontFamily: constAppTitleFont,
+                        fontFamily: constAppTextFont,
                         color: Colors.black,
                         fontSize: 25.0),
                   )),
@@ -46,7 +46,7 @@ Future<bool> showNegateDialog(
                   alignment: Alignment.center,
                   child: const Text(constButtonNo, 
                     style: TextStyle(
-                        fontFamily: constAppTitleFont,
+                        fontFamily: constAppTextFont,
                         color: Colors.black,
                         fontSize: 25.0),
                   )),

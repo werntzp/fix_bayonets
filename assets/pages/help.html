@@ -6,39 +6,51 @@
 <p></p>
 <h2><u>Background</u></h2>
 Is in 1918 and you are the American commander fighting back German forces in the Argonne Forest. You win the game
-if you kill both of the German officers. However, if your two officers die, the Germans forces will overrun your troops. 
+if you kill both of the German officers. However, if your two officers die or any German soldier makes it to the edge
+of the map, the Germans forces will win. 
 
 <h2><u>Units</u></h2>        
 There are 5 types of soldiers: Officers, Riflemen, Snipers, Runners, and Heavy Weapon Specialists. Each icon
-shows the solider type and country (American or German flag). Each icon represents one soldier. 
+shows the solider type and country (American or German flag). Each icon represents one soldier. Soldiers may stack and there is no stacking limit.
 
 <h2><u>Turn sequence</u></h2>
 <h3>Orders Phase</h3>        
-You receive three (3) cards during the Orders phase to use during the Move and Attack phases. The max you can have
+You receive three (3) action cards during the Orders phase to use during the Move and Attack phases. The max you can have
 in your hand is five (5), so you may have to discard cards before you can proceed. Keep an eye on your units to
-decide which cards to keep (for example, if you have no heavy weapons soldiers left, don't keep an Attack card
-restricted to use by heavy weapons).
+decide which cards to keep (for example, if you have no Heavy Weapons soldiers left, don't keep an Attack card
+restricted to use by Heavy Weapons).
 <h3><u>Move Phase</u></h3>        
-You use Move cards to move a soldier. Each Move card has a number which is the number of spaces that solider can
+You use a Move action card to move a soldier. Each Move card has a number which is the number of spaces that solider can
 move. Those moves can be diagonal or orthogonal.
 <ul>
     <li>The "Z" ("Zig Zag") move card allows a solider to move like a knight in Chess.</li> 
-    <li>A single soldier can only moce once per turn, except Runners who can move twice.</li>
-    <li>You cannot move men into or through enemy soldiers.</li>
+    <li>A single soldier can only move once per turn, except Runners who can move twice.</li>
+    <li>You cannot move men into a map hex where there are already enemy soldiers.</li>
     <li>The German computer player may use a Negate card to cancel your move.</li>
 </ul>
 <h3>Fight Phase</h3>        
-You use Attack cards to kill enemy soldiers. The Attack card has a number that is the range of the attack. Those
+You use an Attack action cards to kill enemy soldiers. The Attack card has a number that is the range of the attack. Those
 attacks can be diagonal or orthogonal. The enemy soldier that is the target of the attack is automatically killed
 and removed from the map.
 <ul>
-    <li>The "Z" ("Zig Zag") attack card is an attack with a range like a knight in Chess.</li>
-    <li>Certain Attack cards are restricted to one type of solider. The Attack card will have that soldier type on
+    <li>The "Z" ("Zig Zag") Grenade attack card is an attack with a range like a knight in Chess.</li>
+    <li>Certain Attacks are restricted to one type of solider. The Attack action card will have that soldier type on
         the card. No other type of solider can use that card.</li>
-    <lI>If a stack of soldiers is hit, then one man randomly be killed unless the attack was made by a heavy weapons
-        specialist, then all the soldiers in the stack are killed.</lI>
+    <lI>If a stack of soldiers is hit, then one man randomly be killed unless the attack was made by a Heavy Weapons
+        specialist using the Machine Gun action or any other soldier using the Grenada attack, then all the soldiers in the stack are killed.</lI>
     <li>The German computer player may use a Negate card to cancel your attack.</li>
-
     </ul>        
+<h3>Odds and Ends</h3>        
+<ul>
+    <li>When you select a Move or Attack action card, units eligible to use it will be highlighted (green during Move phase 
+        and Red during Attack phase).</li>
+    <li>Once a soldier is selected to Move or Attack, valid spaces will be displayed. If you click back on the soldier or into an
+        invalid space, the game will deselect that solider. 
+    <lI>Long-pressing on an action card will give you more information about it.</lI>
+    <li>The map terrain is randomly generated, and do not affect movement or attack in any way.</li>
+    <li>You are not able to tell which Germans soldiers are in a map hex, unless you have an American soldier next to them 
+        in which case you can click into the hex to see which ones are there.</li>
+    <li>If you don't have an available Move or Attack action card, the game will skip that phase for you.</li>
+    </ul>         
 </body>
 </html>

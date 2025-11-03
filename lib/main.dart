@@ -100,7 +100,8 @@ class FixBayonetsHome extends StatelessWidget {
                         child: Text(
                           "Play",
                           style: TextStyle(
-                              fontFamily: constAppTitleFont,
+                              fontFamily: constAppTextFont,
+                              fontWeight: FontWeight.bold,
                               color: Colors.black,
                               fontSize: 30.0),
                         )),
@@ -126,8 +127,9 @@ class FixBayonetsHome extends StatelessWidget {
                         child: Text(
                           "Help",
                           style: TextStyle(
-                              fontFamily: constAppTitleFont,
+                              fontFamily: constAppTextFont,
                               color: Colors.black,
+                              fontWeight: FontWeight.bold,
                               fontSize: 30.0),
                         )),
                     onPressed: () {

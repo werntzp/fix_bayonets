@@ -255,6 +255,19 @@ class GameModel {
       }
     }
 
+    // if result is false, and player is German, also see if any of their units made the back
+    // row
+    if ((result == false) && (player == EnumPlayer.german)) {
+        for (int c=0; c < constMapCols; c++) {
+          if ((_hexes[0][c].units.isNotEmpty) && (_hexes[0][c].units.first.owner == EnumUnitOwner.german))  {
+            // if we find at least one German unit in the back 
+            // row, they won, so break out  
+            result = true; 
+            break; 
+          }
+        }
+    }
+
     return result; 
 
  }  
@@ -693,7 +706,10 @@ class GameModel {
 
     // decide how many to draw for the german player 
     int i = 0; 
-    if (_germanHand.length <= constMaxCardsInHand) {
+    int cardsToDraw = constMaxCardsInHand;
+    // just for the first turn, start with three cards
+    if (_round == 1) { cardsToDraw = 3; }
+    if (_germanHand.length <= cardsToDraw) {
       // draw up to three 
       do {
         if (i >= _drawPile.length) { _checkDrawPile(); }
@@ -706,7 +722,7 @@ class GameModel {
           _drawPile.remove(_drawPile[i]);
         }
         i++; 
-      } while (_germanHand.length < constMaxCardsInHand);
+      } while (_germanHand.length < cardsToDraw);
     }
 
   }

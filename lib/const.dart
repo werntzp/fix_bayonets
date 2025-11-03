@@ -24,7 +24,7 @@ const constCraterTerain = "assets/images/terrain_crater";
 const constActionMove = "assets/images/action_move.jpg";
 const constActionAttack = "assets/images/action_attack.jpg";
 const constActionNegateMove = "assets/images/action_negate_move.jpg";
-const constActionNegateAttack = "assets/images/assets/images/action_negate_attack.jpg";
+const constActionNegateAttack = "assets/images/action_negate_attack.jpg";
 const constAmericanVictory = "assets/images/usa_victory.jpg";
 const constGermanVictory = "assets/images/ger_victory.jpg";
 const constGermanTurnStart = "assets/images/ger_turn_start.jpg";
@@ -53,6 +53,7 @@ const constSkippingAttackPhase = "Skipping Attack Phase";
 const constSkippingMoveAndAttackPhase = "Skipping Move and Attack";
 const constNegateMoveMessage = "Germans negated your move!";
 const constNegateAttackMessage = "Germans negated your attack!";
+const constGermanTurnPrepMessage = "The Germans are planning their turn.";
 
 const constStackedUnitPickerOrdersMessage = "Soldiers in this map hex:";
 const constStackedUnitPickerMoveMessage = "Select an eligible soldier to move, or Cancel to return.";
@@ -65,9 +66,9 @@ const constAttackPhaseMessage =
     "Choose an Attack action, select an eligible soldier, and then a target.";
 const constYourHandMessage = "Available Actions:";
 const constVictoryMessage =
-    "Congratulations, you killed both German officers stopping their attack.";
+    "Congratulations, you have succeeded in stopping the German attack!";
 const constDefeatMessage =
-    "The German forces have killed your officers and overrun your postion.";
+    "You lost the battle! The Germans routed your forces and have overrun your postion.";
 
 // card notes 
 const constCardBayonet = "Bayonet attack card.";

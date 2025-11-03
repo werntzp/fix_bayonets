@@ -40,25 +40,25 @@ class HelpScreenState extends State<HelpScreen> {
                     padding: EdgeInsets.all(10.0),
                   ),
                   const Center(
-                    child: Text("How to Play $appTitle",
+                    child: Text("How to Play:",
                         style: TextStyle(
-                            fontFamily: constAppTitleFont,
+                            fontFamily: constAppTextFont,
                             fontSize: 35)),
                   ),
                   SizedBox(
-                    height: 500.0,
+                    height: 550.0,
                     child: WebViewWidget(
                       controller: _controller,
                     ),
                   ),
                   const Padding(
-                    padding: EdgeInsets.all(5.0),
+                    padding: EdgeInsets.all(6.0),
                   ),
                   const Center(
-                    child: Text(appVersion, style: TextStyle(fontFamily: constAppTitleFont,fontSize: 20)),
+                    child: Text(appVersion, style: TextStyle(fontWeight: FontWeight.bold,  fontFamily: constAppTextFont,fontSize: 20)),
                   ),
                   const Padding(
-                    padding: EdgeInsets.all(5.0),
+                    padding: EdgeInsets.all(6.0),
                   ),
                   Center(
                   child: Container(
@@ -90,8 +90,9 @@ class HelpScreenState extends State<HelpScreen> {
                         child: Text(
                           constButtonOK,
                           style: TextStyle(
-                              fontFamily: constAppTitleFont, 
+                              fontFamily: constAppTextFont, 
                               color: Colors.black,
+                              fontWeight: FontWeight.bold,
                               fontSize: 25.0),
                         )),
                                         onPressed: () {

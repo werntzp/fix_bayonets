@@ -91,7 +91,7 @@ void showCardInfoDialog(BuildContext context, EnumCardName cardName, String grap
                         alignment: Alignment.center,
                         child: Text(constButtonOK,
                           style: TextStyle(
-                              fontFamily: constAppTitleFont,
+                              fontFamily: constAppTextFont,
                               color: Colors.black,
                               fontSize: 25.0),
                         )),

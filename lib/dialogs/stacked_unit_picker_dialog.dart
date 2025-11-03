@@ -145,8 +145,8 @@ Future<String?> showStackedUnitPickerDialog(
         ),
             actions: [
                 SizedBox(
-                  width: 125.0,
-                  height: 45.0,
+                  width: 160.0,
+                  height: 55.0,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black, // Text and icon color
@@ -158,7 +158,8 @@ Future<String?> showStackedUnitPickerDialog(
                         child: Text(
                           _pickButton(gameModel.phase(), units.first.owner),
                           style: TextStyle(
-                              fontFamily: constAppTitleFont,
+                              fontFamily: constAppTextFont,
+                              fontWeight: FontWeight.bold,
                               color: Colors.black,
                               fontSize: 25.0),
                         )),

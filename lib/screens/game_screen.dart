@@ -83,6 +83,68 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // show at the beginning of the german turn 
+  // *********************************************
+  Future<void> _germanTurnPrepOverlayMessage() async {
+
+    _completer = Completer<void>();
+
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayShowing = true; 
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 200,
+        left: 50,
+        right: 50,
+        child: Material(
+          elevation: 8.0,
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(constGermanTurnStart, width: 225, height: 225, fit: BoxFit.contain,),
+              SizedBox(height: 12),
+              Text(
+                constGermanTurnPrepMessage,
+                style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const Padding(
+                padding: EdgeInsets.all(2.0),
+              ),
+              Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+                )
+            ],
+          ),
+        ),
+        ),
+    ));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    Future.delayed(Duration(seconds: 3), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+      _overlayShowing = false;
+    });
+
+    await _completer!.future; 
+
+  }
+
+  // *********************************************
   // display the overlay message with a recap of
   // the moves/attacks the Germans made 
   // *********************************************
@@ -94,18 +156,34 @@ class _GameScreenState extends State<GameScreen> {
 
     _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Align(alignment: Alignment.center,
-            child: Card(
-              elevation: 8.0,
+      builder: (context) => Positioned(
+        top: 200,
+        left: 50,
+        right: 50,
+        child: Material(
+          elevation: 8.0,
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
               color: Colors.black,
-              child: Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Text(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(constGermanTurnStart, width: 225, height: 225, fit: BoxFit.contain,),
+              SizedBox(height: 12),
+              Text(
                 message,
                 style: TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center))))]));
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        ),
+    ));
 
     Overlay.of(context).insert(_overlayEntry!);
 
@@ -686,6 +764,68 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // can only one player use this?    
+  // *********************************************
+  Widget _getCardPlayerRestrictions(GameCard card) {
+    String flag = constAmericanFlag; 
+
+    // if both can use, just send back an empty container 
+    if (card.player == EnumPlayerUse.both) {
+      return Container();
+    }
+    else {
+      if (card.player == EnumPlayerUse.german) { flag = constGermanFlag; }
+      return 
+        Image.asset(flag, fit: BoxFit.fill,);
+
+    }
+
+  }
+
+
+  // *********************************************
+  // show any usage restrictions for this card   
+  // *********************************************
+  String _getCardUsageRestrictions(GameCard card) {
+    String result = "";
+    String useBy = "";
+    String range = ""; 
+
+    // is there a unit restriction? 
+    if (card.useby == EnumUnitType.officer) {
+      useBy = "O ";
+    }
+    else if (card.useby == EnumUnitType.heavy) {
+      useBy = "H ";
+    }
+    else if (card.useby == EnumUnitType.sniper) {
+      useBy = "S ";
+    }
+
+    // now tack on card range 
+    
+    // if zero, it is a negate card so show nothing 
+    if (card.minrange == 0) {
+      range = ""; 
+    }
+    // zig zag is weird 
+    else if (card.minrange == constZigZagSpace) {
+      range = "Z";
+    }
+    // if they are the same, just show one 
+    else if (card.minrange == card.maxrange) {
+      range = card.maxrange.toString();
+    }
+    // otherwise, show the min/max range 
+    else {
+      range = card.minrange.toString() + "-" + card.maxrange.toString(); 
+    }
+
+    return useBy + range; 
+
+  }
+
+  // *********************************************
   // pop up with more card details   
   // *********************************************
   void _showCardInfo(EnumCardName cardName, String graphic) {
@@ -744,7 +884,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget _showCards() {
 
     return SizedBox(
-      height: 75, // controls vertical size of the scroll area
+      height: 91, // controls vertical size of the scroll area
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 16),
@@ -766,52 +906,38 @@ class _GameScreenState extends State<GameScreen> {
                     side: BorderSide(width: 1.5, color: _getCardBorderColor(_gameModel.americanHand()[i]))
                     ),
                   child: SizedBox(
-                    height: 75,
-                    width: 65, 
+                    height: 91,
+                    width: 80, 
                     child: Center(child: Image.asset(_gameModel.americanHand()[i].graphic, fit: BoxFit.fill,)))),
                 Positioned(
-                  top: -5,
-                  left: 0, 
+                  top: -6,
+                  left: -1, 
                   child: Container(
                     padding: EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.black,
                       shape: BoxShape.circle,
                     ),
-                  child: Text((i+1).toString(), style: TextStyle(fontFamily: constAppTextFont, color: Colors.white, fontSize: 15),))
+                  child: Text((i+1).toString(), style: TextStyle(fontFamily: 'RobotoMono', color: Colors.white, fontSize: 15),))
             ),
+                Positioned(
+                  top: 62,
+                  left: 7, 
+                  child: Text(_getCardUsageRestrictions(_gameModel.americanHand()[i]),
+                    style: TextStyle(fontFamily: 'RobotoMono', color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold),)
+                ),
+                Positioned(
+                  top: 66,
+                  left: 63, 
+                  child: SizedBox(
+                    height: 16,
+                    width: 18, 
+                    child: _getCardPlayerRestrictions(_gameModel.americanHand()[i]), 
+                  )
+                ),                
         ],
       ),
     )]));
-
-    /*
-    return Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-      SizedBox(width: 5,),
-      Text(constYourHandMessage,
-        style: TextStyle(fontSize: 18 , fontFamily: constAppTextFont, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,),
-      SizedBox(width: 1, height: 85,),
-      for (GameCard card in _gameModel.americanHand())
-        GestureDetector(
-          onTap: () {
-            _selectCard(card.id, card.type); 
-          },
-          onLongPress: () {
-            _showCardInfo(card.name, card.graphic);
-          },
-          child: Padding(
-            padding: EdgeInsets.all(2.0),
-            child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(border: Border.all(color: _getCardBorderColor(card), width: 1)),
-            height: 80,
-            width: 54,
-            child: Image.asset(card.graphic, fit: BoxFit.fill,),
-          ),
-        ),
-        ),
-
-    ]);
-    */
 
   }
 
@@ -848,8 +974,9 @@ class _GameScreenState extends State<GameScreen> {
                 child: Text(
                   s,
                   style: TextStyle(
-                      fontFamily: constAppTitleFont,
+                      fontFamily: constAppTextFont,
                       color: Colors.black,
+                      fontWeight: FontWeight.bold,
                       fontSize: 25.0),
                 )),
           onPressed:  () {
@@ -910,6 +1037,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // if the german player has moves, get them so we can check for negation
     if (_gameModel.isGermanTurn()) {
+      await _germanTurnPrepOverlayMessage(); 
       print("--- new german turn ---");
       // loop through each move
       for (GermanMove move in _gameModel.getGermanMoves()) {
@@ -953,15 +1081,6 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
 
-      // test for game over condition
-      if (_gameModel.isGameOver(EnumPlayer.german)) {
-        // go the game over dialog 
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => GameOverScreen(won: false)),
-        );
-      }      
-
       // let them know german turn ended  
       String moveTimes = "time";
       String attackTimes = "time";
@@ -979,6 +1098,15 @@ class _GameScreenState extends State<GameScreen> {
 
       // recap what happened during German player phase
       await _germanTurnRecapOverlayMessage(message);
+
+      // test for game over condition
+      if (_gameModel.isGameOver(EnumPlayer.german)) {
+        // go the game over dialog 
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => GameOverScreen(won: false)),
+        );
+      }      
 
       // advance to next American orders phase 
       _gameModel.nextPhase();
@@ -1075,7 +1203,7 @@ class _GameScreenState extends State<GameScreen> {
           style: TextStyle(fontSize: 18, fontFamily: constAppTextFont, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,),
         const Padding(padding: EdgeInsets.all(1.0),),
         _showCards(),
-        const Padding(padding: EdgeInsets.all(5.0),),
+        const Padding(padding: EdgeInsets.all(3.0),),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -1099,8 +1227,9 @@ class _GameScreenState extends State<GameScreen> {
                   child: Text(
                     constButtonQuit,
                     style: TextStyle(
-                        fontFamily: constAppTitleFont,
+                        fontFamily: constAppTextFont,
                         color: Colors.black,
+                        fontWeight: FontWeight.bold,
                         fontSize: 25.0),
                   )),
                     onPressed: () { Navigator.pop(context); },                 
