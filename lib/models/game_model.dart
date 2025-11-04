@@ -42,6 +42,7 @@ class GameModel {
   String _displayUnitsKilled = ""; 
   bool _skipMove = false;
   bool _skipAttack = false; 
+  int _unitCount = constInitialUnitCount; 
 
   // *********************************************
   // helper function to capitalize first letter ina  word 
@@ -63,6 +64,13 @@ class GameModel {
   // *********************************************
   void setPhase(EnumPhase phase) {
     _phase = phase;
+  }
+
+  // *********************************************
+  // return the round
+  // *********************************************
+  int round() {
+    return _round;
   }
 
   // *********************************************
@@ -152,6 +160,42 @@ class GameModel {
   }
 
   // *********************************************
+  // add a new unit to the german side 
+  // *********************************************
+  void addGermanReinforcement() {
+    bool validSpot = false; 
+    int col = 0; 
+    late Unit unit; 
+
+    // first decide where to drop it on the map 
+    do {
+      col = Random().nextInt(constMapCols);
+      // spots needs to be empty, or already have german units in it
+      if ((_hexes[constMapRows-1][col].units.isEmpty) || 
+        (_hexes[constMapRows-1][col].units.first.owner == EnumUnitOwner.german)) { 
+          validSpot = true; 
+      }
+    }
+    while (!validSpot);
+
+    // randomly decide if heavy, sniper, or soldier
+    int unitChoice = Random().nextInt(10);
+    if (unitChoice <= 4) {
+      unit = new Unit(_unitCount++, EnumUnitType.rifleman, EnumUnitOwner.german, EnumUnitMoveAllowed.one);
+    }
+    else if (unitChoice < 8) {
+      unit = new Unit(_unitCount++, EnumUnitType.heavy, EnumUnitOwner.german, EnumUnitMoveAllowed.one);
+    }
+    else {
+      unit = new Unit(_unitCount++, EnumUnitType.sniper, EnumUnitOwner.german, EnumUnitMoveAllowed.one);
+    }
+
+    // finally, drop that into the hex 
+    _hexes[constMapCols-1][col].units.add(unit);
+
+  }
+
+  // *********************************************
   // go through and find all the
   // current german units
   // *********************************************
@@ -230,9 +274,10 @@ class GameModel {
   // *********************************************
   // loop through the cards the german can't use and add them to the discard pile
   // *********************************************
-  bool isGameOver(EnumPlayer player) {
+  EnumGameOverReason isGameOver(EnumPlayer player) {
     bool result = true; 
     EnumUnitOwner playerToCheck = EnumUnitOwner.american;
+    EnumGameOverReason reason = EnumGameOverReason.neither; 
 
     // see if both officers are still left for the other player 
     player == EnumPlayer.german
@@ -255,6 +300,9 @@ class GameModel {
       }
     }
 
+    // if result is true, officers dead
+    if (result) { reason = EnumGameOverReason.officers; }
+
     // if result is false, and player is German, also see if any of their units made the back
     // row
     if ((result == false) && (player == EnumPlayer.german)) {
@@ -262,13 +310,13 @@ class GameModel {
           if ((_hexes[0][c].units.isNotEmpty) && (_hexes[0][c].units.first.owner == EnumUnitOwner.german))  {
             // if we find at least one German unit in the back 
             // row, they won, so break out  
-            result = true; 
+            reason = EnumGameOverReason.map;
             break; 
           }
         }
     }
 
-    return result; 
+    return reason; 
 
  }  
 
@@ -299,6 +347,29 @@ class GameModel {
     }
 
   }
+
+  // *********************************************
+  // just drop two random cards from the germans
+  // hand forcing them to pick up some more next go around
+  // *********************************************
+  void dropTwoGermanCards() {
+    int cardNum = 0; 
+    
+    try {
+      cardNum = Random().nextInt(_germanHand.length-1);
+      _discardPile.add(_germanHand[cardNum]); 
+      _germanHand.removeAt(cardNum);
+
+      cardNum = Random().nextInt(_germanHand.length-1);
+      _discardPile.add(_germanHand[cardNum]); 
+      _germanHand.removeAt(cardNum);
+    }
+    catch (e) {
+      // do nothing 
+    }
+
+  }
+
 
   // *********************************************
   // loop through the cards the
@@ -476,7 +547,9 @@ class GameModel {
     late GameCard card;  
     late GermanUnit unitToMove; 
     List<GermanMove> moves = []; 
+    List<int> shuffledCols = []; 
     bool validUnit = false; 
+    bool okToProceed = true; 
 
     // most up to date list of where units are at 
     _setGermanUnits();
@@ -484,13 +557,44 @@ class GameModel {
     // loop through cards to see if there are any move cards
     for (int i = (_germanHand.length-1); i >= 0; i--) {
       card = _germanHand[i];
+      okToProceed = true; 
       if (card.type == EnumCardType.move) {
         do {
-          // grab a random unit (that hasn't already moved)
-          int pos = Random().nextInt(_germanUnits.length);
-          unitToMove = _germanUnits[pos];
-          if (unitToMove.unit.canMove()) { validUnit = true; }          
+          // first, see if either german officer is adjacent to an american unit,
+          // and if so, try to move them first
+          try {
+            GermanUnit officer1 = _germanUnits.firstWhere(((element) => element.unit.type == EnumUnitType.officer));
+            if ((isAmericanUnitAdjacent(officer1.row, officer1.col) && (officer1.unit.canMove()))) {
+              unitToMove = officer1; 
+              validUnit = true; 
+            }
+
+            // if only one unit, will just get back the same one so validate that
+            if (!validUnit) {
+              GermanUnit officer2 = _germanUnits.lastWhere(((element) => element.unit.type == EnumUnitType.officer));
+              if (officer1. unit.id != officer2.unit.id) {
+                // different units, so good to use this one
+                if ((isAmericanUnitAdjacent(officer2.row, officer2.col) && (officer2.unit.canMove()))) {
+                  unitToMove = officer2; 
+                  validUnit = true; 
+                }           
+              }
+            }
+          }
+          catch (e) {
+            validUnit = false; 
+          }
+
+          // we don't have an officer to move
+          if (validUnit == false) {
+            // grab a random unit (that hasn't already moved)
+            int pos = Random().nextInt(_germanUnits.length);
+            unitToMove = _germanUnits[pos];
+            if (unitToMove.unit.canMove()) { validUnit = true; }    
+          }  
+
         } while (validUnit == false);
+
         // get list of valid spaces 
         if (card.minrange == constZigZagSpace) {
           result = _mapFactory.getZigZagDistances(unitToMove.row, unitToMove.col);
@@ -505,26 +609,39 @@ class GameModel {
         // *** cheat *** let the Germans move ONE further than on their card
         outerLoop: 
         for (int destRow=0; destRow<constMapRows; destRow++) {
-          for (int destCol=0; destCol<constMapCols; destCol++) {
-            if ((result[destRow][destCol] != constInvalidSpace) && 
+          // put all the cols into an array and shuffle them
+          shuffledCols = [
+            for (int c=0; c<constMapCols; c++) c, 
+          ];
+          shuffledCols.shuffle();
+          for (int destCol in shuffledCols) {
+           if ((result[destRow][destCol] != constInvalidSpace) && 
               (result[destRow][destCol] >= card.minrange) &&
               (result[destRow][destCol] <= (card.maxrange + 1)) && 
               ((unitToMove.row != destRow) && (unitToMove.col != destCol))) {
-                // update the unit to show it moved (even if the move gets negated later)
-                _hexes[unitToMove.row][unitToMove.col].units.firstWhere((element) => element.id == unitToMove.unit.id).numTimesMoved++;                 
-                // create a move object and add to the array
-                moves.add(GermanMove(unitToMove.unit.id, destRow, destCol));
-                String unitName = unitToMove.unit.type.name;  
-                print("german $unitName moving to $destRow, $destCol");
-                // discard the card 
-                _discardPile.add(_germanHand[i]);
-                try {
-                  _germanHand.removeAt(i);
+                // special case, if unit moving is an officer, don't let it move
+                // into another spot where an officer is at 
+                if ((unitToMove.unit.type == EnumUnitType.officer) &&
+                  (_hexes[unitToMove.row][unitToMove.col].units.any((element) => element.type == unitToMove.unit.type))) {
+                    // don't let them move
+                    okToProceed = false; 
                 }
-                catch (e) {
-                  print("error in getGermanMoves removing card");
+                // the flag only gets set to false if the above happens
+                if (okToProceed) {
+                  // update the unit to show it moved (even if the move gets negated later)
+                  _hexes[unitToMove.row][unitToMove.col].units.firstWhere((element) => element.id == unitToMove.unit.id).numTimesMoved++;                 
+                  // create a move object and add to the array
+                  moves.add(GermanMove(unitToMove.unit.id, destRow, destCol));
+                  // discard the card 
+                  _discardPile.add(_germanHand[i]);
+                  try {
+                    _germanHand.removeAt(i);
+                  }
+                  catch (e) {
+                    // do nothing
+                  }
+                  break outerLoop;    
                 }
-                break outerLoop;    
             }
           }
         }
@@ -554,6 +671,8 @@ class GameModel {
     late GameCard card;  
     late GermanUnit unitAttacking; 
     List<GermanAttack> attacks = []; 
+    List<int> shuffledCols = []; 
+
     int prevRow = -1;
     int prevCol = -1; 
 
@@ -582,7 +701,12 @@ class GameModel {
               // now, use that list to see if there's a valid attacking spot 
               // *** cheat *** let them attack one further than on their card 
               for (int destRow =0; destRow<constMapRows; destRow++) {
-                for (int destCol=0; destCol<constMapCols; destCol++) {
+                // put all the cols into an array and shuffle them
+                shuffledCols = [
+                  for (int c=0; c<constMapCols; c++) c, 
+                ];
+                shuffledCols.shuffle();
+                for (int destCol in shuffledCols) {
                   if ((result[destRow][destCol] != constInvalidSpace) && 
                     (result[destRow][destCol] >= card.minrange) &&
                     (result[destRow][destCol] <= (card.maxrange +1)) && 
@@ -594,8 +718,6 @@ class GameModel {
                       _hexes[unitAttacking.row][unitAttacking.col].units.firstWhere((element) => element.id == unitAttacking.unit.id).hasAttacked = true;    
                       // create an attack  object and add to the array
                       attacks.add(GermanAttack(unitAttacking.unit.id, destRow, destCol, card.name));
-                      String unitName = unitAttacking.unit.type.name;  
-                      print("german $unitName attacking $destRow, $destCol");
                       // save where we attacked
                       prevRow = destRow;
                       prevCol = destCol; 
@@ -605,8 +727,9 @@ class GameModel {
                         _germanHand.removeAt(i);
                       }
                       catch (e) {
-                        print("error in getGermanAttacks removing card");
+                        // do nothing
                       }
+
                       break outerLoop;         
                     }
                 }
@@ -614,7 +737,7 @@ class GameModel {
             }
         }         
       }
-    }
+    } 
 
     return List.from(attacks); 
 
@@ -697,9 +820,9 @@ class GameModel {
 
     }
 
-    // cheat: if german already has three, drop one just so we're
+    // cheat: if german already has the max, drop one just so we're
     // always picking at least one up
-    if (_germanHand.length == constMaxCardsInHand ) {
+    if (_germanHand.length >= constMaxCardsInHand ) {
       _discardPile.add(_germanHand[0]);
       _germanHand.removeAt(0);
     }
@@ -716,8 +839,6 @@ class GameModel {
         
         // cheat: only add to the german's hand if they can use it 
         if (_drawPile[i].player != EnumPlayerUse.american) {
-          String cardName = _drawPile[i].name.name;
-          print("german added a $cardName card");
           _germanHand.add(_drawPile[i]);
           _drawPile.remove(_drawPile[i]);
         }
@@ -748,6 +869,11 @@ class GameModel {
 
     // always reset this
     _displayUnitsKilled = ""; // reset 
+
+    // always deselect any cards
+    for (GameCard card in _americanHand) {
+      card.selected = false; 
+    }
 
     // if we're coming into this phase as the german player, 
     // set phase to attack so we can just flip to american orders
@@ -796,8 +922,6 @@ class GameModel {
         _skipAttack = true; 
       }
     }
-    
-    print("moving to $_phase");
 
   }
 
@@ -1610,7 +1734,6 @@ class GameModel {
     }
     catch (e) {
       // this will fail on very first launch and that's fine
-      print("failed clearing decks");
     }
     _drawPile = _cardFactory.prepareInitialDeck(); // all cards into the draw pile
     _drawCards(); // initial cards to american player and german computer 

@@ -11,6 +11,7 @@ Future<bool> showNegateDialog(
       backgroundColor: const Color.fromARGB(255, 129, 128, 108),
       content: Text(
           'Do you want to negate the German player\'s ${cardNegate.name}?',
+          textAlign: TextAlign.center,
           style: const TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold)),
       actions: <Widget>[
           SizedBox(
@@ -20,6 +21,7 @@ Future<bool> showNegateDialog(
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.black, // Text and icon color
                 backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
                 side: BorderSide(color: Colors.black,   width: 5.0,), // Border color
               ),     
               child: Align(
@@ -40,6 +42,7 @@ Future<bool> showNegateDialog(
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.black, // Text and icon color
                 backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
                 side: BorderSide(color: Colors.black,   width: 5.0,), // Border color
               ),     
               child: Align(

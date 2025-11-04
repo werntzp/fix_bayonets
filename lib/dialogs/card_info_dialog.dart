@@ -86,6 +86,7 @@ void showCardInfoDialog(BuildContext context, EnumCardName cardName, String grap
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black, // Text and icon color
                       backgroundColor: Colors.white, // Background color
+                      overlayColor: Colors.blueAccent.withValues(), // pressed ripple
                       side: BorderSide(color: Colors.black,   width: 5.0,),),     
                     child: Align(
                         alignment: Alignment.center,

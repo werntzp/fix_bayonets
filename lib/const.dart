@@ -12,6 +12,7 @@ const constDrawCards = 3;
 const constStartingCardIdNumber = -1; 
 const constZigZagSpace = -99;
 const constInvalidSpace = -1;
+const constInitialUnitCount = 32; 
 
 // file locations
 const constHelpFileLocation = "assets/pages/help.html";
@@ -53,8 +54,7 @@ const constSkippingAttackPhase = "Skipping Attack Phase";
 const constSkippingMoveAndAttackPhase = "Skipping Move and Attack";
 const constNegateMoveMessage = "Germans negated your move!";
 const constNegateAttackMessage = "Germans negated your attack!";
-const constGermanTurnPrepMessage = "The Germans are planning their turn.";
-
+const constGermanTurnPrepMessage = "The Germans are planning their actions ...";
 const constStackedUnitPickerOrdersMessage = "Soldiers in this map hex:";
 const constStackedUnitPickerMoveMessage = "Select an eligible soldier to move, or Cancel to return.";
 const constStackedUnitPickerAttackMessage = "Select a soldier to attack with, or Cancel to return.";
@@ -64,11 +64,17 @@ const constMovePhaseMessage =
     "Choose a Move action, select an eligible soldier, and then pick a destination hex.";
 const constAttackPhaseMessage =
     "Choose an Attack action, select an eligible soldier, and then a target.";
-const constYourHandMessage = "Available Actions:";
+const constYourHandMessage = "Your Available Actions:";
 const constVictoryMessage =
     "Congratulations, you have succeeded in stopping the German attack!";
 const constDefeatMessage =
     "You lost the battle! The Germans routed your forces and have overrun your postion.";
+const constReinforcementMessage =
+    "A new German soldier has joined the battle!";
+const constOfficersDeadGameOverMessage =
+    "The Germans have elminated both American Officers!";
+const constReachedTopRowGameOverMessage =
+    "A German soldier broke through the American lines!";
 
 // card notes 
 const constCardBayonet = "Bayonet attack card.";
@@ -96,6 +102,7 @@ const constCardWire = "Negate a move with wire.";
 const constCardLandmine =
     "Negate a move with land mines. Only Germans can use.";
 
+enum EnumGameOverReason { officers, map, neither }
 enum EnumPhase { orders, move, attack }
 enum EnumMoveType { regular, zigzag }
 enum EnumPlayer { american, german }

@@ -61,7 +61,7 @@ class _GameScreenState extends State<GameScreen> {
               elevation: 8.0,
               color: const Color.fromARGB(255, 129, 128, 108),
               child: Padding(
-              padding: EdgeInsets.all(10.0),
+              padding: EdgeInsets.all(8.0),
               child: Text(
                 message,
                 style: TextStyle(fontFamily: constAppTextFont, fontSize: 25, fontWeight: FontWeight.bold), 
@@ -93,7 +93,14 @@ class _GameScreenState extends State<GameScreen> {
 
     _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
+            ),
+          ),
+        Positioned(
         top: 200,
         left: 50,
         right: 50,
@@ -101,15 +108,15 @@ class _GameScreenState extends State<GameScreen> {
           elevation: 8.0,
           color: Colors.transparent,
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.black,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(constGermanTurnStart, width: 225, height: 225, fit: BoxFit.contain,),
+              Image.asset(constGermanTurnStart, width: 275, height: 275, fit: BoxFit.contain,),
               SizedBox(height: 12),
               Text(
                 constGermanTurnPrepMessage,
@@ -117,7 +124,7 @@ class _GameScreenState extends State<GameScreen> {
                 textAlign: TextAlign.center,
               ),
               const Padding(
-                padding: EdgeInsets.all(2.0),
+                padding: EdgeInsets.all(3.0),
               ),
               Center(
                 child: CircularProgressIndicator(
@@ -128,6 +135,8 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
         ),
+    )
+    ],
     ));
 
     Overlay.of(context).insert(_overlayEntry!);
@@ -156,7 +165,14 @@ class _GameScreenState extends State<GameScreen> {
 
     _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
+            ),
+          ), 
+        Positioned(
         top: 200,
         left: 50,
         right: 50,
@@ -164,15 +180,15 @@ class _GameScreenState extends State<GameScreen> {
           elevation: 8.0,
           color: Colors.transparent,
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.black,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(constGermanTurnStart, width: 225, height: 225, fit: BoxFit.contain,),
+              Image.asset(constGermanTurnStart, width: 275, height: 275, fit: BoxFit.contain,),
               SizedBox(height: 12),
               Text(
                 message,
@@ -183,11 +199,13 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
         ),
+        ),
+    ],
     ));
 
     Overlay.of(context).insert(_overlayEntry!);
 
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(Duration(seconds: 4), () {
       _overlayEntry?.remove(); 
       _completer?.complete(); 
       _overlayEntry = null; 
@@ -347,6 +365,7 @@ class _GameScreenState extends State<GameScreen> {
     EnumUnitOwner owner; 
     bool deselectedUnit = false; 
     bool okToProceed = true; 
+    EnumGameOverReason reason = EnumGameOverReason.neither;
 
     // always grab these to start 
     count = _gameModel.unitsInHexCount(row, col);
@@ -554,7 +573,8 @@ class _GameScreenState extends State<GameScreen> {
           });
 
           // check on game ending conditions
-          if (_gameModel.isGameOver(EnumPlayer.american)) {
+          reason =_gameModel.isGameOver(EnumPlayer.american); 
+          if (reason == EnumGameOverReason.officers) {
             // go the game over dialog 
             Navigator.push(
               context,
@@ -787,7 +807,6 @@ class _GameScreenState extends State<GameScreen> {
   // show any usage restrictions for this card   
   // *********************************************
   String _getCardUsageRestrictions(GameCard card) {
-    String result = "";
     String useBy = "";
     String range = ""; 
 
@@ -967,6 +986,7 @@ class _GameScreenState extends State<GameScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.black, // Text and icon color
               backgroundColor: Colors.white, // Background color
+              overlayColor: Colors.blueAccent.withValues(), // pressed ripple
               side: BorderSide(color: Colors.black,   width: 3.0,), // Border color
             ),   
             child: Align(
@@ -997,6 +1017,8 @@ class _GameScreenState extends State<GameScreen> {
     int tempKilled = 0; 
     int numKilled = 0; 
     String message = ""; 
+    bool addedReinforcement = false; 
+    EnumGameOverReason reason = EnumGameOverReason.neither;
 
     // if we're in orders phase, and there are selected cards, discard them
     if ((_gameModel.phase() == EnumPhase.orders) && (_gameModel.getSelectedCardCount() > 0)) {
@@ -1038,7 +1060,6 @@ class _GameScreenState extends State<GameScreen> {
     // if the german player has moves, get them so we can check for negation
     if (_gameModel.isGermanTurn()) {
       await _germanTurnPrepOverlayMessage(); 
-      print("--- new german turn ---");
       // loop through each move
       for (GermanMove move in _gameModel.getGermanMoves()) {
         // check to see if player can negate
@@ -1081,36 +1102,69 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
 
-      // let them know german turn ended  
-      String moveTimes = "time";
-      String attackTimes = "time";
-      String killedUnits = _gameModel.displayListOfUnitsKilled();
-      if (moveCount != 1) { moveTimes = "times"; }
-      if (attackCount != 1) { attackTimes = "times"; }
+      // first, did the game end? if not, look for reinforecements and put together
+      // the end of turn recap message
+      reason = _gameModel.isGameOver(EnumPlayer.german);
+      if (reason == EnumGameOverReason.neither) {
+        // once we get to round 15, the german gets a random chance to get a reinforcement each turn
+        if ((_gameModel.round() >= 15) && (Random().nextBool())) {
+          _gameModel.addGermanReinforcement(); 
+          addedReinforcement = true; 
+        }
 
-      message = "The Germans successfully moved $moveCount $moveTimes and attacked $attackCount $attackTimes";
-      if (numKilled > 0) {
-        message += " (killing $killedUnits)";
+        // let them know german turn ended  
+        String moveTimes = "time";
+        String attackTimes = "time";
+        String killedUnits = _gameModel.displayListOfUnitsKilled();
+        if (moveCount != 1) { moveTimes = "times"; }
+        if (attackCount != 1) { attackTimes = "times"; }
+        message = "The Germans successfully moved $moveCount $moveTimes and attacked $attackCount $attackTimes";
+        if (numKilled > 0) {
+          message += " (killing $killedUnits).";
+        }
+        else { 
+          message += ".";
+        }
+        if (addedReinforcement) {
+          message += " " + constReinforcementMessage; 
+        }
+
+        // if germans didn't do any moves or attacks, drop two cards just to shake things up
+        if ((moveCount == 0) && (attackCount == 0)) {
+          _gameModel.dropTwoGermanCards(); 
+        }
+
       }
-      else { 
-        message += ".";
+      else {
+        // yes, game is over, so send proper message
+        if (reason == EnumGameOverReason.officers) {
+          message += " " + constOfficersDeadGameOverMessage;
+        }
+        else {
+          message += " " + constReachedTopRowGameOverMessage;
+        }
+
       }
+
+
 
       // recap what happened during German player phase
       await _germanTurnRecapOverlayMessage(message);
 
       // test for game over condition
-      if (_gameModel.isGameOver(EnumPlayer.german)) {
+      if (reason != EnumGameOverReason.neither) {
         // go the game over dialog 
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => GameOverScreen(won: false)),
         );
-      }      
 
-      // advance to next American orders phase 
-      _gameModel.nextPhase();
-      await _phaseOverlayMessage(_gameModel.phase());
+      }
+      else {
+        // advance to next American orders phase 
+        _gameModel.nextPhase();
+        await _phaseOverlayMessage(_gameModel.phase());
+      }      
 
     }
 
@@ -1145,14 +1199,14 @@ class _GameScreenState extends State<GameScreen> {
                 ),
                 TextSpan(
                   text: _gameModel.displayRound(),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 25, color: Colors.black),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 28, color: Colors.black),
                 ),
                 TextSpan(
                   text: ' - ',
                   style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, color: Colors.black),
                 ),                
                 TextSpan(text: _gameModel.displayPhase(),
-                    style: TextStyle(backgroundColor: getPhaseColor(), fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 25, color: Colors.black),              
+                    style: TextStyle(fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 28, color: getPhaseColor()),              
                 ),
                 TextSpan(
                   text: ' Phase',
@@ -1162,13 +1216,13 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
         ),
-        const Padding(padding: EdgeInsets.all(5.0),),   
+        const Padding(padding: EdgeInsets.all(2.0),),   
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(_showPhaseMessage(),
               style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,))),
-        const Padding(padding: EdgeInsets.all(5.0),),              
+        const Padding(padding: EdgeInsets.all(2.0),),              
         HexagonOffsetGrid.oddFlat(
               color: const Color.fromARGB(255, 129, 128, 108),
               padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
@@ -1198,12 +1252,12 @@ class _GameScreenState extends State<GameScreen> {
                           ],
                         ),),
         )),
-        const Padding(padding: EdgeInsets.all(5.0),),
+        const Padding(padding: EdgeInsets.all(2.0),),
         Text(constYourHandMessage,
           style: TextStyle(fontSize: 18, fontFamily: constAppTextFont, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,),
         const Padding(padding: EdgeInsets.all(1.0),),
         _showCards(),
-        const Padding(padding: EdgeInsets.all(3.0),),
+        const Padding(padding: EdgeInsets.all(1.0),),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -1220,6 +1274,7 @@ class _GameScreenState extends State<GameScreen> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.black, // Text and icon color
                 backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
                 side: BorderSide(color: Colors.black,   width: 3.0,), // Border color
               ),   
               child: Align(
