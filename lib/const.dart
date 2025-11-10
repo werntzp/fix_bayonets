@@ -31,6 +31,8 @@ const constGermanVictory = "assets/images/ger_victory.jpg";
 const constGermanTurnStart = "assets/images/ger_turn_start.jpg";
 const constAmericanFlag = "assets/images/usa_flag.png";
 const constGermanFlag = "assets/images/ger_flag.jpg";
+const constMoveAllDirections = "assets/images/move_all_directions.png";
+const constMoveForwardOnly = "assets/images/move_forward.png";
 
 // used for unit display 
 const constNoUnits = ""; 
@@ -44,6 +46,7 @@ const constButtonQuit = "Quit";
 const constButtonYes = "Yes";
 const constButtonNo = "No";
 const constButtonHome = "Home";
+const constButtonMove = "Move";
 
 // messages
 const constStartingMovePhase = "Starting Move Phase";
@@ -53,6 +56,7 @@ const constStartingAttackPhase = "Starting Attack Phase";
 const constSkippingAttackPhase = "Skipping Attack Phase";
 const constSkippingMoveAndAttackPhase = "Skipping Move and Attack";
 const constNegateMoveMessage = "Germans negated your move!";
+const constNegateMultiMoveMessage = "Germans negated some of your moves!";
 const constNegateAttackMessage = "Germans negated your attack!";
 const constGermanTurnPrepMessage = "The Germans are planning their actions ...";
 const constStackedUnitPickerOrdersMessage = "Soldiers in this map hex:";
@@ -75,6 +79,8 @@ const constOfficersDeadGameOverMessage =
     "The Germans have elminated both American Officers!";
 const constReachedTopRowGameOverMessage =
     "A German soldier broke through the American lines!";
+const constMoveChoiceMessage =
+    "Do you want to move one solider in any direction, or multiple soldiers forward?";
 
 // card notes 
 const constCardBayonet = "Bayonet attack card.";
@@ -102,6 +108,7 @@ const constCardWire = "Negate a move with wire.";
 const constCardLandmine =
     "Negate a move with land mines. Only Germans can use.";
 
+enum EnumMoveChoice  { one, all }
 enum EnumGameOverReason { officers, map, neither }
 enum EnumPhase { orders, move, attack }
 enum EnumMoveType { regular, zigzag }

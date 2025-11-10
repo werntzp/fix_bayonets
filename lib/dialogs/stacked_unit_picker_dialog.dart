@@ -28,12 +28,23 @@ import '../models/card_model.dart';
   // _pickBorder:helper function to show which unit(s)
   // are eligible to be chosen to move 
   // *********************************************
-   Color _pickBorder(GameModel gameModel, Unit u) {
+   Color _pickBorder(GameModel gameModel, Unit u, int row, int col) {
     Color c = Colors.black;
 
     // decide on border based on phase and eligibility 
     if (gameModel.phase() == EnumPhase.move) {
-      if (gameModel.unitIsEligibleToMove(u)) {
+      // we're in multi-select mode, so might be some selected units in the hex
+      if (gameModel.getMultiSelect()) {
+        // if the unit selected, make it yellow (or if not, green)
+        if (gameModel.isUnitSelected(row, col, u.id)) {
+          c = Colors.yellow;
+        }
+        else {
+          c = Colors.green;          
+        }
+
+      }
+      else if (gameModel.unitIsEligibleToMove(u)) {
         c = Colors.green;
       }
     }
@@ -113,7 +124,7 @@ import '../models/card_model.dart';
   }
 
 Future<String?> showStackedUnitPickerDialog(
-    BuildContext context, List<Unit> units, GameModel gameModel) {
+    BuildContext context, List<Unit> units, int row, int col, GameModel gameModel) {
   return showDialog<String>(
     context: context,
     barrierDismissible: false,
@@ -132,7 +143,7 @@ Future<String?> showStackedUnitPickerDialog(
                 child: Container(
                   height: 63,
                   width: 63, 
-                  decoration: BoxDecoration(border: Border.all(color: _pickBorder(gameModel, item), width: 3)),
+                  decoration: BoxDecoration(border: Border.all(color: _pickBorder(gameModel, item, row, col), width: 3)),
                   child: Image.asset(
                   UnitFactory.getUnitGraphic(item.type, item.owner, false),
                   width: 60,

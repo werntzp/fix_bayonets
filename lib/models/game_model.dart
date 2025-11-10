@@ -5,26 +5,26 @@ import '../models/card_model.dart';
 import '../models/map_model.dart';
 import '../models/unit_model.dart';
 
-class GermanUnit {
+class SelectedUnit {
   final Unit unit;
   final int row;
   final int col;
-  GermanUnit(this.unit, this.row, this.col);
+  SelectedUnit(this.unit, this.row, this.col);
 }
 
-class GermanMove {
+class CustomMove {
   final int unitId;
   final int destRow;
   final int destCol;  
-  GermanMove(this.unitId, this.destRow, this.destCol);
+  CustomMove(this.unitId, this.destRow, this.destCol);
 }
 
-class GermanAttack {
+class CustomAttack {
   final int unitId;
   final int attackRow;
   final int attackCol; 
   final EnumCardName cardName; 
-  GermanAttack(this.unitId, this.attackRow, this.attackCol, this.cardName);
+  CustomAttack(this.unitId, this.attackRow, this.attackCol, this.cardName);
 }
 
 class GameModel {
@@ -37,12 +37,13 @@ class GameModel {
   final List<GameCard> _discardPile = [];
   late List<GameCard> _drawPile;
   final MapFactory _mapFactory = MapFactory();
-  final List<GermanUnit> _germanUnits = []; 
+  final List<SelectedUnit> _germanUnits = []; 
   late List<List<MapHex>> _hexes;
   String _displayUnitsKilled = ""; 
   bool _skipMove = false;
   bool _skipAttack = false; 
   int _unitCount = constInitialUnitCount; 
+  bool _multiSelect = false; 
 
   // *********************************************
   // helper function to capitalize first letter ina  word 
@@ -57,6 +58,26 @@ class GameModel {
   // *********************************************
   EnumPhase phase() {
     return _phase;
+  }
+
+  // *********************************************
+  // manually set if they can multi-select units for
+  // movement purposes 
+  // *********************************************
+  void setMultiSelect(bool value) {
+    _multiSelect = value;
+
+    // if turning off, deselect all cards and units that may have been chosen
+    clearAllSelectedCards();
+    unselectAllUnits();
+
+  }
+
+  // *********************************************
+  // return whether multi-select is on 
+  // *********************************************
+  bool getMultiSelect() {
+    return _multiSelect;
   }
 
   // *********************************************
@@ -160,6 +181,35 @@ class GameModel {
   }
 
   // *********************************************
+  // tun selected on/off depending on current state 
+  // *********************************************
+  void toggleUnitsToMove(int row, int col, int id) {
+
+    _hexes[row][col].units.firstWhere((element) => element.id == id).isSelected =
+      !_hexes[row][col].units.firstWhere((element) => element.id == id).isSelected;
+   
+  }
+
+  // *********************************************
+  // move all units one hex forward  
+  // *********************************************
+  void moveSelectedUnitsForward(int spaces) {
+
+    /*
+    for (int r=0; r < constMapRows; r++) {
+      for (int c=0; c < constMapCols; c++) {
+        if (_hexes[r][c].units.isNotEmpty) {
+          for (Unit u in _hexes[r][c].units) {
+              _hexes[r][c].units.firstWhere(( element) => element.id == u.id).reset(); 
+          }
+        }
+      }
+    }
+    */
+
+  }
+
+  // *********************************************
   // add a new unit to the german side 
   // *********************************************
   void addGermanReinforcement() {
@@ -210,7 +260,7 @@ class GameModel {
         if (_hexes[r][c].units.isNotEmpty) {
           for (Unit u in _hexes[r][c].units) {
             if (u.owner == EnumUnitOwner.german) {
-              _germanUnits.add(GermanUnit(u, r, c));
+              _germanUnits.add(SelectedUnit(u, r, c));
             }
           }
         }
@@ -220,7 +270,7 @@ class GameModel {
   }
 
   // *********************************************
-  // _resetUnits: go through and reset all units so they 
+  // go through and reset all units so they 
   // can move and attack again 
   // *********************************************
   void _resetUnits() {
@@ -384,8 +434,8 @@ class GameModel {
     for (int i = (_germanHand.length-1); i >= 0; i--) {
       if (_germanHand[i].useby != EnumUnitType.all) {
         keep = false; 
-        for (GermanUnit gu in _germanUnits) {
-          if (gu.unit.type == _germanHand[i].useby) {
+        for (SelectedUnit su in _germanUnits) {
+          if (su.unit.type == _germanHand[i].useby) {
             keep = true;
             break;
           }
@@ -397,8 +447,8 @@ class GameModel {
             // german hand 
             for (int i = (_drawPile.length-1); i >= 0; i--) {
               if (_drawPile[i].player != EnumPlayerUse.american) {
-                for (GermanUnit gu in _germanUnits) {
-                  if (gu.unit.type == _drawPile[i].useby) {
+                for (SelectedUnit su in _germanUnits) {
+                  if (su.unit.type == _drawPile[i].useby) {
                     _germanHand.add(_drawPile[i]);
                     _drawPile.remove(_drawPile[i]);
                     break;
@@ -539,14 +589,45 @@ class GameModel {
 
   }
 
+
   // *********************************************
   // put together list of valid moves and return 
   // *********************************************
-  List<GermanMove> getGermanMoves() {
+  List<CustomMove> getMultiSelectMoves() {
+    GameCard card = getSelectedCard();
+    List<CustomMove> moves = []; 
+    int destRow;
+
+    // for each selected unit, create a move to return 
+    for (int r=0; r < constMapRows; r++) {
+      for (int c=0; c < constMapCols; c++) {
+        if (_hexes[r][c].units.isNotEmpty) {
+          for (Unit u in _hexes[r][c].units) {
+              if (u.isSelected) {
+                destRow = (r + card.minrange);
+                if (destRow <= constMapRows) {
+                  moves.add(new CustomMove(u.id, destRow, c));
+                }
+              }
+          }
+        }
+      }
+    }
+
+    return List.from(moves); 
+
+  }
+
+
+
+  // *********************************************
+  // put together list of valid moves and return 
+  // *********************************************
+  List<CustomMove> getGermanMoves() {
     late List<List<int>> result; 
     late GameCard card;  
-    late GermanUnit unitToMove; 
-    List<GermanMove> moves = []; 
+    late SelectedUnit unitToMove; 
+    List<CustomMove> moves = []; 
     List<int> shuffledCols = []; 
     bool validUnit = false; 
     bool okToProceed = true; 
@@ -563,7 +644,7 @@ class GameModel {
           // first, see if either german officer is adjacent to an american unit,
           // and if so, try to move them first
           try {
-            GermanUnit officer1 = _germanUnits.firstWhere(((element) => element.unit.type == EnumUnitType.officer));
+            SelectedUnit officer1 = _germanUnits.firstWhere(((element) => element.unit.type == EnumUnitType.officer));
             if ((isAmericanUnitAdjacent(officer1.row, officer1.col) && (officer1.unit.canMove()))) {
               unitToMove = officer1; 
               validUnit = true; 
@@ -571,7 +652,7 @@ class GameModel {
 
             // if only one unit, will just get back the same one so validate that
             if (!validUnit) {
-              GermanUnit officer2 = _germanUnits.lastWhere(((element) => element.unit.type == EnumUnitType.officer));
+              SelectedUnit officer2 = _germanUnits.lastWhere(((element) => element.unit.type == EnumUnitType.officer));
               if (officer1. unit.id != officer2.unit.id) {
                 // different units, so good to use this one
                 if ((isAmericanUnitAdjacent(officer2.row, officer2.col) && (officer2.unit.canMove()))) {
@@ -631,7 +712,7 @@ class GameModel {
                   // update the unit to show it moved (even if the move gets negated later)
                   _hexes[unitToMove.row][unitToMove.col].units.firstWhere((element) => element.id == unitToMove.unit.id).numTimesMoved++;                 
                   // create a move object and add to the array
-                  moves.add(GermanMove(unitToMove.unit.id, destRow, destCol));
+                  moves.add(CustomMove(unitToMove.unit.id, destRow, destCol));
                   // discard the card 
                   _discardPile.add(_germanHand[i]);
                   try {
@@ -666,11 +747,11 @@ class GameModel {
   // *********************************************
   // put together list of valid attacks and return 
   // *********************************************
-  List<GermanAttack> getGermanAttacks() {
+  List<CustomAttack> getGermanAttacks() {
     late List<List<int>> result; 
     late GameCard card;  
-    late GermanUnit unitAttacking; 
-    List<GermanAttack> attacks = []; 
+    late SelectedUnit unitAttacking; 
+    List<CustomAttack> attacks = []; 
     List<int> shuffledCols = []; 
 
     int prevRow = -1;
@@ -717,7 +798,7 @@ class GameModel {
                       // mark the unit as having attacked 
                       _hexes[unitAttacking.row][unitAttacking.col].units.firstWhere((element) => element.id == unitAttacking.unit.id).hasAttacked = true;    
                       // create an attack  object and add to the array
-                      attacks.add(GermanAttack(unitAttacking.unit.id, destRow, destCol, card.name));
+                      attacks.add(CustomAttack(unitAttacking.unit.id, destRow, destCol, card.name));
                       // save where we attacked
                       prevRow = destRow;
                       prevCol = destCol; 
@@ -869,6 +950,10 @@ class GameModel {
 
     // always reset this
     _displayUnitsKilled = ""; // reset 
+
+    // turn off multi-select and clear out any selected units
+    setMultiSelect(false);
+    unselectAllUnits();
 
     // always deselect any cards
     for (GameCard card in _americanHand) {
@@ -1166,6 +1251,17 @@ class GameModel {
       }
     }
 
+    // quick test, if american unit, make sure it can't move into
+    // spot occupied by germans
+    if (unit.owner == EnumUnitOwner.american) {
+      if ((_hexes[destRow][destCol].units.isNotEmpty) && 
+        (_hexes[destRow][destCol].units.first.owner == EnumUnitOwner.german)) {
+          unit.isSelected = false; 
+          return false; 
+        }
+    }
+
+
     // add to new, remove from old; if orig and dest are the same, fail out
     if ((destRow == origRow) && (destCol == origCol)) {
       result = false; 
@@ -1220,6 +1316,9 @@ class GameModel {
   // *********************************************
   bool unitInHexSelected(int row, int col) {
     bool isSelected = false; 
+
+
+
 
     // is there a unit in this hex that has been selected? 
     List<Unit> units = getUnitsInHex(row, col);
@@ -1303,6 +1402,16 @@ class GameModel {
     }
 
     return isEligible;
+  }
+
+  // *********************************************
+  // is there a unit eligible to move in this hex? (even
+  // if part of a stack)
+  // *********************************************
+  bool isUnitSelected(int row, int col, int id) {
+
+    return _hexes[row][col].units.firstWhere((element) => element.id == id).isSelected;
+
   }
 
   // *********************************************
@@ -1464,6 +1573,34 @@ class GameModel {
 
   }
 
+  // *********************************************
+  // get distance from starting hex to
+  // *********************************************
+  List<List<int>> getForwardOnlyMoves(int range) {
+
+    // start with an invalid list
+    List<List<int>> result =  _mapFactory.resetDistances();  
+
+    // now, iterate through each hex looking for any selected units, 
+    // and then based on that, populate very specific spots in the array
+    for (int r=0; r < constMapRows; r++) {
+      for (int c=0; c < constMapCols; c++) {
+        if (_hexes[r][c].units.isNotEmpty) {
+          for (Unit u in _hexes[r][c].units) {
+            if (u.isSelected) {
+              // if we don't end up off the map, that's a valid spot 
+              if ((r + range) <= constMapRows) {
+                result[r + range][c] = range;
+              }
+            }
+          }
+        }
+      }
+    }    
+
+    return List.from(result);
+
+  }
 
   // *********************************************
   // get distance from starting hex to
@@ -1475,21 +1612,32 @@ class GameModel {
     // check preconditions first, and if ready, populate for real,
     // otherwise return one with all invalid spaces
     if (preConditionsMet(phase)) {
-      // do we want to check entire hexagon, or the limited known spaces for zig zag?
+      
       GameCard card = getSelectedCard();
-      if (card.minrange == constZigZagSpace) {
-        result = _mapFactory.getZigZagDistances(row, col);
+
+      // if in move phase, and multi-select, need to build a custom array
+      if ((phase == EnumPhase.move) && (getMultiSelect())) {
+        // go build a custom array 
+        result = getForwardOnlyMoves(card.minrange); 
+
       }
       else { 
-        result = _mapFactory.getDistances(row, col);
+        // do we want to check entire hexagon, or the limited known spaces for zig zag?
+        if (card.minrange == constZigZagSpace) {
+          result = _mapFactory.getZigZagDistances(row, col);
+        }
+        else { 
+          result = _mapFactory.getDistances(row, col);
+        }
       }
-
       // after we do all the distances, also need to make sure any spots with
       // german or american units in them are also marked as invalid (depending on the phase)
       result = _identifyInvalidSpacesByPhase(result, phase);
+
     }
     else {
       result = _mapFactory.resetDistances();
+
     }
 
      return List.from(result);
@@ -1554,13 +1702,20 @@ class GameModel {
           if (_hexes[row][col].units.length > 1) {
             // so there's more than one, which normally would equate to a stack, BUT
             // if we're in move/attack phase and one of those units is selected, then
-            // show that unit instead of the stack 
+            // show that unit instead of the stack , UNLESS we are doing a multi-select
+            // move so even though one or units are selected, we still show the stack
             isStacked = true; 
             for (Unit u in _hexes[row][col].units) {
               if (u.isSelected) {
-                isStacked = false; 
-                graphic = UnitFactory.getUnitGraphic(u.type, EnumUnitOwner.american, false);
-                break; 
+                if (getMultiSelect()) {
+                  isStacked = true;
+                  break; 
+                }
+                else {
+                  isStacked = false; 
+                  graphic = UnitFactory.getUnitGraphic(u.type, EnumUnitOwner.american, false);
+                  break; 
+                }
               }
             }
             // if we got here and stacked is still true, then no unit was selected
@@ -1690,6 +1845,15 @@ class GameModel {
       unselectAllUnits();
     }
       
+  }
+
+  // *********************************************
+  // return the card based on id
+  // *********************************************
+  GameCard getCardById(int id) {
+
+    return _cardFactory.getCardById(id);
+
   }
 
   // *********************************************

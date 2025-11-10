@@ -6,6 +6,7 @@ import '../const.dart';
 import '../dialogs/stacked_unit_picker_dialog.dart';
 import '../dialogs/ask_to_negate_dialog.dart';
 import '../dialogs/card_info_dialog.dart';
+import '../dialogs/move_choice_dialog.dart';
 import 'game_over_screen.dart'; 
 import '../models/game_model.dart';
 import '../models/card_model.dart';
@@ -224,6 +225,10 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> _negateOverlayMessage(EnumPhase phase) async {
     String message = constNegateMoveMessage; 
 
+    if ((phase == EnumPhase.move) && (_gameModel.getMultiSelect())) {
+      message = constNegateMultiMoveMessage;
+    }
+
     if (phase == EnumPhase.attack) {
       message = constNegateAttackMessage;
     }
@@ -356,6 +361,26 @@ class _GameScreenState extends State<GameScreen> {
     _gameModel.newGame();
   }
 
+
+  // *********************************************
+  // decide if we are just cancelling multi-select
+  // or are quitting the game
+  // *********************************************
+  void _handleQuitButton() {
+
+    if (_gameModel.getMultiSelect()) {
+      // deselect all cards and units
+      _gameModel.setMultiSelect(false);
+      setState(() {
+        // do nothing
+      });
+    }
+    else {
+      Navigator.pop(context);
+    }
+
+  }
+
   // *********************************************
   // what to do when user does a single tap
   // *********************************************
@@ -379,7 +404,7 @@ class _GameScreenState extends State<GameScreen> {
         // if there's an american unit adjacent to this, then you can bring up the stack
         // picker dialog to see which German units are in there
         if (_gameModel.isAmericanUnitAdjacent(row, col)) {
-          await showStackedUnitPickerDialog(context, units, _gameModel);
+          await showStackedUnitPickerDialog(context, units, row, col, _gameModel);
         }
         return; 
     }    
@@ -390,110 +415,140 @@ class _GameScreenState extends State<GameScreen> {
     if (_gameModel.phase() == EnumPhase.orders) {
         if ((owner == EnumUnitOwner.american) && (count > 1)) {
           // we don't care about the return value
-          await showStackedUnitPickerDialog(context, units, _gameModel);
+          await showStackedUnitPickerDialog(context, units, row, col, _gameModel);
         }
     }
 
     // *** move phase *** 
     else if (_gameModel.phase() == EnumPhase.move) {
+      // for single move unit decision:
       // if preconditions have been met and we have a selected unit,
       // move that unit to the new space 
-      if (_gameModel.preConditionsMet(EnumPhase.move)) {
-        try {
-          // if we have a selected unit, and this spot is a valid 
-          // move spot, and there aren't germans in the target spot, move the unit and jump out 
-          Unit u = _gameModel.getSelectedUnit();
-          GameCard card = _gameModel.getSelectedCard(); 
-          int distance = _distanceArray[row][col];  
-          if ((distance != constInvalidSpace) &&
-            (distance >= card.minrange) &&
-            (distance <= card.maxrange) &&  
-            (!_gameModel.isHexOccupiedByGermans(row, col))) {
-              // can the german player negate this? if yes, flip a coin if they actually want to do it 
-              if (_gameModel.canNegateAction(EnumPlayer.german, EnumCardNegate.move)) {
-                if (Random().nextBool()) {
-                  // german decided to block the move! 
-                  await _negateOverlayMessage(EnumPhase.move);
-                  // also, increment the move, even if it didn't 
-                  _gameModel.updateUnitStatus(u.id, EnumPhase.move);
-                  // discard the negate card
-                  _gameModel.discardNegateCard(EnumPlayer.german, EnumCardNegate.move);
-                  // set flag
-                  okToProceed = false; 
+      if (!_gameModel.getMultiSelect()) {
+        if (_gameModel.preConditionsMet(EnumPhase.move)) {
+          try {
+            // if we have a selected unit, and this spot is a valid 
+            // move spot, and there aren't germans in the target spot, move the unit and jump out 
+            Unit u = _gameModel.getSelectedUnit();
+            GameCard card = _gameModel.getSelectedCard(); 
+            int distance = _distanceArray[row][col];  
+            if ((distance != constInvalidSpace) &&
+              (distance >= card.minrange) &&
+              (distance <= card.maxrange) &&  
+              (!_gameModel.isHexOccupiedByGermans(row, col))) {
+                // can the german player negate this? if yes, flip a coin if they actually want to do it 
+                if (_gameModel.canNegateAction(EnumPlayer.german, EnumCardNegate.move)) {
+                  if (Random().nextBool()) {
+                    // german decided to block the move! 
+                    await _negateOverlayMessage(EnumPhase.move);
+                    // also, increment the move, even if it didn't 
+                    _gameModel.updateUnitStatus(u.id, EnumPhase.move);
+                    // discard the negate card
+                    _gameModel.discardNegateCard(EnumPlayer.german, EnumCardNegate.move);
+                    // set flag
+                    okToProceed = false; 
+                  }
                 }
-              }
 
-              // do the move 
-              if (okToProceed) {
-                if (_gameModel.moveUnit(u.id, row, col)) {
-                  _distanceArray =  _gameModel.resetDistances(); // reset all distances 
-                  _gameModel.discardCardById(card.id); // get rid of the move card
+                // do the move 
+                if (okToProceed) {
+                  if (_gameModel.moveUnit(u.id, row, col)) {
+                    _distanceArray =  _gameModel.resetDistances(); // reset all distances 
+                    _gameModel.discardCardById(card.id); // get rid of the move card
+                  }
+                  else {
+                    _gameModel.deSelectUnitById(u.id);
+                  }
                 }
                 else {
-                  _gameModel.deSelectUnitById(u.id);
+                  // it was negated, so we need to do a bunch of stuff:
+                  _distanceArray =  _gameModel.resetDistances(); // reset all distances 
+                  _gameModel.discardCardById(card.id); // get rid of the move card    
+                  _gameModel.deSelectUnitById(u.id); // deselect the unit           
                 }
-              }
-              else {
-                // it was negated, so we need to do a bunch of stuff:
-                _distanceArray =  _gameModel.resetDistances(); // reset all distances 
-                _gameModel.discardCardById(card.id); // get rid of the move card    
-                _gameModel.deSelectUnitById(u.id); // deselect the unit           
-              }
-          }
-          else {
-             _gameModel.deSelectUnitById(u.id);
-          }    
-
-          setState(() {      
-              _distanceArray =  _gameModel.resetDistances();          
-          });
-          return; 
-        }
-        catch (e) {
-          // do nothing, 
-        }
-      }
-
-      // otherwise, go through progression; first see if these are american units
-      if (_gameModel.unitsInHexOwner(row, col) == EnumUnitOwner.american) {
-        // next, is there just one unit? 
-        if (count == 1) {
-          // get the unit and validate it is eligible to move 
-          if (_gameModel.unitInHexEligibleToMove(row, col)) {
-            setState(() {
-              _gameModel.setSelectedUnitByFirstPosition(row, col);
-              if (_gameModel.preConditionsMet(EnumPhase.move)) {
-                _distanceArray = _gameModel.getDistances(row, col, EnumPhase.move);
-              }    
-            });
-          }
-        } 
-        else {
-          // first, see if any of units are selected, and if so, toggle that off
-          for (Unit u in units) {
-            if (u.isSelected) {
-              setState(() {
-                _gameModel.deSelectUnitById(u.id);
-                _distanceArray =  _gameModel.resetDistances();
-                deselectedUnit = true;  
-              });
-              // and just break out
-              break; 
             }
-          }
+            else {
+              _gameModel.deSelectUnitById(u.id);
+            }    
 
-          // bring up dialog if we didn't deselect anything, and see if they return back an id 
-          if (!deselectedUnit) {
-            final id = await showStackedUnitPickerDialog(context, units, _gameModel);
-            if (id != null) {
-              _gameModel.unselectAllUnits();
+            setState(() {      
+                _distanceArray =  _gameModel.resetDistances();          
+            });
+            return; 
+          }
+          catch (e) {
+            // do nothing, 
+          }
+        }
+
+        // otherwise, go through progression; first see if these are american units
+        if (_gameModel.unitsInHexOwner(row, col) == EnumUnitOwner.american) {
+          // next, is there just one unit? 
+          if (count == 1) {
+            // get the unit and validate it is eligible to move 
+            if (_gameModel.unitInHexEligibleToMove(row, col)) {
               setState(() {
-                _gameModel.setSelectedUnitById(row, col, int.parse(id));
+                _gameModel.setSelectedUnitByFirstPosition(row, col);
                 if (_gameModel.preConditionsMet(EnumPhase.move)) {
                   _distanceArray = _gameModel.getDistances(row, col, EnumPhase.move);
                 }    
               });
             }
+          } 
+          else {
+            // first, see if any of units are selected, and if so, toggle that off
+            for (Unit u in units) {
+              if (u.isSelected) {
+                setState(() {
+                  _gameModel.deSelectUnitById(u.id);
+                  _distanceArray =  _gameModel.resetDistances();
+                  deselectedUnit = true;  
+                });
+                // and just break out
+                break; 
+              }
+            }
+
+            // bring up dialog if we didn't deselect anything, and see if they return back an id 
+            if (!deselectedUnit) {
+              final id = await showStackedUnitPickerDialog(context, units, row, col, _gameModel);
+              if (id != null) {
+                _gameModel.unselectAllUnits();
+                setState(() {
+                  _gameModel.setSelectedUnitById(row, col, int.parse(id));
+                  if (_gameModel.preConditionsMet(EnumPhase.move)) {
+                    _distanceArray = _gameModel.getDistances(row, col, EnumPhase.move);
+                  }    
+                });
+              }
+            }
+          }
+        }
+      }
+      else {
+        // for muilt-select decisions:
+        // add (or remove) units from the move selected list 
+        // otherwise, go through progression; first see if these are american units
+        if (_gameModel.unitsInHexOwner(row, col) == EnumUnitOwner.american) {
+          // next, is there just one unit? 
+          if (count == 1) {
+            // get the unit and validate it is eligible to move 
+            if (_gameModel.unitInHexEligibleToMove(row, col)) {
+              setState(() {
+                _gameModel.toggleUnitsToMove(row, col, units.first.id);
+                _distanceArray = _gameModel.getDistances(row, col, EnumPhase.move);
+              });
+            }
+          } 
+          else {
+            // bring up dialog to see what we get back 
+            final id = await showStackedUnitPickerDialog(context, units, row, col, _gameModel);
+            if (id != null) {
+              setState(() {
+                _gameModel.toggleUnitsToMove(row, col, int.parse(id));
+                 _distanceArray = _gameModel.getDistances(row, col, EnumPhase.move);
+                });
+              }
           }
         }
       }
@@ -619,7 +674,7 @@ class _GameScreenState extends State<GameScreen> {
 
           // bring up dialog if we didn't deselect anything, and see if they return back an id 
           if (!deselectedUnit) {
-            final id = await showStackedUnitPickerDialog(context, units, _gameModel);
+            final id = await showStackedUnitPickerDialog(context, units, row, col, _gameModel);
             if (id != null) {
               _gameModel.unselectAllUnits();
               setState(() {
@@ -705,6 +760,21 @@ class _GameScreenState extends State<GameScreen> {
           return Container(); 
       }
 
+  }
+
+  // *********************************************
+  // change quit button to cancel if in a 
+  // multi-select move 
+  // *********************************************
+  String _showQuitButton() {
+   
+   if (_gameModel.getMultiSelect()) {
+      return constButtonCancel;
+   }
+   else { 
+    return constButtonQuit;
+   }
+                    
   }
 
   // *********************************************
@@ -855,7 +925,7 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   // mark this card as selected   
   // *********************************************
-  void _selectCard(int id, EnumCardType type) {
+  void _selectCard(int id, EnumCardType type) async {
 
     // if we're in orders phase, they can select one or more
     // cards to discard 
@@ -865,19 +935,44 @@ class _GameScreenState extends State<GameScreen> {
         _gameModel.toggleSelected(id);
       });
     }
+    
     // otherwise, if we're in move phase, see if they picked a move card 
     else if ((_gameModel.phase() == EnumPhase.move) && (type == EnumCardType.move)) {
       // next, make sure they can only pick a card that can be used by the american
       if (_gameModel.americanCanUseCard(id)) {
-        setState(() {
-          // show the card as selected
-          _gameModel.toggleSelected(id);
-          // since distance determined when a unit picked, anytime they pick a new card,
-          // always reset the distance array 
+        // now, ask if they want to just move one unit, or advance all forward 
+        GameCard card = _gameModel.getCardById(id);
+        final result; 
+        if (card.minrange == constZigZagSpace) {
+          // can't do multi-select
+          result = EnumMoveChoice.one;
+        }
+        else { 
+          result = await showMoveChoiceDialog(context);
+      }
+        // if they clicked cancel, nothing really selected
+        if (result == false) {
+            _gameModel.setMultiSelect(false); // set flag 
+        }
+        else if (result == EnumMoveChoice.one) {
+          _gameModel.setMultiSelect(false); // set flag 
+          _gameModel.toggleSelected(id); // show card as selected 
           _distanceArray = _gameModel.resetDistances();
-        });
+
+          setState(() {
+            // since distance determined when a unit picked, anytime they pick a new card,
+            // always reset the distance array 
+          });
+        }
+        else { 
+          _gameModel.setMultiSelect(true); // set flag 
+          _gameModel.toggleSelected(id); // show card as selected 
+
+        }
+
       }
     }
+
     // finally, in attack phase
     else if ((_gameModel.phase() == EnumPhase.attack) && (type == EnumCardType.attack)) {
         if (_gameModel.americanCanUseCard(id)) {
@@ -976,6 +1071,11 @@ class _GameScreenState extends State<GameScreen> {
         s = constButtonDiscard; 
       }
     }
+    else if (_gameModel.phase() == EnumPhase.move) {
+      if (_gameModel.getMultiSelect()) {
+        s = constButtonMove;
+      }
+    }
 
       return 
         Column(
@@ -1018,6 +1118,7 @@ class _GameScreenState extends State<GameScreen> {
     int numKilled = 0; 
     String message = ""; 
     bool addedReinforcement = false; 
+    bool germanNegatedMove = false; 
     EnumGameOverReason reason = EnumGameOverReason.neither;
 
     // if we're in orders phase, and there are selected cards, discard them
@@ -1033,6 +1134,50 @@ class _GameScreenState extends State<GameScreen> {
       // we're done, punch out 
       return; 
     }
+
+    // if we're in a multi-select move action, then we are doing the move(s) instead of 
+    // advancing anything
+    if ((_gameModel.phase() == EnumPhase.move) && (_gameModel.getMultiSelect())) {
+      // get list of moves 
+      for (CustomMove move in _gameModel.getMultiSelectMoves()) {
+        // if not negated by the german, make it happen
+        if (_gameModel.canNegateAction(EnumPlayer.german, EnumCardNegate.move)) {
+          if (Random().nextBool()) {
+            // also, increment the move, even if it didn't 
+            _gameModel.updateUnitStatus(move.unitId, EnumPhase.move);
+            // discard the negate card
+            _gameModel.discardNegateCard(EnumPlayer.german, EnumCardNegate.move);
+            // set the flag 
+            germanNegatedMove = true; 
+          }
+          else { 
+            _gameModel.moveUnit(move.unitId, move.destRow, move.destCol);            
+          }
+        }
+        else { 
+          _gameModel.moveUnit(move.unitId, move.destRow, move.destCol);
+        }
+        
+      }
+
+      // if any were negated, throw up the message 
+      if (germanNegatedMove) {
+        await _negateOverlayMessage(EnumPhase.move);
+      }
+
+      // discard the card and deselect all units
+      _gameModel.unselectAllUnits();
+      _gameModel.discardSelectedCards();
+      _gameModel.setMultiSelect(false);
+
+      setState(() {
+        // do nothing
+      });
+
+      return; 
+
+    }
+
 
     // advance the phase
     _gameModel.nextPhase();
@@ -1061,7 +1206,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_gameModel.isGermanTurn()) {
       await _germanTurnPrepOverlayMessage(); 
       // loop through each move
-      for (GermanMove move in _gameModel.getGermanMoves()) {
+      for (CustomMove move in _gameModel.getGermanMoves()) {
         // check to see if player can negate
         if (_gameModel.canNegateAction(EnumPlayer.american, EnumCardNegate.move)) {
           // throw up dialog to ask 
@@ -1081,7 +1226,7 @@ class _GameScreenState extends State<GameScreen> {
       }
 
       // loop through each move
-      for (GermanAttack attack in _gameModel.getGermanAttacks()) {
+      for (CustomAttack attack in _gameModel.getGermanAttacks()) {
         // check to see if player can negate
         if (_gameModel.canNegateAction(EnumPlayer.american, EnumCardNegate.attack)) {
           // throw up dialog to ask 
@@ -1145,8 +1290,6 @@ class _GameScreenState extends State<GameScreen> {
         }
 
       }
-
-
 
       // recap what happened during German player phase
       await _germanTurnRecapOverlayMessage(message);
@@ -1280,14 +1423,14 @@ class _GameScreenState extends State<GameScreen> {
               child: Align(
                   alignment: Alignment.center,
                   child: Text(
-                    constButtonQuit,
+                    _showQuitButton(),
                     style: TextStyle(
                         fontFamily: constAppTextFont,
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 25.0),
                   )),
-                    onPressed: () { Navigator.pop(context); },                 
+                    onPressed: () { _handleQuitButton(); },                 
             ),
           )]),
         ],)
