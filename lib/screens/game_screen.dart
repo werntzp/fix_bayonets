@@ -706,13 +706,19 @@ class _GameScreenState extends State<GameScreen> {
     String unitCount = count.toString();
     Color textColor = Colors.white; 
 
-    // black color for german units
+    // american units have black, and german white 
     if (_gameModel.unitsInHexOwner(row, col) == EnumUnitOwner.american) {
       textColor = Colors.black; 
       if (count == 1) {
         unitCount = ""; 
       }
     } 
+    else { 
+      textColor = Colors.white; 
+      if (!(_gameModel.isAmericanUnitAdjacent(row, col))) {
+        unitCount = ""; 
+      }
+    }
 
     // check for const first to see if no units there, other create a new image 
     // within a positioned object
