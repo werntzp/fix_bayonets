@@ -702,16 +702,39 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   Widget _showUnits(int row, int col) {
     String graphic = _gameModel.showUnits(row, col);
+    int count = _gameModel.getUnitCountInHex(row, col);
+    String unitCount = count.toString();
+    Color textColor = Colors.white; 
+
+    // black color for german units
+    if (_gameModel.unitsInHexOwner(row, col) == EnumUnitOwner.american) {
+      textColor = Colors.black; 
+      if (count == 1) {
+        unitCount = ""; 
+      }
+    } 
 
     // check for const first to see if no units there, other create a new image 
     // within a positioned object
     if (graphic == constNoUnits) {
       return Container();
     }
-    else {
+    else if (count == constNoUnitsInHex) {
       return 
         Positioned(
           top:8, left: 11, child: Image.asset(graphic, width: 40, height: 40,));
+    }
+    else {
+      return 
+        Stack(
+        children: [
+          Positioned(
+            top:8, left: 11, child: Image.asset(graphic, width: 40, height: 40,)
+          ),
+          Positioned(
+            top:26, left: 12, child: Text(unitCount, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'RobotoMono', color: textColor, fontSize: 18)))
+          ]);
+
     }
   }
 
@@ -1308,7 +1331,6 @@ class _GameScreenState extends State<GameScreen> {
         _gameModel.nextPhase();
         await _phaseOverlayMessage(_gameModel.phase());
       }      
-
     }
 
     setState(() {
@@ -1323,6 +1345,10 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      child: GestureDetector(
+        onHorizontalDragEnd: (details) {
+            return; 
+        },
       child: Scaffold(
       backgroundColor: const Color.fromARGB(255, 129, 128, 108),
       body: Column(
@@ -1435,7 +1461,7 @@ class _GameScreenState extends State<GameScreen> {
           )]),
         ],)
             ]
-        ) 
+        )) 
       )) ;
   }
 }

@@ -13,6 +13,7 @@ const constStartingCardIdNumber = -1;
 const constZigZagSpace = -99;
 const constInvalidSpace = -1;
 const constInitialUnitCount = 32; 
+const constNoUnitsInHex = -1; 
 
 // file locations
 const constHelpFileLocation = "assets/pages/help.html";

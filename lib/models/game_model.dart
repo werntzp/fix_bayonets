@@ -631,12 +631,17 @@ class GameModel {
     List<int> shuffledCols = []; 
     bool validUnit = false; 
     bool okToProceed = true; 
+    bool multipleMoves = false; 
+    bool validSpot = false; 
+    int destRow = 0; 
+    int numMoves = 0;
 
     // most up to date list of where units are at 
     _setGermanUnits();
 
     // loop through cards to see if there are any move cards
     for (int i = (_germanHand.length-1); i >= 0; i--) {
+      multipleMoves = false; 
       card = _germanHand[i];
       okToProceed = true; 
       if (card.type == EnumCardType.move) {
@@ -668,67 +673,121 @@ class GameModel {
 
           // we don't have an officer to move
           if (validUnit == false) {
+            multipleMoves = false; 
+            // first, 25% chance the german wants to move multiple units
+            // forward vs just one (if not a zig zag)
+            if (card.minrange != constZigZagSpace) {
+              int multi = Random().nextInt(4);
+              if (multi == 0) {
+                // yes, so go through each unit, and plot the move
+                for (int i = 0; i <= _germanUnits.length - 1; i++) {
+                  try {
+                    // if unit can move, dest row is on the map, and not occupied by
+                    // americans, add it to the list
+                    if (Random().nextBool()) {
+                      numMoves = 0; 
+                      validSpot = false;       
+                      unitToMove = _germanUnits[i];
+                      destRow = (unitToMove.row - card.minrange);
+                      if (destRow >= 0) {
+                        if (_hexes[destRow][unitToMove.col].units.isEmpty) {
+                          validSpot = true; 
+                        }
+                        else if (_hexes[destRow][unitToMove.col].units.first.owner == EnumUnitOwner.german) {
+                          validSpot = true;
+                        }
+                      }
+                      // conditions met for that unit to move 
+                      if ((unitToMove.unit.canMove()) && (validSpot)) {
+                        moves.add(CustomMove(unitToMove.unit.id, destRow, unitToMove.col));
+                        numMoves++; 
+                        // update the unit to show it moved (even if the move gets negated later)
+                        _hexes[unitToMove.row][unitToMove.col].units.firstWhere((element) => element.id == unitToMove.unit.id).numTimesMoved++;                 
+                      }  
+                    }
+                  }
+                  catch (e) {
+                    print(e); 
+                  }
+ 
+                }
+                // discard the card if we did any
+                if (numMoves > 0) { 
+                  _discardPile.add(_germanHand[i]); 
+                  // set the flags 
+                  multipleMoves = true; 
+                  validUnit = true; 
+                }
+              }
+            }
+
+            // we got here, so either a zig zag card or decided not to do multiple so, 
             // grab a random unit (that hasn't already moved)
-            int pos = Random().nextInt(_germanUnits.length);
-            unitToMove = _germanUnits[pos];
-            if (unitToMove.unit.canMove()) { validUnit = true; }    
+            if (!multipleMoves) {
+              int pos = Random().nextInt(_germanUnits.length);
+              unitToMove = _germanUnits[pos];
+              if (unitToMove.unit.canMove()) { validUnit = true; }    
+            }
           }  
 
         } while (validUnit == false);
 
-        // get list of valid spaces 
-        if (card.minrange == constZigZagSpace) {
-          result = _mapFactory.getZigZagDistances(unitToMove.row, unitToMove.col);
-        }
-        else { 
-          result = _mapFactory.getDistances(unitToMove.row, unitToMove.col);
-        }
-        // then, have to identify if any spaces are ineligible based on units in them
-        result = _identifyInvalidSpaces(result, EnumPhase.move);
-        // so pick a random spot to move the unit to (has to be valid spot, within
-        // range of the move card, and not accidentally be the same spot unit started at)
-        // *** cheat *** let the Germans move ONE further than on their card
-        outerLoop: 
-        for (int destRow=0; destRow<constMapRows; destRow++) {
-          // put all the cols into an array and shuffle them
-          shuffledCols = [
-            for (int c=0; c<constMapCols; c++) c, 
-          ];
-          shuffledCols.shuffle();
-          for (int destCol in shuffledCols) {
-           if ((result[destRow][destCol] != constInvalidSpace) && 
-              (result[destRow][destCol] >= card.minrange) &&
-              (result[destRow][destCol] <= (card.maxrange + 1)) && 
-              ((unitToMove.row != destRow) && (unitToMove.col != destCol))) {
-                // special case, if unit moving is an officer, don't let it move
-                // into another spot where an officer is at 
-                if ((unitToMove.unit.type == EnumUnitType.officer) &&
-                  (_hexes[unitToMove.row][unitToMove.col].units.any((element) => element.type == unitToMove.unit.type))) {
-                    // don't let them move
-                    okToProceed = false; 
-                }
-                // the flag only gets set to false if the above happens
-                if (okToProceed) {
-                  // update the unit to show it moved (even if the move gets negated later)
-                  _hexes[unitToMove.row][unitToMove.col].units.firstWhere((element) => element.id == unitToMove.unit.id).numTimesMoved++;                 
-                  // create a move object and add to the array
-                  moves.add(CustomMove(unitToMove.unit.id, destRow, destCol));
-                  // discard the card 
-                  _discardPile.add(_germanHand[i]);
-                  try {
-                    _germanHand.removeAt(i);
+        // only do all this if we didn't do a bunch of moves above 
+        if (!multipleMoves) {
+          if (card.minrange == constZigZagSpace) {
+            result = _mapFactory.getZigZagDistances(unitToMove.row, unitToMove.col);
+          }
+          else { 
+            result = _mapFactory.getDistances(unitToMove.row, unitToMove.col);
+          }
+          // then, have to identify if any spaces are ineligible based on units in them
+          result = _identifyInvalidSpaces(result, EnumPhase.move);
+          // so pick a random spot to move the unit to (has to be valid spot, within
+          // range of the move card, and not accidentally be the same spot unit started at)
+          // *** cheat *** let the Germans move ONE further than on their card
+          outerLoop: 
+          for (int destRow=0; destRow<constMapRows; destRow++) {
+            // put all the cols into an array and shuffle them
+            shuffledCols = [
+              for (int c=0; c<constMapCols; c++) c, 
+            ];
+            shuffledCols.shuffle();
+            for (int destCol in shuffledCols) {
+            if ((result[destRow][destCol] != constInvalidSpace) && 
+                (result[destRow][destCol] >= card.minrange) &&
+                (result[destRow][destCol] <= (card.maxrange + 1)) && 
+                ((unitToMove.row != destRow) && (unitToMove.col != destCol))) {
+                  // special case, if unit moving is an officer, don't let it move
+                  // into another spot where an officer is at 
+                  if ((unitToMove.unit.type == EnumUnitType.officer) &&
+                    (_hexes[unitToMove.row][unitToMove.col].units.any((element) => element.type == unitToMove.unit.type))) {
+                      // don't let them move
+                      okToProceed = false; 
                   }
-                  catch (e) {
-                    // do nothing
+                  // the flag only gets set to false if the above happens
+                  if (okToProceed) {
+                    // update the unit to show it moved (even if the move gets negated later)
+                    _hexes[unitToMove.row][unitToMove.col].units.firstWhere((element) => element.id == unitToMove.unit.id).numTimesMoved++;                 
+                    // create a move object and add to the array
+                    moves.add(CustomMove(unitToMove.unit.id, destRow, destCol));
+                    // discard the card 
+                    _discardPile.add(_germanHand[i]);
+                    try {
+                      _germanHand.removeAt(i);
+                    }
+                    catch (e) {
+                      // do nothing
+                    }
+                    break outerLoop;    
                   }
-                  break outerLoop;    
-                }
+              }
             }
           }
         }
       }
     }
-    return List.from(moves); 
+
+    return List. from(moves); 
   }
 
   // *********************************************
@@ -1824,6 +1883,19 @@ class GameModel {
 
   }
 
+  // *********************************************
+  // how many units are in the hex?
+  // *********************************************
+  int getUnitCountInHex(int row, int col) {
+    int unitCount = constNoUnitsInHex; 
+
+    if (_hexes[row][col].units.isNotEmpty) {
+      unitCount = _hexes[row][col].units.length;
+    }
+
+    return unitCount;
+
+  }
 
 
   // *********************************************
