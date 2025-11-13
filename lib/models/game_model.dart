@@ -511,7 +511,6 @@ class GameModel {
 
   }
 
-
   // *********************************************
   // determine if an american unit is adjacent to 
   // the row/col 
@@ -635,9 +634,18 @@ class GameModel {
     bool validSpot = false; 
     int destRow = 0; 
     int numMoves = 0;
+    int mod = 0; 
+    int multiChance = 0; 
+    int countMoveCards = 0; 
 
     // most up to date list of where units are at 
     _setGermanUnits();
+
+    // initial loop to get count of move cards 
+    countMoveCards=0; 
+    for (int x = 0; x < _germanHand.length; x++) {
+      if (_germanHand[x].type == EnumCardType.move) { countMoveCards++; }
+    } 
 
     // loop through cards to see if there are any move cards
     for (int i = (_germanHand.length-1); i >= 0; i--) {
@@ -674,11 +682,13 @@ class GameModel {
           // we don't have an officer to move
           if (validUnit == false) {
             multipleMoves = false; 
-            // first, 25% chance the german wants to move multiple units
+            // first, check the chance the german wants to move multiple units
             // forward vs just one (if not a zig zag)
             if (card.minrange != constZigZagSpace) {
+              // if just one move card, becomes 75% chance of multi-move
+              countMoveCards < 2 ? multiChance=3 : multiChance=0; 
               int multi = Random().nextInt(4);
-              if (multi == 0) {
+              if (multi <= multiChance) {
                 // yes, so go through each unit, and plot the move
                 for (int i = 0; i <= _germanUnits.length - 1; i++) {
                   try {
@@ -744,7 +754,11 @@ class GameModel {
           result = _identifyInvalidSpaces(result, EnumPhase.move);
           // so pick a random spot to move the unit to (has to be valid spot, within
           // range of the move card, and not accidentally be the same spot unit started at)
-          // *** cheat *** let the Germans move ONE further than on their card
+
+          // *** cheat *** let the Germans move ONE further than on their card randomly
+          mod = 0; 
+          if ((Random().nextBool())) { mod = 1; }
+          
           outerLoop: 
           for (int destRow=0; destRow<constMapRows; destRow++) {
             // put all the cols into an array and shuffle them
@@ -755,8 +769,8 @@ class GameModel {
             for (int destCol in shuffledCols) {
             if ((result[destRow][destCol] != constInvalidSpace) && 
                 (result[destRow][destCol] >= card.minrange) &&
-                (result[destRow][destCol] <= (card.maxrange + 1)) && 
-                ((unitToMove.row != destRow) && (unitToMove.col != destCol))) {
+                (result[destRow][destCol] <= (card.maxrange + mod)) && 
+                ((unitToMove.row != destRow) || (unitToMove.col != destCol))) {
                   // special case, if unit moving is an officer, don't let it move
                   // into another spot where an officer is at 
                   if ((unitToMove.unit.type == EnumUnitType.officer) &&
@@ -815,6 +829,7 @@ class GameModel {
 
     int prevRow = -1;
     int prevCol = -1; 
+    int mod = 0; 
 
     // most up to date list of where units are at 
     _setGermanUnits();
@@ -827,7 +842,7 @@ class GameModel {
         outerLoop: 
         for (int j = (_germanUnits.length-1); j>=0; j--) {
             unitAttacking = _germanUnits[j];
-            if ((card.useby == EnumUnitType.all) || (card.useby == unitAttacking.unit.type) && 
+            if (((card.useby == EnumUnitType.all) || (card.useby == unitAttacking.unit.type)) && 
               (unitAttacking.unit.hasAttacked == false)) {
               // get list of valid spaces 
               if (card.minrange == constZigZagSpace) {
@@ -839,7 +854,11 @@ class GameModel {
               // then, have to identify if any spaces are ineligible based on units in them
               result = _identifyInvalidSpaces(result, EnumPhase.attack);
               // now, use that list to see if there's a valid attacking spot 
-              // *** cheat *** let them attack one further than on their card 
+
+              // *** cheat *** let them attack one further than on their card randomly
+              mod = 0; 
+              if ((Random().nextBool())) { mod = 1; }
+
               for (int destRow =0; destRow<constMapRows; destRow++) {
                 // put all the cols into an array and shuffle them
                 shuffledCols = [
@@ -849,7 +868,7 @@ class GameModel {
                 for (int destCol in shuffledCols) {
                   if ((result[destRow][destCol] != constInvalidSpace) && 
                     (result[destRow][destCol] >= card.minrange) &&
-                    (result[destRow][destCol] <= (card.maxrange +1)) && 
+                    (result[destRow][destCol] <= (card.maxrange + mod)) && 
                     (_hexes[destRow][destCol].units.isNotEmpty) && 
                     (destRow != prevRow) && 
                     (destCol != prevCol) && 
@@ -941,6 +960,13 @@ class GameModel {
       _drawPile.remove(_drawPile[i]);
     }
 
+    // cheat: if german already has the max, drop one just so we're
+    // always picking at least one up
+    if (_germanHand.length >= constMaxCardsInHand ) {
+      _discardPile.add(_germanHand[0]);
+      _germanHand.removeAt(0);
+    }
+
     // cheat: if german has more than one move/attack negate card,
     // drop it so we focus on actual moves/attacks
     for (int i = (_germanHand.length - 1); i >= 0; i--) {
@@ -957,14 +983,6 @@ class GameModel {
         _discardPile.add(_germanHand[i]);
         _germanHand.remove(i);
       }
-
-    }
-
-    // cheat: if german already has the max, drop one just so we're
-    // always picking at least one up
-    if (_germanHand.length >= constMaxCardsInHand ) {
-      _discardPile.add(_germanHand[0]);
-      _germanHand.removeAt(0);
     }
 
     // decide how many to draw for the german player 
@@ -976,15 +994,34 @@ class GameModel {
       // draw up to three 
       do {
         if (i >= _drawPile.length) { _checkDrawPile(); }
-        
         // cheat: only add to the german's hand if they can use it 
         if (_drawPile[i].player != EnumPlayerUse.american) {
-          _germanHand.add(_drawPile[i]);
-          _drawPile.remove(_drawPile[i]);
+          // second check, if it is a negate card and they already have 
+          // one move/attack, then skip adding 
+          if (_drawPile[i].type == EnumCardType.negate) {
+            if ((_drawPile[i].negate == EnumCardNegate.move) && (numMoveNegate == 1)) {
+              // do nothing, don't add the card
+            }
+            else if ((_drawPile[i].negate == EnumCardNegate.attack) && (numAttackNegate == 1)) {
+              // do nothing, don't add the card
+            } 
+            else { 
+              // add the card
+              _germanHand.add(_drawPile[i]);
+              _drawPile.remove(_drawPile[i]);
+            }
+          }
+          else {
+            // add the card
+            _germanHand.add(_drawPile[i]);
+            _drawPile.remove(_drawPile[i]);
+          }
         }
         i++; 
       } while (_germanHand.length < cardsToDraw);
     }
+
+    print('drawCards complete');
 
   }
 

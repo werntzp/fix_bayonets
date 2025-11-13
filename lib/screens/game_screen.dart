@@ -1360,7 +1360,7 @@ class _GameScreenState extends State<GameScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-        const Padding(padding: EdgeInsets.all(1.0),),
+        const Padding(padding: EdgeInsets.all(0.0),),
         const Text(appTitle,
                   style: TextStyle(fontFamily: constAppTitleFont, fontSize: 50)),
         const Padding(padding: EdgeInsets.all(0.0),),
@@ -1370,7 +1370,7 @@ class _GameScreenState extends State<GameScreen> {
             text: TextSpan(
               children: [
                 TextSpan(text: 'Round ',
-                    style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, color: Colors.black),              
+                    style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),              
                 ),
                 TextSpan(
                   text: _gameModel.displayRound(),
@@ -1378,26 +1378,26 @@ class _GameScreenState extends State<GameScreen> {
                 ),
                 TextSpan(
                   text: ' - ',
-                  style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, color: Colors.black),
+                  style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
                 ),                
                 TextSpan(text: _gameModel.displayPhase(),
                     style: TextStyle(fontWeight: FontWeight.bold, fontFamily: constAppTextFont, fontSize: 28, color: getPhaseColor()),              
                 ),
                 TextSpan(
                   text: ' Phase',
-                  style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, color: Colors.black),
+                  style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
                 ),
             ],
             ),
           ),
         ),
-        const Padding(padding: EdgeInsets.all(2.0),),   
+        const Padding(padding: EdgeInsets.all(1.0),),   
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(_showPhaseMessage(),
-              style: TextStyle(fontFamily: constAppTextFont, fontSize: 20, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,))),
-        const Padding(padding: EdgeInsets.all(2.0),),              
+              style: TextStyle(fontFamily: constAppTextFont, fontSize: 18, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,))),
+        const Padding(padding: EdgeInsets.all(1.0),),              
         HexagonOffsetGrid.oddFlat(
               color: const Color.fromARGB(255, 129, 128, 108),
               padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
@@ -1427,7 +1427,7 @@ class _GameScreenState extends State<GameScreen> {
                           ],
                         ),),
         )),
-        const Padding(padding: EdgeInsets.all(2.0),),
+        const Padding(padding: EdgeInsets.all(1.0),),
         Text(constYourHandMessage,
           style: TextStyle(fontSize: 18, fontFamily: constAppTextFont, fontWeight: FontWeight.bold),  textAlign: TextAlign.center,),
         const Padding(padding: EdgeInsets.all(1.0),),

@@ -76,7 +76,7 @@ class MapFactory {
   // returns distance between two spots
   // on the hex grid 
   // *********************************************
-  int _getDistanceBetweenHexes(int startR, int startC, int endR, int endC) {
+  int getDistanceBetweenHexes(int startR, int startC, int endR, int endC) {
     // Validation (optional, but good practice for an 8x8 grid)
     if (startR < 0 || startR > (constMapRows-1) || startC < 0 || startC > (constMapCols-1) ||
         endR < 0 || endR > (constMapRows-1) || endC < 0 || endC > (constMapCols-1)) {
@@ -208,7 +208,7 @@ class MapFactory {
 
     for (int destRow = 0; destRow < constMapRows; destRow++) {
       for (int destCol = 0; destCol < constMapCols; destCol++) {
-        _distanceArray[destRow][destCol] = _getDistanceBetweenHexes(startRow, startCol, destRow, destCol);
+        _distanceArray[destRow][destCol] = getDistanceBetweenHexes(startRow, startCol, destRow, destCol);
       }
     }
 
